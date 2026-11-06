@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/pulyavin/agentic-sdlc/releases/latest/download/agentic-sdlc.pdf"><img src="docs/images/download.svg" alt="Скачать книгу (PDF)" width="360"></a>
+  <a href="https://github.com/pulyavin/agentic-sdlc/releases/latest/download/agentic-sdlc.pdf"><img src="docs/images/download.svg" alt="Скачать книгу (PDF)" width="420"></a>
 </p>
 
 <h1 align="center">Как построить Agentic SDLC в своём репозитории</h1>
