@@ -929,6 +929,21 @@ def beam(c: Canvas, pivot: tuple[float, float], end: tuple[float, float], k: flo
               f'<circle cx="{n(hx)}" cy="{n(hy)}" r="{n(2.4 * k)}" fill="{P.WOOD_DARK}"/>')
 
 
+ROCK = 12          # the least a beam's raised handle stands over its pivot, so that it still reads as rocking
+
+
+def car_k(rail: float) -> float:
+    """The largest scale at which a handcar on the rail at `rail` keeps its beam's raised handle (`ROCK` over the
+    pivot, 104 up, its knob 7 more) inside the frame's top."""
+    return (rail - 4) / (111 + ROCK)
+
+
+def lift(pivot: tuple[float, float], k: float, rise: float) -> float:
+    """How far (in units, at scale k) the beam's raised handle may stand over its pivot: `rise`, or less in a low
+    frame, so that the handle stays inside the frame's top."""
+    return max(0.0, min(rise, (pivot[1] - 4) / k - 7))
+
+
 def dust(c: Canvas, x: float, rail: float, k: float, way: int, seed: int) -> None:
     """The dust a running wheel kicks up off the ballast: small puffs at the rail, wider and paler behind."""
     puffs(c, x, rail - 4 * k, 18 * k, -way * 70 * k, 3 * k, 10 * k, 9, seed, color=DUST)
@@ -1762,17 +1777,22 @@ def small_station(s: Strip, beat: str) -> None:
     w = s.way
     g = setting(s, vehicle=1.7, rider=True) if beat == "pump" and not low(s) else setting(s)
     p = height(s, "professor")
-    k = min(0.95 * p / 110 * s.track_depth, (g.rail - 6) / 110)
+    k = min(0.95 * p / 110 * s.track_depth, (g.rail - 6) / 110, car_k(g.rail))
     c = Canvas()
     if beat in ("telegram", "back"):
         hx = X(s, 0.66)
-        hc = handcar(c, hx, g.rail, k, w)
-        piv = hc["pivot"]
-        end = (piv[0] + w * 50 * k, piv[1] - 26 * k)
-        beam(c, piv, end, k)
-        on_track(s, c.render(), hc["box"], "handcar")
+
+        def car(hx: float) -> tuple[dict, tuple[float, float]]:
+            hc = handcar(c, hx, g.rail, k, w)
+            piv = hc["pivot"]
+            end = (piv[0] + w * 50 * k, piv[1] - lift(piv, k, 26) * k)
+            beam(c, piv, end, k)
+            on_track(s, c.render(), hc["box"], "handcar")
+            return hc, end
+
         giver, taker = ("professor", "agent") if beat == "telegram" else ("agent", "professor")
         if beat == "back":                                             # back from the run: the agent at the car
+            hc, end = car(hx)
             half = (_box(s, "agent", 0, g.feet)[2] - _box(s, "agent", 0, g.feet)[0]) / 2
             giver_x = fit_x(s, "agent", hc["box"][0] - half - 8 if w > 0 else hc["box"][2] + half + 8)
             face_g = -w
@@ -1784,7 +1804,11 @@ def small_station(s: Strip, beat: str) -> None:
         gx, gy, _ = s.grip(who, "right")
         reach = 21 * tall_of(s, giver) / 100 * 0.8
         tx = reach_x(s, taker, "present", -face_g, (gx + face_g * reach, gy), 0.0)
-        stand(s, taker, tx, "present" if taker == "agent" else "read", "smile", face=-face_g, group="hand")
+        got = stand(s, taker, tx, "present" if taker == "agent" else "read", "smile", face=-face_g, group="hand")
+        if beat == "telegram":                                         # the car waits clear of the hand-over
+            reach_ = 93 * k + 8                                        # its brake lever's end, from its middle
+            hc, end = car(max(hx, got.right + reach_) if w > 0 else min(hx, got.left - reach_))
+        piv = hc["pivot"]
         place_free(s, "caterpillar", 0.95, "think", "smile", face=-w)
         bird_on(s, 2 * piv[0] - end[0], 2 * piv[1] - end[1] - 6 * k, "handcar")
         return
@@ -1797,7 +1821,7 @@ def small_station(s: Strip, beat: str) -> None:
         for wx in hc["wheels"]:
             dust(d, wx - w * 8 * k, g.rail, k, w, int(wx))
         s.put(g.rail + 0.4, d.render(), None)
-        beam(c, piv, (piv[0] + w * 50 * k, piv[1] - 22 * k), k)
+        beam(c, piv, (piv[0] + w * 50 * k, piv[1] - lift(piv, k, 22) * k), k)
         on_track(s, c.render(), hc["box"], "handcar")
         end = (hx - w * 74 * k, deck + 4 * k)
         gx0, gy0, _ = grip_at(s, "agent", 0.0, "present", w)
@@ -2164,15 +2188,23 @@ def no_human_station(s: Strip, beat: str) -> None:
     c = Canvas()
     if low(s):
         p = height(s, "professor")
-        hk = min(0.95 * p / 110, (g.rail - 6) / 110)
-        for f in ((0.72, 0.66, 0.6) if beat == "past" else (0.9, 0.85, 0.8, 0.75, 0.7)):
+        hk = min(0.95 * p / 110, (g.rail - 6) / 110, car_k(g.rail))
+        keep = [(zone, 0.0) for zone in s.reserved]
+        if beat == "past":                                             # and clear of the onlookers' bench
+            empty = getattr(s, "swap", {}).get("cat") == ""
+            keep.append((bench(Canvas(), X(s, 0.3), g.feet - 1, 0.25 * p / 46, half=50 if empty else 130)["box"], 3.0))
+        sweep = tuple(i / 40 for i in range(40, -1, -1))              # failing those, the first spot that is free
+        for f in ((0.72, 0.66, 0.6) if beat == "past" else (0.9, 0.85, 0.8, 0.75, 0.7)) + sweep:
             hx = X(s, f)
             probe = handcar(Canvas(), hx, g.rail, hk, w)["box"]
-            if not any(Box(*zone, "", "").hits(probe) for zone in s.reserved):
+            if not any(Box(*zone, "", "").hits(probe, air) for zone, air in keep):
                 break
         hc = handcar(c, hx, g.rail, hk, w)
         piv = hc["pivot"]
         tilt = math.radians(22 if beat == "past" else -18)
+        rise = lift(piv, hk, 52 * abs(math.sin(tilt)))
+        if rise < 52 * abs(math.sin(tilt)):                            # a low frame: the beam rocks less far
+            tilt = math.copysign(math.asin(rise / 52), tilt)
         beam(c, piv, (piv[0] + w * 52 * hk * math.cos(tilt), piv[1] - 52 * hk * math.sin(tilt)), hk)
         d = Canvas()
         for wx in hc["wheels"]:
@@ -2369,9 +2401,9 @@ def parallel_more(s: Strip, beat: str) -> None:
         k = rs_k(s)
         tc = Canvas()
         if low(s):
-            hk = min(0.95 * p / 110, (g.rails[1] - 6) / 110) * 0.9
+            hk = min(min(0.95 * p / 110, (g.rails[1] - 6) / 110) * 0.9, car_k(g.rails[1]))
             hc = handcar(tc, xs - w * (110 + 60) * kt - w * 70 * hk, g.rails[1], hk, -w)
-            beam(tc, hc["pivot"], (hc["pivot"][0] - w * 50 * hk, hc["pivot"][1] - 20 * hk), hk)
+            beam(tc, hc["pivot"], (hc["pivot"][0] - w * 50 * hk, hc["pivot"][1] - lift(hc["pivot"], hk, 20) * hk), hk)
             box = hc["box"]
         else:
             tr = train(tc, xs - w * (110 + 60) * kt, g.rails[1], k * 0.8, moving=True, cars=1,

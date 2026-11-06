@@ -6,7 +6,7 @@ import yaml
 
 from bookkit import design
 from bookkit.art.footers import footer_conflicts, footers
-from bookkit.art.openers import conflicts, opener
+from bookkit.art.openers import W, conflicts, opener
 from bookkit.art.worlds import WORLDS, frame, schedule
 from bookkit.config import LOCALES
 
@@ -86,3 +86,22 @@ def test_the_worlds_opener_draws_clean(name):
 def test_every_station_has_its_label_in_the_locale():
     for name, world in WORLDS.items():
         assert {station.key for station in world.stations} <= set(LOCALE["worlds"][name])
+
+
+# Frames that once broke between the sampled heights: a footer grown to fill a page may take any height.
+BETWEEN = [("harbour", "entrance", "open", 160), ("harbour", "entrance", "wait", 192),
+           ("station", "task", "work", 264), ("station", "tools", "work", 576), ("station", "mcp", "work", 568),
+           ("station", "mcp", "work", 208), ("railway", "small", "telegram", 288), ("railway", "no-human", "past", 272),
+           ("railway", "no-human", "past", 296), ("railway", None, None, 288)]
+
+
+@pytest.mark.parametrize("name,key,beat,h", BETWEEN)
+def test_frames_between_the_sampled_heights_draw_clean_and_whole(name, key, beat, h):
+    world = WORLDS[name]
+    keys = [station.key for station in world.stations]
+    place = None if key is None else (keys.index(key), beat)
+    for clear in ("left", "right"):
+        for seed in (0, 1):
+            _, strip = frame(world, h, place, clear, 3, design.ORANGE, LOCALE["worlds"][name], seed)
+            assert footer_conflicts(strip) == [], (clear, seed)
+            assert all(b.top >= -0.5 and b.left >= -0.5 and b.right <= W + 0.5 for b in strip.boxes), (clear, seed)

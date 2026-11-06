@@ -6,7 +6,7 @@ topics: [Скиллы, Хуки, MCP, Промпты, Субагенты]   # st
 subtitle: для тех, кто начинает — с нуля и в картинках
 author: Тёма Пулявин
 year: 2026
-version: "0.120-11.2026"
+version: "0.121-11.2026"
 repo: https://github.com/pulyavin/agentic-sdlc
 toc: true
 plan:                # every chapter of the handbook in order; unwritten ones show as "soon"

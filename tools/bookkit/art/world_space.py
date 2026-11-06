@@ -671,10 +671,12 @@ def task(s: Strip, beat: str) -> None:
     ak = min(k, (r.floor - r.trunk - r.tube - 10) / 210)
     ax = s.x(0.0) + 62 * ak
     airlock(s, ax, r.floor, ak)
-    after = ax + 62 * ak + s.tall * 0.3                     # the professor stands clear of the door
+    lead = who(s, "professor", "cat")
+    body = _box(s, lead, 0, r.floor)
+    after = ax + 62 * ak + max(s.tall * 0.3, (body[2] - body[0]) / 2 + 4)   # the lead stands clear of the door
     sk = k * 1.1                                            # the switch's scale
     if beat == "work":
-        prof = cast(s, who(s, "professor", "cat"), max(0.2, frac_of(s, after)), "present", "talk")
+        prof = cast(s, lead, max(0.2, frac_of(s, after)), "present", "talk")
         hx, hy = s.hand(prof, "present", False)
         ck = post_scale(s, hy, k)                           # the capsule's scale, the tube's width with it
         cx = hx + 17 * ck                                   # held by its back end, pushed into the mouth
@@ -1005,10 +1007,11 @@ def mcp(s: Strip, beat: str) -> None:
         cast(s, "cat", 0.42, "cheer", "smile", flip=True)
         sound(s, mx - 40 * k, sy - 56 * k, s.word("dzyn"), max(sets.LETTERING_MIN + 6, 26 * k), "plug")  # clear of him
     else:
-        for frac in (0.5, 0.45, 0.4, 0.35, 0.3, 0.25):    # carried towards the socket, its pins short of it
+        short = min([mx - COLLAR_R * 0.5 * k - 8] + [b.left - 4 for b in s.boxes if b.group == "socket"])
+        for frac in (0.5, 0.45, 0.4, 0.35, 0.3, 0.25):    # carried towards the socket, its pins short of it and its lid
             cat = cast(s, "cat", frac, "present", "talk", flip=False)
             hx, hy = s.hand(cat, "present", False)
-            if hx + 80 * k < mx - COLLAR_R * 0.5 * k - 8 or frac == 0.25:
+            if hx + 80 * k < short or frac == 0.25:
                 break
             index, _ = s.drawn.pop(id(cat))               # too close: stand it a step further back
             s.items.pop(index)
@@ -1535,10 +1538,12 @@ def outside(s: Strip, r: Hull, index: int, beat: str, at: float) -> None:
         box = Canvas()
         box.shape(rounded_rect_d(80, -100, 40, 28, 3), P.RED, sw=1.8, light=(-1, -1))
         box.line("M92,-100 V-106 H108 V-100", 2.2)
-        ax = min(at, W - 180 * k)
-        s.put(0.4, robot_arm(ax, hull, k * 1.3, box.render()), (ax - 20 * k, hull - 140 * k, ax + 160 * k, hull), "arm")
+        ka = min(k, (hull - 4) / 140)       # the toolbox stays below the top of the frame
+        ax = min(at, W - 180 * ka)
+        s.put(0.4, robot_arm(ax, hull, ka * 1.3, box.render()), (ax - 20 * ka, hull - 140 * ka, ax + 160 * ka, hull),
+              "arm")
     elif index == 2:                        # the dish over the MCP box: folded, or open once the connector is in
-        dk = k * 1.5
+        dk = min(k * 1.5, (hull - 4) / 76)  # its rim stays below the top of the frame
         s.put(0.4, dish(at, hull, dk, beat == "spark"), (at - 30 * dk, hull - 76 * dk, at + 30 * dk, hull), "dish")
     elif index == 3:                        # the branch through the hull to an antenna, a beam to each service
         _orbit(s, hull, k, _antenna(s, at, hull, k), SERVICES)

@@ -900,7 +900,7 @@ def entrance_station(s: Strip, beat: str) -> None:
     back and lying along the mole, a boat flying green comes in with its bow wave."""
     go = beat == "open"
     width = 520
-    k = water_k(s, width, 0.74, 136)
+    k = water_k(s, width, 0.74, 144)                                   # the signal mast's lamps, over the mole
     x0 = middle(s, width, k)
     wl = s.wl
     c = Canvas()
