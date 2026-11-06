@@ -29,14 +29,14 @@ import random
 
 from .. import design as P
 from ..design import darken, lighten, mix
-from . import handheld, props, sets, stories
+from . import handheld, props, sets
 from .footers import Strip
 from .ink import INK, Canvas, ellipse_d, lettering, n, rounded_rect_d
-from .openers import CLEAR_MM, H, W, Box, Stage
+from .openers import CLEAR_MM, H, OPENERS, W, Box, Stage
 from .world_kit import (GAP_MIN, SIZE, Pen, Room, connect, hide, ledger, letter, motion, port, room, stash_along,
                         tag_size, wrap)
 from .world_kitchen import _box, _fit_tall, extra, flier, perch, red_button, smoke_cloud
-from .worlds import Station, world
+from .world_base import Station, world
 
 FAIR = world("fair", opener="fairground")
 
@@ -1663,5 +1663,5 @@ FAIR.stations.extend([
 FAIR.backdrop = backdrop
 FAIR.alternate = True                                     # never one moment on two pages in a row
 FAIR.finale = finale
-stories.OPENERS["fairground"] = opener
+OPENERS["fairground"] = opener
 hide(FAIR, "engines", "look")

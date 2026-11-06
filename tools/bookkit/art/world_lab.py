@@ -29,15 +29,15 @@ import random
 
 from .. import design as P
 from ..design import darken, lighten, mix
-from . import handheld, sets, stories
+from . import handheld, sets
 from .footers import Strip
 from .ink import INK, Canvas, n, rounded_rect_d
-from .openers import CLEAR_MM, H, W, Stage
+from .openers import CLEAR_MM, H, OPENERS, W, Stage
 from .world_fair import glow, held, inside, lane, mid, zoom
 from .world_kit import SIZE, Pen, clock_hands, connect, hide, ledger, motion, port, stash_along, tag_size
 from .world_kitchen import _fit_tall
 from .world_sea import beside, gauge, scale_for, sparrow_on, stand, sx
-from .worlds import Station, world
+from .world_base import Station, world
 
 LAB = world("lab", opener="laboratory")
 
@@ -1101,5 +1101,5 @@ LAB.stations.extend([
 LAB.backdrop = backdrop
 LAB.alternate = True                                       # never one moment on two pages in a row
 LAB.finale = finale
-stories.OPENERS["laboratory"] = opener
+OPENERS["laboratory"] = opener
 hide(LAB, "testfirst", "green")

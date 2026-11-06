@@ -75,7 +75,7 @@ def test_a_storyboard_may_preview_a_chapter_in_another_world_without_touching_it
 
     chapter = tmp_path / "01-a.md"
     (tmp_path / "book.yml").write_text("title: T\n", encoding="utf-8")
-    chapter.write_text("---\nscene: morning\n---\n# A\n\nText.\n", encoding="utf-8")
+    chapter.write_text("---\nscene: railway\n---\n# A\n\nText.\n", encoding="utf-8")
     before = chapter.read_text(encoding="utf-8")
     html = build_html(tmp_path, only="01-a", world="station").html
     assert 'data-world="station"' in html and chapter.read_text(encoding="utf-8") == before

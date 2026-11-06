@@ -31,16 +31,16 @@ import random
 
 from .. import design as P
 from ..design import darken, lighten, mix
-from . import handheld, sets, stories
+from . import handheld, sets
 from .footers import Strip
 from .ink import INK, Canvas, n, rounded_rect_d
-from .openers import CLEAR_MM, H, W, Stage
+from .openers import CLEAR_MM, H, OPENERS, W, Stage
 from .world_fair import glow, held, inside, lane, mid, zoom
 from .world_fair import stand as _fair_stand
 from .world_kit import FLOPPY_K, SIZE, Pen, hide, ledger, motion, stash, tag_size
 from .world_kitchen import _box, _fit_tall
 from .world_library import ph, span
-from .worlds import Station, world
+from .world_base import Station, world
 
 SEA = world("sea", opener="deepsea")
 
@@ -1639,5 +1639,5 @@ SEA.stations.extend([
 SEA.backdrop = backdrop
 SEA.alternate = True                                       # never one moment on two pages in a row
 SEA.finale = finale
-stories.OPENERS["deepsea"] = opener
+OPENERS["deepsea"] = opener
 hide(SEA, "preview", "share")

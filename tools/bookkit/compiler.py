@@ -22,7 +22,7 @@ from markdown_it.token import Token
 
 from . import design
 from .art.characters import UnknownCharacter, check, resolve
-from .art.openers import OPENERS
+from .art.stories import STORIES
 from .art.scenes import SCENE_KINDS, parse_cast
 from .components import Context, Prompt, Row, render_block, render_fence
 from .components.layout import page_break, side_switch
@@ -43,7 +43,7 @@ CHAPTER_KEYS = {
     "pose": "that character's pose",
     "lead": "what the character says on the opener",
     "cast": "other characters on the opener, as name:pose:mood",
-    "scene": f"opener: a story ({', '.join(OPENERS)}) or a generic setting ({', '.join(SCENE_KINDS)})",
+    "scene": f"opener without a world: a story ({', '.join(STORIES)}) or a generic setting ({', '.join(SCENE_KINDS)})",
     "sign": "text on the signpost of the opener",
     "world": "the chapter's world: its opener and a camera along its machine in the footers (art/worlds.py)",
     "kicker": "label shown instead of 'Chapter N' on an unnumbered opener; an empty string shows none",
@@ -117,9 +117,9 @@ def validate_front_matter(meta: dict) -> None:
         raise BuildError(f"front matter: unknown color {meta['color']!r}; available: {', '.join(design.ACCENTS)}")
     if "side" in meta and meta["side"] not in SIDES:
         raise BuildError(f"front matter: side must be one of: {', '.join(SIDES)}")
-    if "scene" in meta and meta["scene"] not in SCENE_KINDS and meta["scene"] not in OPENERS:
+    if "scene" in meta and meta["scene"] not in SCENE_KINDS and meta["scene"] not in STORIES:
         raise BuildError(f"front matter: unknown scene {meta['scene']!r}; "
-                         f"available: {', '.join([*OPENERS, *SCENE_KINDS])}")
+                         f"available: {', '.join([*STORIES, *SCENE_KINDS])}")
     number = meta.get("number", True)
     if not (number is True or number is False or (isinstance(number, int) and number > 0)):
         raise BuildError(f"front matter: number must be false or a whole number above zero, got {number!r}")

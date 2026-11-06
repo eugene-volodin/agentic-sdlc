@@ -31,16 +31,16 @@ import random
 
 from .. import design as P
 from ..design import darken, lighten, mix
-from . import handheld, sets, stories
+from . import handheld, sets
 from .footers import Strip
 from .ink import INK, Canvas, lettering, n, rounded_rect_d
-from .openers import CLEAR_MM, H, W, Stage
+from .openers import CLEAR_MM, H, OPENERS, W, Stage
 from .world_fair import glow, held, inside, lane, mid, paving, turn, zoom
 from .world_fair import stand as _stand
 from .world_kit import (SIZE, Pen, clock_hands, floppy_size, hide, ledger, letter, motion, stash, tag_size, tome,
                         tome_size)
 from .world_kitchen import _box, _fit_tall, perch, rules, rules_size
-from .worlds import Station, world
+from .world_base import Station, world
 
 LIBRARY = world("library", opener="reading_room")
 
@@ -1060,5 +1060,5 @@ LIBRARY.stations.extend([
 LIBRARY.backdrop = backdrop
 LIBRARY.alternate = True                                     # never one moment on two pages in a row
 LIBRARY.finale = finale
-stories.OPENERS["reading_room"] = opener
+OPENERS["reading_room"] = opener
 hide(LIBRARY, "check", "find")

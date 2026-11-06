@@ -57,7 +57,7 @@ def test_the_checker_catches_what_it_should():
 
 def test_a_story_opener_has_a_drawn_title_and_no_numeral(tmp_path: Path):
     (tmp_path / "book.yml").write_text("title: T\n", encoding="utf-8")
-    (tmp_path / "01-a.md").write_text("---\ncolor: coral\nscene: morning\nlead: Words `<in>` the bubble\n---\n"
+    (tmp_path / "01-a.md").write_text("---\ncolor: coral\nscene: railway\nlead: Words `<in>` the bubble\n---\n"
                                       "# Why & `how`\n\ntext\n", encoding="utf-8")
     html = build_html(tmp_path).html
     assert 'class="fullpage opener story"' in html and '<div class="opener-big">' not in html
@@ -81,7 +81,7 @@ def test_an_unknown_scene_lists_the_stories(tmp_path: Path):
     from bookkit.markup import BuildError
     (tmp_path / "book.yml").write_text("title: T\n", encoding="utf-8")
     (tmp_path / "01-a.md").write_text("---\nscene: moon\n---\n# A\n", encoding="utf-8")
-    with pytest.raises(BuildError, match="morning"):
+    with pytest.raises(BuildError, match="available: railway, meadow"):
         build_html(tmp_path)
 
 
@@ -168,7 +168,7 @@ def test_the_farewell_is_composed_without_overlaps_and_no_one_is_cut():
 def _book(tmp_path: Path, plan: bool) -> Path:
     (tmp_path / "book.yml").write_text("title: T\ncover: false\ntoc: false\n"
                                        + ("plan:\n  - 1. A\n  - 2. B\n" if plan else ""), encoding="utf-8")
-    for number, name, scene in ((1, "A", "morning"), (2, "B", "lab")):
+    for number, name, scene in ((1, "A", "railway"), (2, "B", "meadow")):
         (tmp_path / f"0{number}-{name.lower()}.md").write_text(
             f"---\ncolor: coral\nscene: {scene}\nnumber: {number}\n---\n# {name}\n\ntext\n", encoding="utf-8")
     return tmp_path

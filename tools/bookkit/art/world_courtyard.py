@@ -55,7 +55,7 @@ from .world_kit import SIZE, Pen, floppy, ledger
 from .world_kitchen import _box
 from .world_moon import checklist, height
 from .world_sea import beside, sparrow_on
-from .worlds import Station, world
+from .world_base import Station, world
 
 FRONT = world("front", opener="")              # the front pages
 COURTYARD = world("courtyard", opener="")      # the introduction

@@ -28,12 +28,12 @@ import random
 
 from .. import design as P
 from ..design import darken, mix
-from . import handheld, sets, stories
+from . import handheld, sets
 from .farewell import basket, city_view, dots, handcart
 from .footers import Strip
 from .ink import INK, Canvas, lettering, n, rounded_rect_d
 from .road import Road, birds, body_box, furnish, long_shadow, rim, walk_along
-from .openers import CLEAR_MM, H, W, Stage
+from .openers import CLEAR_MM, H, OPENERS, W, Stage
 from .world_courtyard import _framed, apple_tree, cast, gate, house, pickets, pk, roof
 from .world_fair import lane, zoom
 from .world_harbour import fx, place
@@ -41,7 +41,7 @@ from .world_kit import SIZE, Holder, Pen, _tag_pad, ledger, text_box
 from .world_kitchen import _box
 from .world_moon import checklist, height
 from .world_sea import sparrow_on
-from .worlds import Station, world
+from .world_base import Station, world
 
 CITY = world("city", opener="city_road")
 
@@ -597,4 +597,4 @@ def opener(st: Stage, accent: str):
     return drawn
 
 
-stories.OPENERS["city_road"] = opener
+OPENERS["city_road"] = opener

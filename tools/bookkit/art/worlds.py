@@ -19,43 +19,13 @@ Frames draw on a footer `Strip` (`footers.py`): the same boxes, groups and no-ov
 """
 from __future__ import annotations
 
-from collections.abc import Callable
-from dataclasses import dataclass, field
-
+from . import (  # noqa: F401  (each world registers itself in WORLDS on import)
+    world_attic, world_camp, world_city, world_courtyard, world_fair, world_harbour, world_kitchen, world_lab,
+    world_library, world_moon, world_railway, world_sea, world_space,
+)
 from .flipbook import flipbook
 from .footers import Strip, look_for
-
-
-@dataclass(frozen=True)
-class Station:
-    """One step of the machine. `draw(s, beat)` draws the station in a frame; `beats` are its moments in order -
-    a station shown on several pages shows them in turn."""
-    key: str                                   # its label in the locale (`worlds: <world>: <key>`)
-    draw: Callable[[Strip, str], None]
-    beats: tuple[str, ...] = ("work",)
-
-
-@dataclass
-class World:
-    """A chapter's world: its stations left to right, the backdrop of every frame, the finale and the opener."""
-    name: str
-    stations: list[Station] = field(default_factory=list)
-    backdrop: Callable[[Strip, int], None] | None = None     # (strip, station index) -> the place behind it
-    finale: Callable[[Strip], None] | None = None             # every station at once, running and labelled
-    opener: str = ""                                          # the name of its opener in `OPENERS`
-    alternate: bool = False                                   # a station's beats take turns page by page
-    floppy: tuple[str, str] | None = None                     # (station, beat) hiding the golden floppy
-
-
-WORLDS: dict[str, World] = {}
-
-
-def world(name: str, opener: str) -> World:
-    """Register a world; its module then adds stations with `World.stations.append`."""
-    if name in WORLDS:
-        raise ValueError(f"world {name!r} registered twice")
-    WORLDS[name] = World(name, opener=opener)
-    return WORLDS[name]
+from .world_base import WORLDS, Station, World, world  # noqa: F401  (the registry, re-exported)
 
 
 def schedule(world_: World, pages: int) -> list[tuple[int, str] | None]:
@@ -163,6 +133,3 @@ def moment(world_: World, place: tuple[int, str] | None, strip: Strip) -> dict:
     return {"kind": "world", "world": world_.name, "station": station, "beat": place[1] if place else None,
             "strip": strip}
 
-
-# The worlds register themselves on import.
-from . import world_attic, world_camp, world_city, world_courtyard, world_fair, world_harbour, world_kitchen, world_lab, world_library, world_moon, world_railway, world_sea, world_space  # noqa: E402,F401,E501

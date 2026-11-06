@@ -43,7 +43,7 @@ from ..design import darken, lighten, mix
 from . import characters, handheld, sets, stories
 from .footers import Strip
 from .ink import INK, Canvas, ellipse_d, lettering, n, rounded_rect_d
-from .openers import IN_FRONT, Box, Stage, W
+from .openers import IN_FRONT, OPENERS, W, Box, Stage
 from .world_fair import lane, zoom
 from .world_kit import SIZE, Pen, clock_hands, connect, ledger, port, tag_size
 from .world_courtyard import merged
@@ -52,7 +52,7 @@ from .world_camp import mug
 from .world_moon import checklist, height, mates
 from .world_harbour import in_hand
 from .world_sea import sparrow_on
-from .worlds import Station, world
+from .world_base import Station, world
 
 RAILWAY = world("railway", opener="railway_station")   # the story `railway` (stories.py), see `opener`
 
@@ -2796,4 +2796,4 @@ def opener(st, accent: str):
     return drawn
 
 
-stories.OPENERS["railway_station"] = opener
+OPENERS["railway_station"] = opener

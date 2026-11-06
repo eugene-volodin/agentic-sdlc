@@ -54,22 +54,14 @@ typography:
   # Short words that must not be left hanging at the end of a line.
   short_words: [в, во, и, к, ко, с, со, у, о, об, а, я, на, не, ни, по, за, из, от, до, но, же, ли, бы, для, что, как, это, при, над, под, без]
 
-# Lettering inside the pictures of the chapter openers (art/stories.py), story by story.
+# Lettering inside the pictures of the chapter openers (art/stories.py and the worlds' openers), opener by opener.
 openers:
   city_road:                     # the conclusion's opener: the signpost by the professor's gate
     city: В город
     home: Домой
-  morning: {month: ПН, again: опять, review: Ревью}
-  fair: {models: Модели, harnesses: Обвязки}
-  valley: {base: База, metrics: Метрики, logs: Логи, tickets: Тикеты}
-  house: {commands: команды}
-  library: {playbooks: Плейбуки, catalog: Описания, parcel: скиллы}
   station: {station: Станция, logs: Логи, tickets: Тикеты, base: База, metrics: Метрики}
   kitchen: {prompts: промпты, skills: скиллы, hooks: хуки, mcp: MCP, subagents: субагенты, checks: проверки,
             copypaste: копипаста, legacy: легаси, crutches: костыли}
-  proving: {repo: Монорепо, apps: apps/, services: scripts/, infra: infra/, preview: превью}
-  lab: {tests: Тесты}
-  crossing: {main: main, pr: PR}
 
 # Easter eggs (art/world_kit.py): the letters on the golden floppies hidden in the chapter worlds, in chapter order.
 easter:
@@ -250,7 +242,6 @@ worlds:
     tickets: Тикеты
     base: База
     metrics: Метрики
-    airlock: Шлюз
     capsule: задача
     inlet: вход
     outlet: выход

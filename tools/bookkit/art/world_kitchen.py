@@ -28,15 +28,15 @@ import math
 
 from .. import design as P
 from ..design import darken, lighten, mix
-from . import handheld, props, sets, stories, things
+from . import handheld, props, sets
 from .characters import module as char_module
 from .footers import Strip
 from .ink import INK, Canvas, ellipse_d, lettering, lettering_width, n, rounded_rect_d
-from .openers import CLEAR_MM, H, W, Stage
+from .openers import CLEAR_MM, H, OPENERS, W, Stage
 from .scenes import PROFESSOR_HEIGHT
 from .world_kit import (GAP_MIN, SIZE, Holder, Pen, Room, cast, clock_hands, hide, ledger, letter, room, sound,
                         stash_along, tag_size, wrap)
-from .worlds import Station, world
+from .world_base import Station, world
 
 KITCHEN = world("kitchen", opener="kitchen")
 
@@ -421,6 +421,25 @@ def larder(s: Strip, r: Counter) -> None:
 
 
 # ============================================================================ things
+def kitchen_table(x: float, y: float, k: float = 1.0, w: float = 110, color: str = P.WOOD_LIGHT,
+                  cloth: str | None = P.RED) -> str:
+    """A small table 46 high; `cloth` hangs a checked tablecloth over it."""
+    c = Canvas()
+    hw = w / 2
+    c.line(f"M{-hw + 8},0 V-42 M{hw - 8},0 V-42", 4.5, P.WOOD_DARK)
+    c.shape(rounded_rect_d(-hw, -48, w, 8, 2), color, sw=2, light=None)
+    if cloth:
+        clip = c.shape(f"M{-hw - 4},-48 H{hw + 4} V-30 Q{hw},-26 {hw - 8},-30 Q0,-24 {-hw + 8},-30 Q{-hw},-26 "
+                       f"{-hw - 4},-30 Z", P.WHITE, sw=1.8, light=None, clip=True)
+        checks = "".join(f'<rect x="{-hw - 4 + i * 10}" y="-50" width="5" height="26" fill="{cloth}" opacity=".7"/>'
+                         for i in range(int(w / 10) + 2))
+        c.add(f'<g clip-path="url(#{clip})">{checks}<rect x="{-hw - 4}" y="-41" width="{w + 8}" height="4" '
+              f'fill="{cloth}" opacity=".5"/></g>')
+        c.path(f"M{-hw - 4},-48 H{hw + 4} V-30 Q{hw},-26 {hw - 8},-30 Q0,-24 {-hw + 8},-30 Q{-hw},-26 "
+               f"{-hw - 4},-30 Z", "none", 1.8)
+    return props._at(c, x, y, k)
+
+
 def pie(x: float, y: float, k: float, kind: str = "good") -> str:
     """A pie in its tin, the middle of the tin's foot at (x, y), 64 wide: "raw" (pale dough, a lattice), "good"
     (golden, even, the lattice browned, a wisp of steam) or "bad" (lopsided, one side slumped, burnt on top, the
@@ -1442,7 +1461,7 @@ def good_station(s: Strip, beat: str) -> None:
         pk = tk * 0.82
         top = feet - 48 * tk
         table = (tx - 47 * tk, top - 44 * pk, tx + 47 * tk, feet)
-        s.put(feet, things.kitchen_table(tx, feet, tk, 90, cloth=P.RED) + pie(tx, top, pk, "good"), table, "table",
+        s.put(feet, kitchen_table(tx, feet, tk, 90, cloth=P.RED) + pie(tx, top, pk, "good"), table, "table",
               group="table")
         bk = s.unit * 0.95
         for _ in range(6):                                # the button's box and its plate whole on the wall
@@ -1555,7 +1574,7 @@ def finale(s: Strip) -> None:
     tk = min(k * 1.4, (g1 - g0) / 96)
     tx = (g0 + g1) / 2
     ttop = feet - 1 - 48 * tk
-    s.put(feet, things.kitchen_table(tx, feet - 1, tk, 90, cloth=P.RED) + pie(tx, ttop, tk * 0.82, "good"),
+    s.put(feet, kitchen_table(tx, feet - 1, tk, 90, cloth=P.RED) + pie(tx, ttop, tk * 0.82, "good"),
           (tx - 47 * tk, ttop - 44 * tk * 0.82, tx + 47 * tk, feet - 1), "table", group="table")
     tops[5] = ttop - 44 * tk * 0.82
     stand(s, "professor", (a0 + a1) / 2, "present", "smile", face=W, hold=handheld.card)
@@ -1716,5 +1735,5 @@ KITCHEN.stations.extend([
 KITCHEN.backdrop = backdrop
 KITCHEN.finale = finale
 KITCHEN.alternate = True                                     # never one moment on two pages in a row
-stories.OPENERS["kitchen"] = opener
+OPENERS["kitchen"] = opener
 hide(KITCHEN, "oven", "bake")

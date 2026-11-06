@@ -30,10 +30,10 @@ import random
 
 from .. import design as P
 from ..design import darken, lighten, mix
-from . import handheld, sets, stories
+from . import handheld, sets
 from .footers import Strip
 from .ink import INK, Canvas, lettering, n, rounded_rect_d
-from .openers import CLEAR_MM, H, W, Stage
+from .openers import CLEAR_MM, H, OPENERS, W, Stage
 from .world_fair import held, inside, lane, mid, paving, zoom
 from .world_fair import stand as _fair_stand
 from .world_kit import (SIZE, Pen, clock_hands, floppy_size, hide, ledger, letter, motion, stash, tag_size, tome,
@@ -41,7 +41,7 @@ from .world_kit import (SIZE, Pen, clock_hands, floppy_size, hide, ledger, lette
 from .world_kitchen import _box, _fit_tall
 from .world_library import ph, span, sparrow
 from .world_sea import F, M, sx
-from .worlds import Station, world
+from .world_base import Station, world
 
 ATTIC = world("attic", opener="workshop")
 
@@ -1257,5 +1257,5 @@ ATTIC.stations.extend([
 ATTIC.backdrop = backdrop
 ATTIC.alternate = True                                     # never one moment on two pages in a row
 ATTIC.finale = finale
-stories.OPENERS["workshop"] = opener
+OPENERS["workshop"] = opener
 hide(ATTIC, "index", "pick")

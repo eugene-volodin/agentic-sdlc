@@ -13,7 +13,7 @@ from bookkit.compiler import build_html
 from bookkit.hyphenate import SHY
 from bookkit.render import footer_warnings
 
-FRONT = "---\ntitle: Test\nscene: fair\n---\n\n# Test\n\n"
+FRONT = "---\ntitle: Test\nscene: railway\n---\n\n# Test\n\n"
 SENTENCE = "The agent reads the repository, runs the build and checks its own work before it says that it is done. "
 PARAGRAPH = SENTENCE * 7 + "\n\n"                     # about ten lines: whole, it would leave a hole when it moves on
 NOTE = "::: note cat\nA remark on the paragraph above, with a source.\n:::\n\n"

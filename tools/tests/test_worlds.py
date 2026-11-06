@@ -1,5 +1,8 @@
 """Chapter worlds: the camera visits every station in order, every frame draws clean, the finale closes the chapter."""
 import re
+import subprocess
+import sys
+from pathlib import Path
 
 import pytest
 import yaml
@@ -105,3 +108,15 @@ def test_frames_between_the_sampled_heights_draw_clean_and_whole(name, key, beat
             _, strip = frame(world, h, place, clear, 3, design.ORANGE, LOCALE["worlds"][name], seed)
             assert footer_conflicts(strip) == [], (clear, seed)
             assert all(b.top >= -0.5 and b.left >= -0.5 and b.right <= W + 0.5 for b in strip.boxes), (clear, seed)
+
+
+ART = Path(__file__).resolve().parents[1] / "bookkit" / "art"
+FIRST = sorted(p.stem for p in ART.glob("world*.py")) + ["openers", "stories"]
+
+
+@pytest.mark.parametrize("module", FIRST)
+def test_any_world_module_can_be_imported_first(module):
+    """No import cycle: each world module, the registry and the openers load on their own in a fresh interpreter."""
+    done = subprocess.run([sys.executable, "-c", f"import bookkit.art.{module}"], capture_output=True, text=True,
+                          cwd=ART.parents[1])
+    assert done.returncode == 0, done.stderr.strip().splitlines()[-1:]

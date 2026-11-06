@@ -32,17 +32,17 @@ import random
 
 from .. import design as P
 from ..design import darken, lighten, mix
-from . import handheld, sets, stories
+from . import handheld, sets
 from .footers import Strip
 from .ink import INK, Canvas, lettering, n, rounded_rect_d
-from .openers import CLEAR_MM, H, W, Stage
+from .openers import CLEAR_MM, H, OPENERS, W, Stage
 from .world_fair import lane, zoom
 from .world_harbour import across, fx, place
 from .world_kit import SIZE, Pen, ledger, tag_size
 from .world_kitchen import _box
 from .world_moon import cast, checklist, height, low, mates, perch
 from .world_sea import sparrow_on
-from .worlds import Station, world
+from .world_base import Station, world
 
 CAMP = world("camp", opener="forest_camp")
 
@@ -1218,4 +1218,4 @@ CAMP.stations.extend([
 CAMP.backdrop = backdrop
 CAMP.alternate = True                                       # never one moment on two pages in a row
 CAMP.finale = finale
-stories.OPENERS["forest_camp"] = opener
+OPENERS["forest_camp"] = opener

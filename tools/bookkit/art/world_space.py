@@ -32,17 +32,17 @@ from dataclasses import dataclass
 
 from .. import design as P
 from ..design import darken, lighten, mix
-from . import handheld, props, sets, stories
+from . import handheld, props, sets
 from .characters import module as char_module
 from .footers import Strip
 from .ink import INK, Canvas, ellipse_d, lettering, lettering_width, n, rounded_rect_d, uid
-from .openers import CLEAR_MM, H, W, Stage
+from .openers import CLEAR_MM, H, OPENERS, W, Stage
 from .scenes import PROFESSOR_HEIGHT
 from .world_kit import (FLOPPY_K, GAP_MIN, GLASS, SIZE, Pen, Port, Room, burst, cast, clear_path,
                        connect, floppy_size, frac_of, hide, height_of, ledger, letter, motion, path_points, port, puff,
                        room, route, sound, stash, tag_size, wrap)
 from .world_kitchen import _box, _upright, low, who
-from .worlds import Station, world
+from .world_base import Station, world
 
 SPACE = world("station", opener="station")
 
@@ -2162,5 +2162,5 @@ SPACE.stations.extend([
 SPACE.backdrop = backdrop
 SPACE.finale = finale
 SPACE.alternate = True                                       # never one moment on two pages in a row
-stories.OPENERS["station"] = opener
+OPENERS["station"] = opener
 hide(SPACE, "tools", "work")

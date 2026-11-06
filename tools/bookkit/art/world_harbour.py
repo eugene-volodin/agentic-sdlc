@@ -30,16 +30,16 @@ import random
 
 from .. import design as P
 from ..design import darken, lighten, mix
-from . import handheld, sets, stories
+from . import handheld, sets
 from .footers import Strip
 from .ink import INK, Canvas, lettering, lettering_width, n, rounded_rect_d
-from .openers import CLEAR_MM, H, W, Stage
+from .openers import CLEAR_MM, H, OPENERS, W, Stage
 from .world_fair import glow, held, lane, mid, zoom
 from .world_kit import CLOCK_TIME, SIZE, Pen, clock_hands, connect, hide, ledger, port, stash_along, tag_size
 from .world_kitchen import _box, _fit_tall
 from .world_library import ph
 from .world_sea import beside, scale_for, stand
-from .worlds import Station, world
+from .world_base import Station, world
 
 HARBOUR = world("harbour", opener="lighthouse")
 
@@ -1546,5 +1546,5 @@ HARBOUR.stations.extend([
 HARBOUR.backdrop = backdrop
 HARBOUR.alternate = True                                   # never one moment on two pages in a row
 HARBOUR.finale = finale
-stories.OPENERS["lighthouse"] = opener
+OPENERS["lighthouse"] = opener
 hide(HARBOUR, "inspection", "cargo")

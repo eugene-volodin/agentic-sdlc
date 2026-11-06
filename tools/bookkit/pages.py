@@ -83,8 +83,9 @@ def cover_page(config: BookConfig) -> str:
 def opener_page(chapter: Chapter, compiler: Compiler) -> str:
     """The full-page opening of a chapter: a story picture, the title on paper plates, the professor's bubble, a tag.
 
-    A chapter with a `world:` gets its world's opener, and one whose `scene:` names a story of `art.openers` gets that
-    picture, over the whole page; any other setting falls back to the generic scene under a colored page.
+    A chapter with a `world:` gets its world's opener, and one whose `scene:` names a story of `art.stories` gets that
+    picture, over the whole page. Any other chapter - a world without an opener of its own (the courtyard), a `scene:`
+    naming a generic setting, or neither key (the meadow) - gets the generic scene under a colored page.
     """
     meta, config = chapter.meta, compiler.config
     kind = WORLDS[meta["world"]].opener if meta.get("world") else meta.get("scene", "meadow")

@@ -18,13 +18,15 @@ Units: the page is 840 x 1188 (4 units to the millimetre).
 from __future__ import annotations
 
 import random
+from collections.abc import Callable
 from dataclasses import dataclass, field
 
 from .. import design as P
-from .characters import module, resolve
+from .characters import module, resolve, span
 from .ink import Canvas, n, settle_lettering
 from .scenes import PROFESSOR_HEIGHT
 from .scenes import actor as _actor
+from .stories import STORIES
 
 W = 840
 H = 1188
@@ -35,6 +37,10 @@ TITLE_ZONE = (0, 0, 680, 252)        # up to three lines of the title
 TAG_ZONE = (0, 1100, 250, 1188)      # the arrow tag with the chapter's number at the bottom left
 TAIL_MM = 9                          # how far the opener bubble's tail reaches below the bubble
 CLEAR_MM = 4                         # the air round the opener bubble: nothing comes nearer
+
+# Every opener by name: the stories of `stories.py`, which a chapter without a world may name as `scene:`, and the
+# opener each world module adds on import (`world(name, opener=...)`).
+OPENERS: dict[str, Callable] = dict(STORIES)
 
 
 @dataclass
@@ -137,9 +143,9 @@ class Stage:
         mod = module(name)
         k = tall / PROFESSOR_HEIGHT * mod.SCENE_SCALE
         self.put(feet if depth is None else depth, _actor(name, x, feet, tall, pose, mood, flip=flip, **options))
-        half = mod.SIZE[0] * 0.40 * k
+        left, right = span(name, pose, x, k, flip)
         top = feet - (mod.FEET_Y - mod.HEAD_TOP) * k
-        box = Box(x - half, top, x + half, feet, name, group or name, "actor", flip)
+        box = Box(left, top, right, feet, name, group or name, "actor", flip)
         self.boxes.append(box)
         self.drawn[id(box)] = (len(self.items) - 1, dict(name=name, x=x, feet=feet, tall=tall, pose=pose, mood=mood,
                                                          flip=flip, options=options))
@@ -281,15 +287,3 @@ def opener(name: str, accent: str, seed: int = 0, lead_chars: int = 140, words: 
         zone = (0, 0, max(TITLE_ZONE[2], (TITLE_AT + title[0]) * MM + 20), (TITLE_AT + title[1]) * MM + 24)
     return OPENERS[name](Stage(seed, lead_chars, words, reserved=[zone, TAG_ZONE]), accent)
 
-
-def strip_boxes(points: list[tuple[float, float]], width: float) -> list[tuple]:
-    """Boxes along a long thin thing (a ribbon, a cable), one per stretch between two points."""
-    half = width / 2
-    return [(min(a[0], b[0]) - half, min(a[1], b[1]) - half, max(a[0], b[0]) + half, max(a[1], b[1]) + half)
-            for a, b in zip(points, points[1:], strict=False)]
-
-
-# The stories, registered by the name used as `scene:` in a chapter's front matter.
-from . import stories  # noqa: E402  (the stories use Stage, defined above)
-
-OPENERS = stories.OPENERS

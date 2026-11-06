@@ -15,7 +15,7 @@ from bookkit.compiler import build_html
 from bookkit.markup import BuildError
 from bookkit.render import _font_warnings, render_isolated
 
-FRONT = "---\ntitle: Глава\nscene: fair\n---\n\n# Глава\n\n"
+FRONT = "---\ntitle: Глава\nscene: railway\n---\n\n# Глава\n\n"
 TEXT = "Обычный абзац текста.\n\n"
 
 
@@ -55,7 +55,7 @@ BROKEN = {
     "number is text": ({"01-a.md": "---\nnumber: abc\n---\n# A\n\nx\n"}, "title: T\n", "number must be"),
     "front is text": ({"01-a.md": "---\nfront: yes please\n---\n# A\n\nx\n"}, "title: T\n", "front must be"),
     "one scene twice": ({"01-a.md": FRONT + TEXT, "02-b.md": FRONT + TEXT}, "title: T\n",
-                        "the scene 'fair' is already the opener of 01-a.md"),
+                        "the scene 'railway' is already the opener of 01-a.md"),
     # blocks
     "stray closer": ({"01-a.md": FRONT + TEXT + ":::\n"}, "title: T\n", "line 10: ':::' closes no block"),
     "unclosed fence": ({"01-a.md": FRONT + "```prompt\nделай\n"}, "title: T\n", "line 8: the code block opened"),
