@@ -75,7 +75,7 @@ def _qr(link: str) -> str:
        example="::: download\nPoint the camera at the code or tap the button.\n:::")
 def download(ctx: Context, call: Call) -> Row:
     """Where to get the newest version: a QR code and a button for the latest release's PDF, and the version
-    this copy is. Needs `repo` in book.yml and a version file; the body is a line of text under the button."""
+    this copy is. Needs `repo` and `version` in book.yml; the body is a line of text under the button."""
     config = ctx.config
     if not config.repo or not config.version:
         raise BuildError("'download' needs 'repo' and 'version' in book.yml")

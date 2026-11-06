@@ -18,7 +18,7 @@ import pyphen
 
 from . import design
 
-SHY = "­"
+SHY = "\u00ad"
 
 HOSTS = {"p", "li"}                                          # the blocks whose text is hyphenated
 SKIP_TAGS = {"code", "pre", "kbd", "samp", "a", "h1", "h2", "h3", "h4", "h5", "h6", "svg", "math", "script",

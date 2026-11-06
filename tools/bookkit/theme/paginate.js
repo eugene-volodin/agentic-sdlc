@@ -1035,9 +1035,8 @@
       const wide = wideNote([note], lowest);
       // A question goes above the paragraph it asks about; any other note goes under the text, but never between a
       // lead-in and the list or table it introduces: there it stands above the lead-in.
-      const tail = rows[rows.length - 1];
       if (note.textContent.trim().endsWith('?')) aboveOf(owner).before(wide);
-      else if (introducesNext(tail)) tail.before(wide);
+      else if (introducesNext(last)) last.before(wide);
       else body.append(wide);
       if (!fits()) { lowest.append(note); wide.remove(); settle(); return; }
     }
@@ -1123,7 +1122,7 @@
   const TRACK_TARGET = parseFloat(root.getPropertyValue('--track-target'));
   const TRACK_MAX = parseFloat(root.getPropertyValue('--track-max'));
   const BREAKS = /[ \t\n\r]/;                            // a no-break space glues: it is part of a word here
-  const GAPS = /[ \t\n\r ]/;
+  const GAPS = /[ \t\n\r\u00a0]/;
   const charRange = document.createRange();
   function charTop(node, i) {
     charRange.setStart(node, i);

@@ -182,7 +182,7 @@ def split_segments(text: str, first_line: int = 1) -> list[Segment]:
 
 def split_front_matter(text: str) -> tuple[dict, str, int]:
     """Return `(metadata, body, line number of the first body line)`."""
-    text = text.replace("\r\n", "\n").lstrip("﻿")
+    text = text.replace("\r\n", "\n").lstrip("\ufeff")
     match = _FRONT_MATTER.match(text)
     if not match:
         if re.match(r"---[ \t]*\n", text):

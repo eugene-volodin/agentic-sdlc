@@ -16,7 +16,7 @@ options it understands and of what type, whether it can span the full width - so
 Adding a component
 ------------------
 1. Write the function in the module of its family (`speech.py`, `callouts.py`, `lists.py`,
-   `code.py`, `layout.py`) and decorate it. Its docstring's first line is its description.
+   `layout.py`, `people.py`, `code.py`, `chat.py`) and decorate it. Its docstring's first line is its description.
 2. Return a `Row` (or a list of rows, or `None`). Put the HTML in `Row.main`; use
    `ctx.blocks(text)` / `ctx.inline(text)` to render the author's Markdown.
 3. Style it in the family's sheet in `theme/css/` using design tokens only, and show it in the demo chapter.

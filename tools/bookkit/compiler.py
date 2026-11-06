@@ -65,7 +65,6 @@ def _lead_in(match: re.Match) -> str:
     return f'<p><span class="lead-in">{first}{second}{mark}</span>'
 
 
-
 @dataclass
 class Section:
     anchor: str

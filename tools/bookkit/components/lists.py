@@ -41,14 +41,11 @@ def checklist(ctx: Context, call: Call) -> Row:
         # The character stands behind the poster, torso up; only the hands that grip its top edge come out in front.
         x, _, w, _ = (float(v) for v in (getattr(mod, "VIEW_BOX", None) or f"0 0 {mod.SIZE[0]} {mod.SIZE[1]}").split())
         holder = figure(call.who, "stand", call.get("mood", "smile"), flip=right, view_box=f"{x:g} 0 {w:g} {hold_y}")
-        side = " board-right" if right else ""
-        return Row(f'<div class="board board-hold{side}"><div class="board-peek">{holder}</div>'
-                   f'<div class="board-sheet">{grip("grip-left", mod.HAND)}{grip("grip-right", mod.HAND)}{title}'
-                   f'<ul class="checks">{"".join(entries)}</ul></div></div>')
-    holder = peek(call.who, call.get("mood", "smile"), flip=right)
-    hand = mod.HAND
-    return Row(f'<div class="board{" board-right" if right else ""}"><div class="board-peek">{holder}</div>'
-               f'<div class="board-sheet">{grip("grip-left", hand)}{grip("grip-right", hand)}{title}'
+    else:
+        holder = peek(call.who, call.get("mood", "smile"), flip=right)
+    classes = "board" + (" board-hold" if hold_y else "") + (" board-right" if right else "")
+    return Row(f'<div class="{classes}"><div class="board-peek">{holder}</div>'
+               f'<div class="board-sheet">{grip("grip-left", mod.HAND)}{grip("grip-right", mod.HAND)}{title}'
                f'<ul class="checks">{"".join(entries)}</ul></div></div>')
 
 

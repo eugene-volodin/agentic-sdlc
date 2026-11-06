@@ -1,9 +1,8 @@
 /* Tokens derived from design.py, the reset, and the off-screen staging areas.
    Colors, fonts and sizes come from bookkit/design.py as custom properties; none are literal here. */
 :root {
-  /* Colors, fonts and page geometry are NOT declared here: `bookkit/design.py` generates them
-     as custom properties (--ink, --paper, --f-head, --col-main, --foot-m ...) ahead of this file.
-     Only values derived from them live in the stylesheet. */
+  /* design.py writes the tokens (--ink, --paper, --f-head, --col-main, --foot-m ...) ahead of this file; only values
+     derived from them are declared here. */
   --accent: var(--chapter-sky);                                     /* overridden per chapter */
   --accent-soft: color-mix(in srgb, var(--accent) 22%, var(--paper));
   --hairline: color-mix(in srgb, var(--ink) 28%, transparent);      /* thin rules and code borders */

@@ -6,7 +6,7 @@ Importing this package registers every component; the modules group them by fami
     callouts   tip, warn, idea, try, define, stat, recap, dodont, compare
     lists      checklist, steps, cast
     layout     scene, wide, pagebreak
-    people     about, contacts
+    people     about, contacts, download, github
     code       fences: code, terminal, tree, file, prompt
     chat       fence: a messenger channel with its thread
 """

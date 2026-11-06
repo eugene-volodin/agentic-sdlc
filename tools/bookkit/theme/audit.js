@@ -48,7 +48,7 @@
    * starts on; a word the line breaks inside is cut into pieces, one per line. Every measurement is a Range over one
    * character or one run of spaces, so it is the browser's own layout, glyph by glyph. */
   const BLOCKS = 'p, li, td, th';
-  const SPACE = /[ \t\n\r ]/;
+  const SPACE = /[ \t\n\r\u00a0]/;
   const range = document.createRange();
   function charBox(node, i) {
     range.setStart(node, i);
@@ -171,7 +171,7 @@
         if (!line.pieces.length) return;
         const first = line.pieces[0];
         const last = line.pieces[line.pieces.length - 1];
-        // 2. Wide word gaps in a justified line.
+        // Wide word gaps in a justified line.
         if (justified && !ragged.has(k) && line.gaps.length) {
           const mean = line.gaps.reduce((s, g) => s + g.em, 0) / line.gaps.length;
           const most = Math.max(...line.gaps.map((g) => g.em));
@@ -181,7 +181,7 @@
                 { mean_em: +mean.toFixed(2), max_em: +most.toFixed(2) }, lineBox(line));
           }
         }
-        // 6. A line that starts with a punctuation mark, or with a dash that belongs to the line above.
+        // A line that starts with a punctuation mark, or with a dash that belongs to the line above.
         if (k > 0) {
           const ch = first.text[0];
           if (/[,.;:)!?»…]/.test(ch) && first.broken) {          // a word of its own may begin with a dot (.env)
@@ -198,7 +198,7 @@
               {}, lineBox(line));
         }
       });
-      // 5 and 9. A break inside a word: inside a bit of code it must fall at a space, slash, hyphen or dot; never
+      // A break inside a word: inside a bit of code it must fall at a space, slash, hyphen or dot; never
       // between two digits of a number.
       for (const line of lines) {
         for (const piece of line.pieces) {
@@ -217,7 +217,7 @@
           }
         }
       }
-      // 8. The last line of a paragraph: one short word alone.
+      // The last line of a paragraph: one short word alone.
       const row = block.closest('.row');
       if (running && lines.length > 1 && !block.classList.contains('cut') &&
           !(row && row.classList.contains('split-head') && block.matches('.main > p:last-child'))) {
@@ -261,7 +261,7 @@
       for (const note of row.querySelectorAll(':scope > .side > *')) lowest = Math.max(lowest, note.getBoundingClientRect().bottom);
     }
     const lastOfChapter = record && record.end === 'last';
-    // 1. A hole above the footer.
+    // A hole above the footer.
     const hole = (footTop - lowest) / PX - opts.bodyGap;
     if (!lastOfChapter && hole > opts.hole) {
       const why = record ? (record.end === 'stuck' ? `the next block (${record.blocker || 'block'}) could not move up`
@@ -272,12 +272,12 @@
             blocker: record ? record.blocker : '' },
           { left: area.left, top: lowest, right: area.right, bottom: footTop, width: area.width, height: footTop - lowest });
     }
-    // 15. A page with next to nothing on it.
+    // A page with next to nothing on it.
     if ((lowest - area.top) / PX < opts.blank) {
       add('blank-page', 'warning', body.textContent.slice(0, 60),
           `the page holds only ${MM(lowest - area.top)} mm of content`, { content_mm: MM(lowest - area.top) }, body);
     }
-    // 7. A heading at the foot of the text, or a section that starts with less than two lines of itself.
+    // A heading at the foot of the text, or a section that starts with less than two lines of itself.
     const LINE = parseFloat(style(document.body).lineHeight) || 26;
     const bottom = footTop - opts.bodyGap * PX;
     const headings = rows.filter((r) => r.classList.contains('row-heading'));
@@ -301,7 +301,7 @@
             { under_mm: MM(under) }, lastHead);
       }
     }
-    // 4. Text outside the text area: wider than the text block, or down into the footer.
+    // Text outside the text area: to the left or the right of the text block.
     const texts = textRects(body, null);
     for (const { el, rect } of texts) {
       if (rect.left < area.left - opts.slack * PX || rect.right > area.right + opts.slack * PX) {
@@ -310,7 +310,7 @@
         break;
       }
     }
-    // 13. A note touching another note, or a block or a line of text beside it.
+    // A note touching another note, or a block or a line of text beside it.
     const notes = [...body.querySelectorAll('.row > .side > *')].filter((n) => n.getBoundingClientRect().height > 0);
     for (let i = 0; i < notes.length; i++) {
       const a = notes[i].getBoundingClientRect();
@@ -333,7 +333,7 @@
         add('note-overlap', 'error', notes[i].textContent, `a note overlaps "${snippet(hit.el.textContent, 40)}"`, {}, union(a, hit.rect));
       }
     }
-    // 9. Tables: wider than their column, a cell whose content does not fit.
+    // Tables: wider than their column, a cell whose content does not fit.
     for (const table of body.querySelectorAll('table')) {
       const holder = table.parentElement.getBoundingClientRect();
       const t = table.getBoundingClientRect();
@@ -347,7 +347,7 @@
         }
       }
     }
-    // 10. A monitor: its screen 4:3, the whole monitor no wider than the text.
+    // A monitor: its screen 4:3, the whole monitor no wider than the text.
     for (const prompt of body.querySelectorAll('.prompt')) {
       const screen = prompt.querySelector('.screen');
       if (!screen) continue;
@@ -361,7 +361,7 @@
         add('monitor', 'error', screen.textContent, `a monitor ${MM(p.width - area.width)} mm wider than the text`, {}, prompt);
       }
     }
-    // 11. The running head, clipped or cut with an ellipsis.
+    // The running head, clipped or cut with an ellipsis.
     for (const head of page.querySelectorAll('.rh-text')) {
       if (head.scrollWidth > head.clientWidth + 1) {
         add('running-head', 'error', head.textContent, 'the running head is too long and is cut with an ellipsis', {}, head);
@@ -403,14 +403,14 @@
   // ------------------------------------------------------------------ the whole document
   function auditDocument() {
     current = null;
-    // 12. Pictures that did not load.
+    // Pictures that did not load.
     for (const img of document.images) {
       if (!img.naturalWidth) {
         current = img.closest('.page');
         add('image', 'error', img.getAttribute('src'), `a picture did not load: ${img.getAttribute('src')}`, {}, img);
       }
     }
-    // 12. Ids: one element each, and every reference finds its target.
+    // Ids: one element each, and every reference finds its target.
     const owners = new Map();
     for (const el of document.querySelectorAll('[id]')) {
       const top = el.closest('svg') ? (el.closest('svg:not(svg svg)') || el.ownerSVGElement) : el;
@@ -435,7 +435,7 @@
         }
       }
     }
-    // 22. Links: external ones well-formed, internal ones found; the contents' page numbers right.
+    // Links: external ones well-formed, internal ones found; the contents' page numbers right.
     for (const a of document.querySelectorAll('#book a[href]')) {
       const href = a.getAttribute('href');
       current = a.closest('.page');
@@ -460,7 +460,7 @@
             `the contents give page ${cell.textContent.trim()}, the heading is on page ${holder.dataset.page}`, {}, cell);
       }
     }
-    // 16. Which side the book ends on.
+    // Which side the book ends on.
     const last = pages[pages.length - 1];
     if (last) {
       current = last;
@@ -477,7 +477,7 @@
     time('page', () => auditPage(page));
     time('text', () => { if (!page.classList.contains('full')) auditText(page); });
     time('residue', () => auditResidue(page));
-    // 19. The weight of a page's markup: a heavy one runs the browser out of memory.
+    // The weight of a page's markup: a heavy one runs the browser out of memory.
     time('weight', () => {
       const kb = page.outerHTML.length / 1024;
       if (kb > opts.pageWeight) {

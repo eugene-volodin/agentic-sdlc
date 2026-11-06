@@ -5,7 +5,7 @@ A thin wrapper around markdown-it that adds what running text in a printed book 
 * typographic quotes and dashes in the book's language;
 * no-break spaces after short words and before dashes, so lines never end on a preposition
   (applied to text only - code is never touched);
-* two inline extensions: `[[Key]]` for keyboard keys and `==text==` for a marker highlight;
+* three inline extensions: `[[Key]]` for keyboard keys, `==text==` for a marker highlight, `:flag-us:` for a flag;
 * images resolved against the chapter file, with a clear error when one is missing;
 * code fences inside lists and blocks rendered by the same components as top-level ones.
 """
@@ -23,7 +23,7 @@ from .art.flags import flag
 from . import design
 from .markup import BuildError
 
-# Inline extensions, matched in running text only: [[Key]] and ==marked text==.
+# Inline extensions, matched in running text only: [[Key]], ==marked text== and :flag-xx:.
 # Inline code with spaces up to this length never breaks and is never stretched by justification: `codex mcp add`
 # printed with wide gaps reads as a different command.
 CODE_WORDS_MAX = 32
@@ -170,7 +170,7 @@ class MarkdownRenderer:
 
     @staticmethod
     def _extras(text: Token) -> list[Token]:
-        """Split a text token around `[[Key]]` and `==mark==`, turning those into HTML tokens."""
+        """Split a text token around `[[Key]]`, `==mark==` and `:flag-xx:`, turning those into HTML tokens."""
         pieces: list[Token] = []
         position = 0
         for match in _INLINE_EXTRA.finditer(text.content):
