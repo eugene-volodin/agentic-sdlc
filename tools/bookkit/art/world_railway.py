@@ -120,8 +120,8 @@ class Line:
         self.t = max(height(s, x) for x in ("professor", "agent", "cat", "caterpillar"))
         t = self.t
         front = max(8.0, 0.1 * t)
-        if s.h >= 300:                                                 # room to stand clearly in front of a train
-            front = max(front, IN_FRONT + 4 - max(6.0, 0.075 * t))
+        if not low(s):                                                 # a deep platform: the whole cast stands on
+            front = deep_front(s)                                      # the paving, below the track's edge
         self.kerb = self.feet - front
         self.rail = self.kerb - max(6.0, 0.075 * t)
         self.rails = [self.rail]                                       # the roads of the track, near to far
@@ -129,6 +129,17 @@ class Line:
             self.rails.append(self.rail - q * max(12.0, 0.2 * t))
         self.cope = self.rails[-1] - max(8.0, 0.16 * t)
         self.wall = self.cope - max(4.0, 0.05 * t)
+
+
+CLEAR = 0.1                    # the air over the tallest head (or raised hand) to the platform's edge, in its height
+
+
+def deep_front(s: Strip) -> float:
+    """How deep the near platform is in a frame that is not a strip: from the feet line up to the coping, the tallest
+    of the cast and the air over its head (its arms raised in cheer included), so that nobody standing on the
+    paving is drawn over the track or over anything standing on it."""
+    t = max(height(s, x) for x in ("professor", "agent", "cat", "caterpillar"))
+    return t * (1 + CLEAR) + 4
 
 
 def agent_h(s: Strip) -> float:
@@ -140,18 +151,33 @@ def low(s: Strip) -> bool:
     return s.h < 300
 
 
-def setting(s: Strip, vehicle: float = 0.0, roads: int = 1, steam: float = 0.0, strict: bool = False) -> Line:
+BACK = 0.15                     # the share of a tall frame over the far platform: the station building
+
+
+LEAN = 0.45                     # a pole or a tool held up from the deep platform at a train: that much forward per rise
+FAR_TRACK = 0.7                # a tall frame's rolling stock, seen beyond the deep platform: that much smaller
+
+
+def setting(s: Strip, vehicle: float = 0.0, roads: int = 1, steam: float = 0.0, rider: bool = False) -> Line:
     """Choose the camera for a station and draw what stands behind it. `vehicle`: the height (in the agent's
-    heights) of a carriage on the near track that must stand whole in the frame, steam (`steam`, more) included
-    if there is room - the cast steps back until it does."""
-    if vehicle and (strict or not low(s)):
-        for _ in range(6):
+    heights, at the cast's distance) of a carriage on the near track that must stand whole in the frame, steam
+    (`steam`, more) included if there is room - the cast steps back until it does. In a frame taller than a strip
+    the track lies beyond the deep platform, so the rolling stock is drawn smaller with the distance
+    (`FAR_TRACK`), unless one of the cast rides it (`rider`) and it keeps his scale."""
+    s.track_depth = 1.0 if low(s) or rider else FAR_TRACK
+    vehicle *= s.track_depth
+    if not low(s):                                                     # the cast steps back until the track,
+        def fits(tall: float) -> bool:                                 # the far platform and the building show
+            s.tall, s.unit, s._room = tall, tall / 137, None           # over their heads, and the carriage whole
             g = Line(s, roads)
-            f = (g.rail - 6) / (agent_h(s) * vehicle)
-            if f >= 0.995:
-                break
-            s.tall *= f * 0.99
-            s.unit = s.tall / 137
+            return g.rail >= max(BACK * s.h + g.rail - g.wall, agent_h(s) * vehicle + 6)
+        top = s.tall
+        if not fits(top):                                              # the biggest cast that fits, by halving
+            lo_, hi_ = top * 0.2, top
+            for _ in range(16):
+                mid = (lo_ + hi_) / 2
+                lo_, hi_ = (mid, hi_) if fits(mid) else (lo_, mid)
+            fits(lo_)
     g = Line(s, roads)
     s.line = g
     s.steam = bool(steam) and g.rail - agent_h(s) * (vehicle + steam) > 4
@@ -167,6 +193,7 @@ def prepare(s: Strip, index: int) -> None:
     ledger(s)
     zoom(s)
     s.index = index
+    s.track_depth = 1.0 if low(s) else FAR_TRACK                       # the rolling stock beyond a deep platform
     feet = lane(s).feet
     names = ("professor", "cat", "agent", "caterpillar")               # the professor in every frame size
     if low(s):                                                         # a close-up: the cast nearly fills it
@@ -533,9 +560,11 @@ def canopy_front(c: Canvas, s: Strip, edge: float, t: float, bays: list[float]) 
 
 
 # ============================================================================ the rolling stock
-def wheel(c: Canvas, x: float, r: float, crank: float, centre: str) -> tuple[float, float]:
+def wheel(c: Canvas, x: float, r: float, crank: float, centre: str,
+          driving: bool | None = None) -> tuple[float, float]:
     """A wheel standing on the rail (y = 0) at x: the steel tyre, the spokes, the counterweight opposite the crank
-    on a big wheel, the hub and the crank pin. Returns where the crank pin is."""
+    on a driving wheel (`driving`, by default a big one), the hub and the crank pin. Returns where the crank pin
+    is."""
     cy = -r
     c.add(f'<circle cx="{n(x)}" cy="{n(cy)}" r="{n(r)}" fill="{P.CHARCOAL}" stroke="{INK}" stroke-width="2.2"/>')
     c.add(f'<circle cx="{n(x)}" cy="{n(cy)}" r="{n(r * 0.84)}" fill="{centre}" stroke="{INK}" stroke-width="1.4"/>')
@@ -544,7 +573,7 @@ def wheel(c: Canvas, x: float, r: float, crank: float, centre: str) -> tuple[flo
                     f"L{n(x + r * 0.8 * math.cos(a))},{n(cy + r * 0.8 * math.sin(a))}"
                     for a in (i * 2 * math.pi / spokes for i in range(spokes))), max(1.6, r * 0.07),
            darken(centre, 0.6))
-    if r > 30:
+    if r > 30 if driving is None else driving:
         a0, a1 = math.radians(crank + 180 - 42), math.radians(crank + 180 + 42)
         rr = r * 0.82
         c.shape(f"M{n(x + rr * math.cos(a0))},{n(cy + rr * math.sin(a0))} A{n(rr)},{n(rr)} 0 0 1 "
@@ -668,6 +697,7 @@ def locomotive(c: Canvas, x: float, rail: float, k: float, cab: bool = True, ste
 
 
 COACH_L = 330
+VEHICLES = ("handcar", "engine", "wagon", "stock", "train", "buffer", "bogie")   # what runs on the rails, by name
 
 
 def coach(c: Canvas, x: float, rail: float, k: float, seed: int = 0, way: int = 1) -> dict:
@@ -683,21 +713,12 @@ def coach(c: Canvas, x: float, rail: float, k: float, seed: int = 0, way: int = 
     d.shape(rounded_rect_d(-7, -122, 7, 24, 3), P.METAL, sw=1.4, light=None)
     d.shape(rounded_rect_d(-COACH_L + 10, -132, COACH_L - 20, 18, 3), P.CHARCOAL, sw=1.8, light=None)
     mid_ = -COACH_L / 2                                                # the truss rods and battery box between
-    d.path(f"M{-COACH_L + 104},-116 L{mid_ - 50},-94 H{mid_ + 50} L-104,-116", "none", 2.4, P.METAL_DARK)
-    for qx in (mid_ - 50, mid_ + 50):
-        d.line(f"M{qx},-116 V-94", 2.4, P.METAL_DARK)
-    d.shape(rounded_rect_d(mid_ - 30, -114, 60, 16, 2), P.CHARCOAL, sw=1.4, light=None)
-    for bx in (-COACH_L + 66, -66):                                    # the bogies: frame, springs, axleboxes
-        d.shape(rounded_rect_d(bx - 16, -116, 32, 40, 3), P.CHARCOAL, sw=1.6, light=None)      # the bolster
-        for wx in (bx - 28, bx + 28):
-            wheel(d, wx, 24, 0, RUBY_DEEP)
-        d.shape(f"M{bx - 56},-78 H{bx + 56} L{bx + 50},-52 H{bx + 38} Q{bx + 28},-64 {bx + 18},-52 H{bx - 18} "
-                f"Q{bx - 28},-64 {bx - 38},-52 H{bx - 50} Z", P.CHARCOAL, sw=1.6, light=None)  # the side frame
-        for wx in (bx - 28, bx + 28):
-            d.shape(rounded_rect_d(wx - 9, -34, 18, 18, 2), P.METAL_DARK, sw=1.4, light=None)  # the axlebox
-            d.line(f"M{wx - 7},-25 h14", 1, P.METAL_PALE)
-            d.path(f"M{wx - 6},-52 l12,-3 l-12,-3 l12,-3", "none", 1.6, P.METAL)
-            d.path(f"M{wx},-52 V-34", "none", 1, P.METAL_DARK)
+    d.path(f"M{-COACH_L + 130},-116 L{mid_ - 30},-98 H{mid_ + 30} L-130,-116", "none", 2.4, P.METAL_DARK)
+    for qx in (mid_ - 30, mid_ + 30):
+        d.line(f"M{qx},-116 V-98", 2.4, P.METAL_DARK)
+    d.shape(rounded_rect_d(mid_ - 22, -114, 44, 14, 2), P.CHARCOAL, sw=1.4, light=None)
+    for bx in BOGIES:                                                  # the two bogies under the floor
+        bogie_side(d, bx, -114)
     d.shape(rounded_rect_d(-COACH_L + 10, -270, COACH_L - 20, 140, 8), RUBY, sw=2.4, light=(-3, -3))
     d.shape(rounded_rect_d(-COACH_L + 10, -250, COACH_L - 20, 54, 2), P.CREAM, sw=1.8, light=None)
     for wx in range(-COACH_L + 24, -40, 50):
@@ -717,10 +738,53 @@ def coach(c: Canvas, x: float, rail: float, k: float, seed: int = 0, way: int = 
         c.add(_at(d, x, rail, k, mirror=True))
     else:
         c.add(_at(d, x, rail, k))
-    wheels = [x + way * wx * k for bx in (-COACH_L + 66, -66) for wx in (bx - 28, bx + 28)]
+    wheels = [x + way * wx * k for bx in BOGIES for wx in (bx - WHEELBASE / 2, bx + WHEELBASE / 2)]
     lo_, hi_ = sorted((x, x - way * (COACH_L + 2) * k))
     return {"box": (lo_ - (2 * k if way < 0 else 0), rail - 298 * k, hi_ + (2 * k if way > 0 else 0), rail),
-            "wheels": wheels, "hub": rail - 24 * k, "r": 24 * k, "buffer": (x + way * 0.5 * k, rail - 110 * k)}
+            "wheels": wheels, "hub": rail - BOGIE_R * k, "r": BOGIE_R * k,
+            "buffer": (x + way * 0.5 * k, rail - 110 * k)}
+
+
+BOGIE_R = 34                     # a bogie's wheel radius, its wheelbase and where the coach's two bogies stand
+WHEELBASE = 80
+BOGIES = (-COACH_L + 78, -78)
+
+
+def bogie_side(d: Canvas, bx: float, floor: float, far: bool = False) -> None:
+    """A two-axle bogie seen from the side, its middle at bx on the rail (y = 0): the two spoked wheels on the rail,
+    the far pair darker behind them (`far`); the side frame across both axles over the wheels' middles, its ends
+    turned down, a pair of horn guides at each axle and the axlebox between them, its round end cover on the axle's
+    centre; the coil spring between each axlebox and the frame; in the middle the bolster on its springs and, on
+    top, the centre pivot up to the coach floor at `floor`."""
+    r, half = BOGIE_R, WHEELBASE / 2
+    hub = -r
+    if far:
+        for wx in (bx - half, bx + half):
+            d.add(f'<circle cx="{wx + 6}" cy="{hub - 2}" r="{r}" fill="{darken(P.CHARCOAL, 0.8)}" stroke="{INK}" '
+                  f'stroke-width="1.2"/>')
+    for wx in (bx - half, bx + half):
+        wheel(d, wx, r, 0, RUBY_DEEP, driving=False)
+    top, low_ = hub - 32, hub - 20                                     # the side frame's top and bottom edges
+    d.shape(f"M{bx - half - 24},{low_ + 6} L{bx - half - 20},{top} H{bx + half + 20} L{bx + half + 24},{low_ + 6} "
+            f"H{bx + half + 13} V{low_} H{bx + 13} Q{bx},{low_ + 8} {bx - 13},{low_} H{bx - half - 13} V{low_ + 6} Z",
+            P.CHARCOAL, sw=1.6, light=None)                            # the side frame, a belly at the bolster
+    d.line(" ".join(f"M{n(q)},{top + 3} v3" for q in range(int(bx - half - 14), int(bx + half + 16), 12)), 1,
+           P.METAL_DARK)                                               # its rivets
+    for wx in (bx - half, bx + half):
+        d.line(f"M{wx - 13},{low_} V{hub + 14} M{wx + 13},{low_} V{hub + 14}", 3.2, P.CHARCOAL)   # horn guides
+        d.path(f"M{wx - 6},{low_} l12,3 l-12,3 l12,3 l-12,3", "none", 1.8, P.METAL)                # coil spring
+        d.shape(rounded_rect_d(wx - 10, low_ + 11, 20, 22, 2.5), P.METAL_DARK, sw=1.4, light=None)  # axlebox
+        d.add(f'<circle cx="{wx}" cy="{hub}" r="5.5" fill="{P.METAL}" stroke="{INK}" stroke-width="1.2"/>')
+        d.add(f'<circle cx="{wx}" cy="{hub}" r="1.8" fill="{P.METAL_DARK}"/>')                    # axle's end
+    lift = max(10.0, min(18.0, top - floor - 30))                     # the bolster springs' height
+    beam_top = max(floor + 8, top - lift - 14)
+    for sx in (bx - 14, bx + 14):                                      # the bolster on its two coil springs
+        d.path(f"M{sx - 5},{top} " + " ".join(f"l10,{-lift / 6:.1f} l-10,{-lift / 6:.1f}" for _ in range(3)),
+               "none", 1.8, P.METAL)
+    d.shape(rounded_rect_d(bx - 26, beam_top, 52, top - lift - beam_top, 2), P.CHARCOAL, sw=1.4, light=None)
+    if beam_top > floor + 0.5:
+        d.shape(f"M{bx - 11},{beam_top} L{bx - 8},{floor} H{bx + 8} L{bx + 11},{beam_top} Z", P.METAL_DARK, sw=1.4,
+                light=None)                                             # the centre pivot under the floor
 
 
 def train(c: Canvas, x: float, rail: float, k: float, cab: bool = True, moving: bool = False, cars: int = 2,
@@ -739,6 +803,30 @@ def train(c: Canvas, x: float, rail: float, k: float, cab: bool = True, moving: 
             left, right = min(left, cb["box"][0]), max(right, cb["box"][2])
         back -= way * (COACH_L + 4) * k
     return {"box": (left, lo["box"][1], right, rail), "engine": lo}
+
+
+def tail_lamp(c: Canvas, end: float, rail: float, k: float, way: int) -> None:
+    """The red tail lamp on the end of the last coach, whose body ends at x = `end` and which faces `way`: the lamp
+    iron bolted to the end panel and standing out from it, the lamp case hung on it by its handle, the red lens
+    looking back along the line."""
+    out = -way                                                         # away from the coach, back along the line
+    y = rail - 156 * k                                                 # low on the end panel, over the buffers
+    c.add(f'<path d="M{n(end)},{n(y + 18 * k)} h{n(out * 5 * k)} V{n(y - 4 * k)} h{n(out * 6 * k)}" fill="none" '
+          f'stroke="{INK}" stroke-width="{n(2.4 * k + 1.6)}" stroke-linejoin="round"/>'
+          f'<path d="M{n(end)},{n(y + 18 * k)} h{n(out * 5 * k)} V{n(y - 4 * k)} h{n(out * 6 * k)}" fill="none" '
+          f'stroke="{P.METAL_DARK}" stroke-width="{n(2.4 * k)}" stroke-linejoin="round"/>')    # the lamp iron
+    c.add(f'<rect x="{n(end - 2 * k)}" y="{n(y + 15 * k)}" width="{n(4 * k)}" height="{n(6 * k)}" '
+          f'fill="{P.METAL_DARK}" stroke="{INK}" stroke-width="1"/>')                          # its foot plate
+    cx = end + out * 12 * k
+    c.add(f'<path d="M{n(cx - 4 * k)},{n(y + 2 * k)} Q{n(cx)},{n(y - 7 * k)} {n(cx + 4 * k)},{n(y + 2 * k)}" '
+          f'fill="none" stroke="{INK}" stroke-width="{n(1.6 * k + 0.6)}"/>')                  # the handle
+    c.add(f'<rect x="{n(cx - 7 * k)}" y="{n(y + 2 * k)}" width="{n(14 * k)}" height="{n(17 * k)}" rx="{n(2.5 * k)}" '
+          f'fill="{P.CHARCOAL}" stroke="{INK}" stroke-width="1.2"/>'
+          f'<path d="M{n(cx - 5 * k)},{n(y + 2 * k)} l{n(5 * k)},{n(-4 * k)} l{n(5 * k)},{n(4 * k)} Z" '
+          f'fill="{P.CHARCOAL}" stroke="{INK}" stroke-width="1"/>'
+          f'<circle cx="{n(cx + out * 4 * k)}" cy="{n(y + 11 * k)}" r="{n(4.6 * k)}" fill="{P.RED}" stroke="{INK}" '
+          f'stroke-width="1"/><circle cx="{n(cx + out * 5 * k)}" cy="{n(y + 9.6 * k)}" r="{n(1.4 * k)}" '
+          f'fill="{lighten(P.RED, 0.5)}"/>')
 
 
 def buffer_stop(c: Canvas, x: float, rail: float, k: float, way: int = 1) -> dict:
@@ -1031,26 +1119,18 @@ def driving_wheels(c: Canvas, x: float, rail: float, k: float, way: int = 1) -> 
 
 
 def bogie(c: Canvas, x: float, rail: float, k: float) -> dict:
-    """A coach bogie run out from under its coach for the wheel tapper, on the near rail at (x, rail): two spoked
-    wheels, the side frame over them, an axlebox at each wheel on its coil springs, the bolster with its centre
-    pivot on top. Returns its box, the wheels and the hubs' height."""
+    """A coach bogie run out from under its coach for the wheel tapper, on the near rail at (x, rail): the bogie of
+    `bogie_side`, its centre pivot standing free on the bolster. Returns its box, the wheels and the hubs'
+    height."""
     d = Canvas()
-    for wx in (-28, 28):
-        d.add(f'<circle cx="{wx + 5}" cy="-25" r="24" fill="{darken(P.CHARCOAL, 0.8)}" stroke="{INK}" '
-              f'stroke-width="1.2"/>')
-    d.shape(rounded_rect_d(-24, -92, 48, 22, 3), P.CHARCOAL, sw=1.6, light=None)               # the bolster
-    d.shape(rounded_rect_d(-10, -100, 20, 10, 2), P.METAL_DARK, sw=1.2, light=None)
-    for wx in (-28, 28):
-        wheel(d, wx, 24, 0, RUBY_DEEP)
-    d.shape("M-60,-80 H60 L54,-54 H40 Q28,-66 16,-54 H-16 Q-28,-66 -40,-54 H-54 Z", P.CHARCOAL, sw=1.6,
-            light=None)                                                                        # the side frame
-    for wx in (-28, 28):
-        d.shape(rounded_rect_d(wx - 9, -34, 18, 18, 2), P.METAL_DARK, sw=1.4, light=None)
-        d.line(f"M{wx - 7},-25 h14", 1, P.METAL_PALE)
-        d.path(f"M{wx - 6},-54 l12,-3 l-12,-3 l12,-3 l-12,-3", "none", 1.8, P.METAL)
+    bogie_side(d, 0, -BOGIE_TOP, far=True)
     c.add(_at(d, x, rail, k))
-    return {"box": (x - 61 * k, rail - 101 * k, x + 61 * k, rail), "wheels": [x - 28 * k, x + 28 * k],
-            "hub": rail - 24 * k, "r": 24 * k}
+    half = WHEELBASE / 2 + BOGIE_R + 2
+    return {"box": (x - half * k, rail - (BOGIE_TOP + 1) * k, x + (half + 6) * k, rail),
+            "wheels": [x - WHEELBASE / 2 * k, x + WHEELBASE / 2 * k], "hub": rail - BOGIE_R * k, "r": BOGIE_R * k}
+
+
+BOGIE_TOP = BOGIE_R + 32 + 10 + 14 + 8   # the run-out bogie's height: wheel, frame, springs, bolster, pivot
 
 
 def stop_block(c: Canvas, x: float, rail: float, k: float, way: int = 1) -> dict:
@@ -1173,6 +1253,21 @@ def chalk(x: float, y: float, k: float) -> str:
 CHALK_TIP = (0.0, 7.0)
 
 
+def shunting_pole(length: float):
+    """A shunter's pole `length` long (in the grip frame) through the fist: the ash shaft out along the forearm to
+    its iron head, a hook curled back at the tip that lifts a coupling's link onto the hook of the next vehicle.
+    Returns the drawing and its tip."""
+    def draw(x: float, y: float, k: float) -> str:
+        c = Canvas()
+        c.path(f"M-6,0 L{n(length - 6)},0", "none", 3, INK)
+        c.path(f"M-6,0 L{n(length - 6)},0", "none", 1.8, P.WOOD_PALE)
+        c.shape(rounded_rect_d(length - 8, -1.8, 6, 3.6, 0.6), P.METAL_DARK, sw=0.5, light=None)
+        c.path(f"M{n(length - 2)},0 L{n(length)},0 Q{n(length + 3)},0 {n(length + 3)},3 Q{n(length + 3)},5.5 "
+               f"{n(length + 0.6)},5", "none", 1.6, P.METAL_DARK)
+        return _at(c, x, y, k)
+    return draw, (length, 0.0)
+
+
 def bar_end(x: float, y: float, k: float) -> str:
     """The end of the coupling screw's tommy bar, through the fist."""
     c = Canvas()
@@ -1281,6 +1376,20 @@ def timetable(s: Strip, x: float, foot: float, k: float, rows_done: int, signed:
     ry = top + rows_done * rh + rh / 2
     return {"box": box, "sign": pen_.at(sig[0] + 26, sig[1] - 3), "row": pen_.at(left + 58, ry),
             "tick": pen_.at(split - 12, ry - rh), "edge": pen_.at(86, -150)}
+
+
+def lever_foot(s: Strip, g: Line) -> tuple[float, float, float]:
+    """Where the points' ground lever stands, its rod's length factor and its depth: in a strip in the ballast at
+    the track's edge, its rod running along the sleepers to the switch; in a taller frame the track lies beyond the
+    deep platform, so the lever stands on the paving a step behind the one who throws it, its rod run under the
+    platform (none seen)."""
+    if low(s):
+        return g.kerb - 1, 1.0, g.rail + 0.9
+    foot = g.feet - LEVER_BACK * g.t
+    return foot, 0.0, foot - 0.5
+
+
+LEVER_BACK = 0.12               # a tall frame's lever: that much of the tallest of the cast behind the feet line
 
 
 def point_lever(c: Canvas, x: float, foot: float, k: float, handle: tuple[float, float], way: int = 1,
@@ -1503,7 +1612,7 @@ def place_free(s: Strip, name: str, f0: float, pose: str, mood: str = "smile", f
             continue
         if any(o.hits(b, 3) and not (o.kind == "backdrop" and feet - o.bottom >= IN_FRONT) for o in s.boxes):
             continue
-        if any(Box(*zone, "", "").hits(b) for zone in s.reserved):
+        if any(Box(*zone, "", "").hits(b) for zone in [*s.reserved, *getattr(s, "keep_off", [])]):
             continue
         who = stand(s, name, x, pose, mood, face, group)
         if hold is not None:
@@ -1534,6 +1643,44 @@ def reach_x(s: Strip, name: str, pose: str, face: int, target: tuple[float, floa
     dy = target[1] - gy
     dx = math.sqrt(max(0.0, length * length - dy * dy))
     return target[0] - face * dx - gx
+
+
+def reach_or_aim(s: Strip, name: str, pose: str, face: int, target: tuple[float, float], length: float) -> float:
+    """The x to stand a character at so that a held thing `length` long reaches `target`; where the target is out
+    of its reach - on a train beyond the deep platform - the x from which it aims the thing up at it, a step back
+    along the platform."""
+    gx0, gy0, _ = grip_at(s, name, 0.0, pose, face)
+    rise = gy0 - target[1]
+    if rise <= length:
+        return reach_x(s, name, pose, face, target, length)
+    return target[0] - face * LEAN * rise - gx0
+
+
+def clear_of(s: Strip, name: str, x: float, box: tuple, face: int) -> float:
+    """x moved back, if need be, so that a character facing `face` stands beside the vehicle in `box`, not in front
+    of it: its hand may reach the vehicle's end, its body never covers it."""
+    b = _box(s, name, x, s.line.feet)
+    if face > 0 and b[2] > box[0]:
+        return x - (b[2] - box[0]) - 1
+    if face < 0 and b[0] < box[2]:
+        return x + (box[2] - b[0]) + 1
+    return x
+
+
+def keep_clear(s: Strip, who, target: tuple[float, float]) -> None:
+    """Keep the rest of the cast off the line from `who`'s fist up to `target`, along which it holds a long thing:
+    a zone that `place_free` keeps the onlookers out of."""
+    gx, gy, _ = s.grip(who, "right")
+    box = (min(gx, target[0]) - 4, min(gy, target[1]), max(gx, target[0]) + 4, max(gy, target[1]) + 4)
+    s.keep_off = [*getattr(s, "keep_off", []), box]
+
+
+def away_from(s: Strip, who, target: tuple[float, float]) -> float:
+    """A place across the frame (read from the station's side) beside `who` on the side away from `target`, for an
+    onlooker to stand clear of what `who` holds up at it."""
+    x = who.right + 40 if target[0] < (who.left + who.right) / 2 else who.left - 40
+    f = (x - s.lo) / (s.hi - s.lo)
+    return f if s.way > 0 else 1 - f
 
 
 def hold_reaching(s: Strip, who, make, tip: tuple[float, float], target: tuple[float, float]) -> None:
@@ -1635,9 +1782,9 @@ def small_station(s: Strip, beat: str) -> None:
     form, the handcar waiting on the rails behind; "pump" - the agent on the handcar pumps its beam and is off
     down the line, dust flying from the wheels, the cat and the caterpillar seeing him off."""
     w = s.way
-    g = setting(s, vehicle=1.7, strict=True) if beat == "pump" and not low(s) else setting(s)
+    g = setting(s, vehicle=1.7, rider=True) if beat == "pump" and not low(s) else setting(s)
     p = height(s, "professor")
-    k = min(0.95 * p / 110, (g.rail - 6) / 110)
+    k = min(0.95 * p / 110 * s.track_depth, (g.rail - 6) / 110)
     c = Canvas()
     if beat in ("telegram", "back"):
         hx = X(s, 0.66)
@@ -1676,7 +1823,8 @@ def small_station(s: Strip, beat: str) -> None:
         on_track(s, c.render(), hc["box"], "handcar")
         end = (hx - w * 74 * k, deck + 4 * k)
         gx0, gy0, _ = grip_at(s, "agent", 0.0, "present", w)
-        stand(s, "agent", fit_x(s, "agent", end[0] - gx0), "present", "smile", face=w, group="handcar")
+        stand(s, "agent", clear_of(s, "agent", fit_x(s, "agent", end[0] - gx0), hc["box"], w), "present", "smile",
+              face=w, group="handcar")
         place_free(s, "caterpillar", 0.96, "cheer", "smile", face=-w)
         return
     L = 52 * k
@@ -1697,8 +1845,9 @@ def small_station(s: Strip, beat: str) -> None:
 
 
 def rs_k(s: Strip) -> float:
-    """The scale of the rolling stock at its true size against the cast: the engine two and a half agents tall."""
-    return agent_h(s) * 2.5 / ENGINE_H
+    """The scale of the rolling stock at its true size against the cast: the engine two and a half agents tall,
+    smaller with the distance when the track lies beyond a deep platform."""
+    return agent_h(s) * 2.5 / ENGINE_H * getattr(s, "track_depth", 1.0)
 
 
 def roles_station(s: Strip, beat: str) -> None:
@@ -1748,10 +1897,13 @@ def roles_station(s: Strip, beat: str) -> None:
         on_track(s, c.render(), box, "engine")
         target = lo["rod"]
     face = w
-    x = reach_x(s, "cat", "present", face, target, hand_len(s, "cat", OILCAN_TIP))
+    x = reach_or_aim(s, "cat", "present", face, target, hand_len(s, "cat", OILCAN_TIP))
+    if low(s):                                                         # beside the wheels, the spout in at the rod
+        x = clear_of(s, "cat", x, dw["box"], face)
     who = stand(s, "cat", fit_x(s, "cat", x), "present", "smile", face=face, group="wagon" if low(s) else None)
     hold_reaching(s, who, oilcan, OILCAN_TIP, target)
-    place_free(s, "agent", 0.88, "think", "smile", face=-w)
+    keep_clear(s, who, target)
+    place_free(s, "agent", away_from(s, who, target), "think", "smile", face=-w)
 
 
 def plan_station(s: Strip, beat: str) -> None:
@@ -1843,7 +1995,7 @@ def parallel_station(s: Strip, beat: str) -> None:
             s.put(g.rails[q] + 0.5, tc.render(), box, f"train{q}", group="lever")
     p = height(s, "professor")
     lk = 0.25 * p / 34
-    foot = g.kerb - 1                                                  # in the ballast at the track's edge
+    foot, rods, depth = lever_foot(s, g)
     lx = X(s, 0.62)
     L = 74 * lk
     pivot = (lx, foot - 34 * lk)
@@ -1857,9 +2009,9 @@ def parallel_station(s: Strip, beat: str) -> None:
         gx, gy, _ = s.grip(who, "right")
         handle = (gx, gy)
     c2 = Canvas()
-    rod = abs(xs - lx) / lk
+    rod = max(46.0, rods * abs(xs - lx) / lk)
     pl = point_lever(c2, lx, foot, lk, handle, w, rod=rod)
-    s.put(g.rail + 0.9, c2.render(), pl["boxes"][:1], "lever", group="lever")   # the rod lies behind feet
+    s.put(depth, c2.render(), pl["boxes"][:1], "lever", group="lever")   # the rod lies behind feet
     if beat == "run":
         place_free(s, "professor", 0.95, "think", "smile", face=-w)
     else:
@@ -1877,7 +2029,7 @@ def to_pr_station(s: Strip, beat: str) -> None:
     c = Canvas()
     if beat == "tap":
         if low(s):
-            v = bogie(c, X(s, 0.6), g.rail, min(k, (g.rail - 4) / 102))
+            v = bogie(c, X(s, 0.6), g.rail, min(k, (g.rail - 4) / (BOGIE_TOP + 1)))
             wx = v["wheels"][0 if w > 0 else 1]
         else:
             lead = X(s, 0.55) + w * 50 * k
@@ -1887,16 +2039,17 @@ def to_pr_station(s: Strip, beat: str) -> None:
         on_track(s, c.render(), box, "stock")
         face = w
         target = (wx - face * v["r"] * 0.9, v["hub"])
-        x = reach_x(s, "cat", "present", face, target, hand_len(s, "cat", TAPPER_TIP))
+        x = fit_x(s, "cat", reach_or_aim(s, "cat", "present", face, target, hand_len(s, "cat", TAPPER_TIP)))
         who = stand(s, "cat", x, "present", "smile", face=face)
         hold_reaching(s, who, tapper, TAPPER_TIP, target)
-        f = (who.left - s.lo) / (s.hi - s.lo)
-        place_free(s, "caterpillar", f - 0.08 if w > 0 else 1 - f + 0.08, "think", "smile", face=w)
+        keep_clear(s, who, target)
+        place_free(s, "caterpillar", away_from(s, who, target), "think", "smile", face=w)
         return
     mid = (s.x(0.72 if s.clear == "left" else 0.28) if low(s)          # the far ends run off the side away
            else X(s, 0.48))                                            # from the page number
     gap = 6 * k
-    if low(s):
+    if low(s):                                                         # the wagon rolling up: room between the
+        gap = _box(s, "agent", 0, g.feet)[2] - _box(s, "agent", 0, g.feet)[0] + 18  # buffers for the agent
         a = wagon(c, mid - gap / 2 - 128 * k, g.rail, k, 1)
         b = wagon(c, mid + gap / 2 + 128 * k, g.rail, k, 1)
         hooks = (a["hooks"][1], b["hooks"][0])
@@ -1910,21 +2063,30 @@ def to_pr_station(s: Strip, beat: str) -> None:
         b = coach(c, mid + gap / 2, g.rail, k, way=-1)
         hooks = ((mid - gap / 2 - 4 * k, g.rail - 100 * k), (mid + gap / 2 + 4 * k, g.rail - 100 * k))
         box = (0.0, min(a["box"][1], b["box"][1]), float(W), g.rail)
-    on_track(s, c.render(), box, "stock")
+    on_track(s, c.render(), (box[0], box[1], mid - gap / 2, box[3]) if low(s) else box, "stock")
+    if low(s):
+        s.put(g.rail + 0.5, "", (mid + gap / 2, box[1], box[2], box[3]), "stock", group="stock", backdrop=True)
     face = -w
     centre = ((hooks[0][0] + hooks[1][0]) / 2, max(hooks[0][1], hooks[1][1]) + 4 * k)
-    if low(s):                                                         # a strip: from the platform's edge
-        gx0, gy0, _ = grip_at(s, "agent", 0.0, "present", face)
-        who = stand(s, "agent", centre[0] + face * 30 * k - gx0, "present", "smile", face=face, group="stock")
-    else:
-        feet = g.rail + 1                                              # between the buffers, on the sleepers
-        gx0, gy0, _ = grip_at(s, "agent", 0.0, "present", face, feet)
-        ax = centre[0] + face * 34 * k - gx0
-        who = stand(s, "agent", ax, "present", "smile", face=face, group="stock", feet=feet, depth=g.rail + 0.6)
-    s.hold(who, bar_end)                                               # his fist round the tommy bar's end
-    gx, gy, _ = s.grip(who, "right")
     cc = Canvas()
-    screw_coupling(cc, hooks[0], hooks[1], (gx, gy), k)
+    if low(s):                                                         # a strip: in the gap between the buffers,
+        who = stand(s, "agent", mid - face * 0.06 * gap, "present", "smile", face=face, group="stock")   # the
+        s.hold(who, bar_end)
+        gx, gy, _ = s.grip(who, "right")
+        hook = hooks[0] if face < 0 else hooks[1]                      # coupling off the hook he faces in his fist
+        screw_coupling(cc, hook, (gx, gy), ((hook[0] + gx) / 2, max(hook[1], gy) + 14 * k), k)
+    else:                                                              # a tall frame: from the deep platform,
+        lift = (centre[0], centre[1] - 6 * k)                          # the link lifted on the shunter's pole
+        gx0, gy0, _ = grip_at(s, "agent", 0.0, "present", face)
+        ax = lift[0] - face * LEAN * (gy0 - lift[1]) - gx0
+        who = stand(s, "agent", fit_x(s, "agent", ax), "present", "smile", face=face, group="pole")
+        gx, gy, _ = s.grip(who, "right")
+        span = math.hypot(lift[0] - gx, lift[1] - gy) * 100 / height(s, "agent")
+        make, tip = shunting_pole(span)
+        hold_reaching(s, who, make, tip, lift)
+        keep_clear(s, who, lift)
+        mx = (hooks[0][0] + hooks[1][0]) / 2                           # done up: the tommy bar hangs down
+        screw_coupling(cc, hooks[0], hooks[1], (mx + 5 * k, centre[1] + 18 * k), k)
     s.put(g.rail + 0.7, cc.render(), None)
     place_free(s, "professor", 0.1, "think", "smile", face=w)
 
@@ -1962,7 +2124,7 @@ def to_prod_station(s: Strip, beat: str) -> None:
         place_free(s, "agent", 0.32, "point", "smile", face=w)
         return
     engine = not low(s)                                                # the engine itself, the cast stepping back
-    g = setting(s, vehicle=2.5 if engine else 0, strict=engine)
+    g = setting(s, vehicle=2.5 if engine else 0)
     k = min(rs_k(s), (g.rail - 4) / 154)
     c = Canvas()
     bx = X(s, 0.8)
@@ -2052,12 +2214,8 @@ def no_human_station(s: Strip, beat: str) -> None:
             front = rear + w * length
         tr = train(c, front, g.rail, k, cab=False, moving=True, cars=cars, steam="low" if beat == "past" else False,
                    way=w)
-        if beat == "gone":                                             # the tail lamp on the last coach
-            rear = front - w * length
-            c.add(f'<rect x="{n(rear - (14 * k if w > 0 else 0))}" y="{n(g.rail - 150 * k)}" width="{n(14 * k)}" '
-                  f'height="{n(16 * k)}" rx="{n(3 * k)}" fill="{P.CHARCOAL}" stroke="{INK}" stroke-width="1.2"/>'
-                  f'<circle cx="{n(rear - w * 7 * k)}" cy="{n(g.rail - 142 * k)}" r="{n(5 * k)}" fill="{P.RED}" '
-                  f'stroke="{INK}" stroke-width="1"/>')
+        if beat == "gone":                                             # the tail lamp on the last coach's end
+            tail_lamp(c, front - w * length + w * 14 * k, g.rail, k, w)
         on_track(s, c.render(), (max(0.0, tr["box"][0]), tr["box"][1], min(float(W), tr["box"][2]), g.rail),
                  "train")
     if beat == "past":
@@ -2117,14 +2275,18 @@ def key_(x: float, y: float, k: float) -> str:
     return _at(c, x, y, k)
 
 
-def switch_lamp(c: Canvas, x: float, foot: float, top: float, k: float) -> dict:
-    """The points' lamp at the switch: an iron post from its sleeper up to `top`, the square lamp case on it with
-    its chimney and a white and a green lens. Returns its box and the lamp's middle. In a tall frame the hand that
-    trims it may be lower than the sleeper seen behind the platform edge: the post then keeps a short length of its
-    own instead of going negative."""
+def switch_lamp(c: Canvas, x: float, foot: float, top: float, k: float, sleeper: bool = True) -> dict:
+    """The points' lamp: an iron post up to `top` from its sleeper by the switch (`sleeper`) or, in a tall frame
+    where the track lies beyond the deep platform, from a cast-iron foot on the paving; the square lamp case on it
+    with its chimney and a white and a green lens. Returns its box and the lamp's middle. The post keeps a short
+    length of its own when the hand that trims it is lower than its foot."""
     top = min(top, foot - 16 * k)
-    c.add(f'<rect x="{n(x - 24 * k)}" y="{n(foot - 6 * k)}" width="{n(48 * k)}" height="{n(6 * k)}" '
-          f'fill="{SLEEPER}" stroke="{INK}" stroke-width="1"/>')
+    if sleeper:
+        c.add(f'<rect x="{n(x - 24 * k)}" y="{n(foot - 6 * k)}" width="{n(48 * k)}" height="{n(6 * k)}" '
+              f'fill="{SLEEPER}" stroke="{INK}" stroke-width="1"/>')
+    else:                                                              # on the paving: a cast-iron foot
+        c.add(f'<path d="M{n(x - 12 * k)},{n(foot)} L{n(x - 5 * k)},{n(foot - 6 * k)} H{n(x + 5 * k)} '
+              f'L{n(x + 12 * k)},{n(foot)} Z" fill="{IRON}" stroke="{INK}" stroke-width="1"/>')
     c.add(f'<rect x="{n(x - 3 * k)}" y="{n(top)}" width="{n(6 * k)}" height="{n(foot - 6 * k - top)}" '
           f'fill="{IRON}" stroke="{INK}" stroke-width="1"/>')
     c.add(f'<rect x="{n(x - 12 * k)}" y="{n(top - 22 * k)}" width="{n(24 * k)}" height="{n(24 * k)}" rx="{n(3 * k)}" '
@@ -2240,21 +2402,22 @@ def parallel_more(s: Strip, beat: str) -> None:
             box = (max(0.0, tr["box"][0]), tr["box"][1], min(float(W), tr["box"][2]), g.rails[1])
         s.put(g.rails[1] + 0.5, tc.render(), box, "train", group="lever", backdrop=True)   # the lever before it
         lk = 0.25 * p / 34
-        foot = g.kerb - 1
+        foot, rods, depth = lever_foot(s, g)
         lx = X(s, 0.86) if low(s) else X(s, 0.2)                      # clear of the train on the branch
         pivot = (lx, foot - 34 * lk)
         handle = (pivot[0] + w * 74 * lk * math.cos(math.radians(35)), pivot[1] - 74 * lk * math.sin(math.radians(35)))
         lc = Canvas()
-        pl = point_lever(lc, lx, foot, lk, handle, -w, rod=abs(lx - xs) / lk)
-        s.put(g.rail + 0.9, lc.render(), pl["boxes"][:1], "lever", group="lever")
+        pl = point_lever(lc, lx, foot, lk, handle, -w, rod=max(46.0, rods * abs(lx - xs) / lk))
+        s.put(depth, lc.render(), pl["boxes"][:1], "lever", group="lever")
         place_free(s, "caterpillar", 0.4, "cheer", "smile", face=w)
         place_free(s, "professor", 0.95, "point", "smile", face=-w)
         return
     lamp_top = grip_y(s, "agent") + 10 * (p / 140)
     lc = Canvas()
     lk = p / 90
-    sl = switch_lamp(lc, xs + w * 30 * lk, g.kerb - 1, lamp_top, lk)
-    s.put(g.rail + 0.9, lc.render(), sl["box"], "lamp", group="lamp")
+    foot, _, depth = lever_foot(s, g)                                  # by the track, or on the deep platform
+    sl = switch_lamp(lc, xs + w * 30 * lk, foot, lamp_top, lk, sleeper=low(s))
+    s.put(depth, lc.render(), sl["box"], "lamp", group="lamp")
     hand_on(s, "agent", (sl["box"][0] - 2 if w > 0 else sl["box"][2] + 2, sl["lamp"][1]), "present", w, group="lamp")
     place_free(s, "professor", 0.95, "think", "smile", face=-w)
 
@@ -2279,7 +2442,12 @@ def to_pr_more(s: Strip, beat: str) -> None:
     item = s.drawn[id(ag)][0]                                          # the professor at the buffers instead
     s.items[item] = (s.items[item][0], s.items[item][1], "")
     s.boxes.remove(ag)
-    stand(s, "professor", (ag.left + ag.right) / 2, "present", "smile", face=-1 if ag.flip else 1, group="stock")
+    face = -1 if ag.flip else 1
+    if low(s):                                                         # in the gap between the buffers
+        stand(s, "professor", (ag.left + ag.right) / 2, "present", "smile", face=face, group="stock")
+    else:                                                              # on the platform where the agent stood
+        f = ((ag.left + ag.right) / 2 - s.lo) / (s.hi - s.lo)
+        place_free(s, "professor", f if s.way > 0 else 1 - f, "point", "smile", face=face)
 
 
 def to_prod_more(s: Strip, beat: str) -> None:
@@ -2422,7 +2590,7 @@ def finale(s: Strip) -> None:
                + 100 * 0.25 * p_ / 34 + wd["agent"] + 0.4 * p_ + wd["cat"] + 5 * 18)
         k_ = a_ * 2.5 / ENGINE_H * FAR
         cw = (_box(s, "cat", 0, feet0)[2] - _box(s, "cat", 0, feet0)[0]) * FAR
-        frow = (168 * 0.95 * p_ / 110 + 124 * a_ * 2.5 / ENGINE_H + 110 * a_ * 2.5 / ENGINE_H + 112 * 1.25 * t_ / 178
+        frow = (168 * 0.95 * p_ / 110 + 160 * a_ * 2.5 / ENGINE_H + 110 * a_ * 2.5 / ENGINE_H + 112 * 1.25 * t_ / 178
                 + 184 * 0.25 * p_ / 46) * FAR + cw + 840 * k_ + 7 * 14
         tall = 1.32 * t_ + plate + 0.3 * t_ + 322 * k_ + plate + 6    # near row, the tracks, the far row
         f = min((s.hi - s.lo) / max(row, frow), (feet0 - 4) / tall)
@@ -2451,7 +2619,7 @@ def finale(s: Strip) -> None:
     tops: dict[str, tuple[float, float]] = {}
     # the far row, spread across the frame
     cwf = (_box(s, "cat", 0, feet)[2] - _box(s, "cat", 0, feet)[0]) * FAR
-    fw = {"small": 168 * 0.95 * p / 110 * FAR, "to-pr": 124 * kf + cwf, "train": 840 * kf, "to-prod": 110 * kf,
+    fw = {"small": 168 * 0.95 * p / 110 * FAR, "to-pr": 160 * kf + cwf, "train": 840 * kf, "to-prod": 110 * kf,
           "metrics": 112 * 1.25 * t_ / 178 * FAR, "no-human": 184 * 0.25 * p / 46 * FAR}
     forder = ("small", "to-pr", "to-prod", "metrics", "train", "no-human")   # the bench by the driverless train
     spare = (s.hi - s.lo - sum(fw.values())) / (len(forder) + 1)
@@ -2469,7 +2637,7 @@ def finale(s: Strip) -> None:
     tops["small"] = ((hc["box"][0] + hc["box"][2]) / 2, hc["box"][1])
     a, b = fslot["to-pr"]                                              # the cat tapping the bogie's wheel
     c = Canvas()
-    bg = bogie(c, b - 62 * kf, far_rail, kf)
+    bg = bogie(c, b - 82 * kf, far_rail, kf)
     s.put(far_rail + 0.5, c.render(), bg["box"], "bogie", group="bogie")
     tall_c = tall_of(s, "cat") * FAR
     probe = Stage()
@@ -2541,7 +2709,7 @@ def finale(s: Strip) -> None:
     hold_reaching(s, who, pen, PEN_TIP, probe["sign"])
     tops["plan"] = (bx, tt["box"][1])
     a, b = slot["parallel"]
-    foot = g.kerb - 1
+    foot, _, depth = lever_foot(s, g)
     gx0, gy0, _ = grip_at(s, "agent", 0.0, "present", -1)
     lx = a + 30 * lk
     pivot = (lx, foot - 34 * lk)
@@ -2550,8 +2718,8 @@ def finale(s: Strip) -> None:
     who = stand(s, "agent", handle[0] - gx0, "present", "smile", face=-1, group="lever")
     gx, gy, _ = s.grip(who, "right")
     lc = Canvas()
-    pl = point_lever(lc, lx, foot, lk, (gx, gy), 1, rod=30)
-    s.put(g.rail + 0.9, lc.render(), pl["box"], "lever", group="lever")
+    pl = point_lever(lc, lx, foot, lk, (gx, gy), 1, rod=46)
+    s.put(depth, lc.render(), pl["box"], "lever", group="lever")
     tops["parallel"] = (lx, min(pl["box"][1], who.top))
     a, b = slot["check"]
     sc = Canvas()

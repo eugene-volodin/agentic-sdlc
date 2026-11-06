@@ -101,3 +101,36 @@ def test_two_pages_in_a_row_show_another_moment(name):
             cast_a = sorted(x.name for x in sa.boxes if x.kind == "actor")
             cast_b = sorted(x.name for x in sb.boxes if x.kind == "actor")
             assert cast_a != cast_b or abs(sa.tall - sb.tall) > 1, where
+
+
+def _railway_frames():
+    world = WORLDS["railway"]
+    words = LOCALE["worlds"]["railway"]
+    places = [(i, beat) for i, station in enumerate(world.stations) for beat in station.beats] + [None]
+    for place in places:
+        for h in HEIGHTS:
+            for clear in ("left", "right"):
+                for seed in (0, 1, 2, 3):
+                    yield (place, h, clear, seed), frame(world, h, place, clear, 3, design.ORANGE, words, seed)[1]
+
+
+@pytest.mark.parametrize("where,s", list(_railway_frames()), ids=lambda v: str(v)[:60])
+def test_railway_cast_keeps_clear_of_the_track_and_the_trains(where, s):
+    """On the railway nobody standing on the platform is drawn over a vehicle (an engine, a coach, a wagon, the
+    handcar, a bogie, the buffer stop with its engine); only one riding it - standing on its deck - is, and the
+    sparrow, who perches. In a frame taller than a strip the near platform is deep enough that the whole cast stands
+    below its coping, never over the rails behind."""
+    from bookkit.art.world_railway import VEHICLES, low
+    vehicles = [b for b in s.boxes if b.name.rstrip("0123456789") in VEHICLES and b.kind != "actor"]
+    faults = []
+    for a in s.boxes:
+        if a.kind != "actor" or a.name == "sparrow":
+            continue
+        for v in vehicles:
+            riding = a.group == v.group and a.bottom < v.bottom - 1
+            if not riding and a.hits(v):
+                faults.append(f"{a.name} over the {v.name}")
+        on_platform = a.bottom > s.line.kerb
+        if not low(s) and on_platform and a.top < s.line.kerb - 0.5:
+            faults.append(f"{a.name} over the track: top {a.top:.0f}, the coping at {s.line.kerb:.0f}")
+    assert faults == [], where

@@ -731,9 +731,13 @@ Station by station:
   controller, the cat oiling the rods, a tiny signal, a timetable card) → the timetable board → the points into three
   tracks and their lever → wheel tapping and the coupling screw → the semaphore, the departures board and the buffer
   stop → the platform clock → the driverless train → the emergency stop under its cover. A low strip shows a
-  waist-height thing of its station, never a squashed engine. Frames stay under 200 KB and the finale under 350 KB: the
-  ballast and the brickwork are merged paths, one per shade (a heavier world runs the browser out of memory on
-  `--shots all`). The opener is the story `railway` (`stories.py`), wired as `railway_station`.
+  waist-height thing of its station, never a squashed engine. Nobody standing on the platform is drawn over a vehicle;
+  in a frame taller than a strip the near platform is deep enough that the whole cast stands below its coping, never
+  over the rails, the rolling stock beyond it drawn smaller with the distance (`FAR_TRACK`), and a tool or the
+  shunter's pole is held up at a train out of reach (`tests/test_world_frames.py`). A coach runs on two two-axle
+  bogies: side frame, axleboxes in their horn guides, coil springs, the bolster on its springs and the centre pivot.
+  Frames stay under 200 KB and the finale under 350 KB: the ballast and the brickwork are merged paths, one per shade
+  (a heavier world runs the browser out of memory on `--shots all`). The opener is the story `railway` (`stories.py`), wired as `railway_station`.
 - **The professor's courtyard** (`front` and `courtyard`): the beginning of the book, so every frame is worked through
   in detail. One real place behind every frame. The street: paving, a picket fence with posts and rails, the gate
   hinged between two gateposts in the fence line, the mailbox on its own post (door, flag, slot), a little free
