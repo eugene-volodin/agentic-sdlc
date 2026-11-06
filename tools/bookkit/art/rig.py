@@ -33,7 +33,6 @@ from .. import design as P
 from .ink import Canvas, angle_of, ellipse_d, n, polar
 
 GRIP = (13.0, 0.0)          # the middle of the closed fist in a hand's own units: a handle passes here
-HOLD_KINDS = ("hold",)
 
 
 @dataclass(frozen=True)

@@ -196,7 +196,7 @@ class Stage:
         lft = left if left is not None else max(8.0, min(P.PAGE_WIDTH - 8 - width, cx / MM - width * 0.62))
         tail = cx / MM - lft
         self.bubble = (lft, tip / MM - TAIL_MM, width, tail)
-        lines = -(-self.lead_chars // int(width * 0.40))
+        lines = -(-self.lead_chars // max(1, int(width * 0.40)))
         height = (lines * 7 + 14) * MM
         self.bubble_box = (lft * MM, tip - TAIL_MM * MM - height - 22, (lft + width) * MM, tip - TAIL_MM * MM)
         clear = air * MM                       # the air every thing keeps from the bubble
@@ -275,7 +275,7 @@ def opener(name: str, accent: str, seed: int = 0, lead_chars: int = 140, words: 
 
     `lead_chars` is the length of the bubble's words; `words` the lettering in the picture (`openers:` in the
     locale); `title` the drawn title's width and height in mm, kept clear with some air (the default zone holds
-    the square and three lines)."""
+    three lines)."""
     zone = TITLE_ZONE
     if title:
         zone = (0, 0, max(TITLE_ZONE[2], (TITLE_AT + title[0]) * MM + 20), (TITLE_AT + title[1]) * MM + 24)
