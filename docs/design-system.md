@@ -186,8 +186,8 @@ color: coral                      # a chapter color, see Colors
 who: professor                    # who speaks on the opener; he stands right under the bubble's tail
 pose: explain                     # that character's pose
 cast: ["cat:wave:smile", "agent"] # up to three more, as name:pose:mood
-scene: meadow                     # a story opener (see Chapter openers) or a generic setting:
-                                  # meadow | path | pond | room | study
+scene: meadow                     # without a world: a story opener (railway) or a generic setting:
+                                  # meadow | path | pond | room | study (the default)
 world: kitchen                    # instead of scene: the chapter's world - its opener and a camera along
                                   # its machine in the footers (art/worlds.py)
 sign: ...                         # text on the opener's signpost (optional)
@@ -595,9 +595,11 @@ under a bubble with the `lead:`.
 - **Low scenes:** characters are scaled so the professor's head stays inside the painted sky; a study scene with the
   cast placed from outside has no empty chair behind someone.
 
-**Opener scenes.** `scene:` takes a story opener registered in `stories.OPENERS` (`morning`, `fair`, `valley`,
-`house`, `library`, `proving`, `lab`, `crossing`, `moonbase`, `forestcamp`, `railway`, plus the openers the worlds
-register) or a generic setting: `meadow`, `path`, `pond`, `room`, `study`.
+**Opener scenes.** Every chapter of the book takes its opener from its `world:` (`World.opener`, registered in
+`openers.OPENERS`). A chapter without a world may name `scene:`: a story opener of `art/stories.py` (`railway`) or a
+generic setting (`meadow`, `path`, `pond`, `room`, `study`) drawn at the foot of a colored page. A chapter with neither,
+or in a world without an opener of its own (the courtyard of the introduction), gets that generic page with the
+meadow.
 
 ---
 
@@ -621,8 +623,9 @@ A chapter with `world:` in its front matter gets a **camera along its machine** 
   `<temp>/bookkit/storyboard/`; `--world <name>` previews a chapter in a world it does not live in yet, without
   touching its file.
 
-A chapter without a world gets **episodes** (`art/episodes*.py`, registered with `@episode`): little stories chosen by
-the topic words of each page (`footers: <episode>: topics` in the locale), none twice in a chapter.
+A page without a world - a front page, or a chapter that names none - is drawn in the professor's **courtyard**
+(`art/world_courtyard.py`): a front page shows the moment its headings and text name (`worlds: front: pages:` in the
+locale), and a numbered chapter without a world goes along the introduction's courtyard like any world.
 
 ### Frames
 
@@ -855,9 +858,6 @@ Every picture is code (`tools/bookkit/art/`). These rules hold for every opener,
 - Lettering is never squeezed: a line too wide is set smaller as a whole (`ink.lettering(room=...)`), its width measured
   on the real glyph advances, or its sign is made wider.
 - Labels keep off the edges of what they are on.
-
-**Speech in footers:** `footers.py Strip.say` grows the tail out of the bubble in one smooth outline, with no corner
-where it joins.
 
 **Doodles** (`art/doodles.py`, 44 functions registered with `@doodle_drawing`) are small standalone objects: the
 object accents beside paragraphs, the icons of `contacts`, `download` and `github`, and a proof sheet

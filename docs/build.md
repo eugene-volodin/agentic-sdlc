@@ -169,15 +169,15 @@ tools/
       professor.py, cat.py, caterpillar.py, sparrow.py, agent.py
       handheld.py       things a character holds, with their grip
       curves.py         how every cable, hose and tube bends
-      props.py, sets.py, things.py   scenery, opener sets, footer props
+      props.py, sets.py scenery and props shared by the worlds and the openers
       doodles.py        small standalone objects: accents, icons
       flags.py          the flags of :flag-xx:
       scenes.py         the generic scenes (meadow, path, pond, room, study)
-      openers.py        the opener stage: bubble, cast, keep-clear areas
-      stories.py        the story openers, registered in OPENERS
-      footers.py        footer strips: routing a page to its world or episode
-      episodes*.py      footer episodes for chapters without a world
-      worlds.py         chapter worlds: World, Station, schedule()
+      openers.py        the opener stage (bubble, cast, keep-clear areas) and OPENERS, every opener by name
+      stories.py        the story openers a chapter can name as `scene:` (the railway)
+      footers.py        footer strips: routing a page to its world, or to the courtyard without one
+      world_base.py     World, Station and the WORLDS registry each world module adds itself to
+      worlds.py         loads every world; schedule() and frame(): the camera along a world
       world_kit.py      the kit every world draws with, and its checks
       world_*.py        one module per world
       bookmap.py        the map of the book
@@ -311,7 +311,7 @@ The thresholds are the `AUDIT_*` tokens in `design.py`.
 | `footer-size` | a large footer where text could have filled the page, or too many in a chapter (`render.footer_findings`) |
 | `blank-page` | a near-blank page (`AUDIT_BLANK`) |
 | `last-page` | the side the book ends on |
-| `footer-repeat` | two neighbouring pages showing one moment of a world or one episode (an error; two pages apart, a warning) |
+| `footer-repeat` | two neighbouring pages showing one moment of a world (an error; two pages apart, a warning) |
 | `footer-frame` | every footer drawn rerun through its own checks (overlaps, containers, cables, characters cut or below the floor) at the height, side and seed it was really drawn at (`footers(..., trace)`) |
 | `page-weight` | a page's markup over `AUDIT_PAGE_WEIGHT` KB, heavy enough to run the browser out of memory |
 | `residue` | markup or typing left in the text |
@@ -404,8 +404,8 @@ uvx ruff check bookkit tests
 | `test_openers.py` | every opener draws; nothing overlaps or reaches under the title or the bubble; no character cut |
 | `test_grips.py` | hands close round what they hold; arms join the body at its sides |
 | `test_curves.py` | every line bends smoothly: steps of at most 8 degrees, the radius, coaxial ends |
-| `test_footers.py` | footer episodes draw without overlaps, have their words, are chosen fairly |
-| `test_worlds.py` | the camera visits every station in order; every frame draws clean; the finale closes the chapter |
+| `test_footers.py` | a page without a world is drawn in the courtyard, clean, never the same moment twice in a row |
+| `test_worlds.py` | the camera visits every station in order; every frame draws clean; the finale closes the chapter; any world module imports first |
 | `test_world_frames.py` | nothing in a frame is cut; the floor shows under the feet; neighbouring frames differ |
 | `test_world_kit.py`, `test_world_space.py` | containers and ports in every world; the space station's own story |
 | `test_bookmap.py` | the map of the book: every written chapter's world has its place |
@@ -493,7 +493,8 @@ Drawn through the grip, never put next to a hand: `Stage.hold(box, make, side, t
 ### A new world
 
 1. A module like `art/world_space.py`: `world(name, opener=...)`, its stations (`Station(key, draw, beats)`), the
-   `backdrop` of a frame, the `finale`, and an opener registered in `stories.OPENERS`.
+   `backdrop` of a frame, the `finale`, and an opener registered in `openers.OPENERS`; it imports `world` and
+   `Station` from `art/world_base.py`, and `art/worlds.py` imports the module so that it registers.
 2. Draw with the kit of `art/world_kit.py`: containers through `Pen.container` / `Pen.tag`, lines through `connect()`
    between declared ports.
 3. Its lettering goes under `worlds: <name>:` and `openers: <name>:` in the locale.
@@ -502,9 +503,7 @@ Drawn through the grip, never put next to a hand: `Stage.hold(box, make, side, t
 5. Set `world: name` in the chapter's front matter, preview it with `uv run book storyboard <chapter>` (or
    `--world <name>` before switching), and run the world tests.
 
-### A footer episode, scenery, a doodle
+### Scenery, a doodle
 
-- **Footer episode:** a function with `@episode(name)` in `art/episodes*.py` and its topic words under
-  `footers: <episode>: topics` in the locale.
 - **Scenery:** a function in `art/props.py`.
 - **Doodle:** a function with `@doodle_drawing` in `art/doodles.py`.
