@@ -1,33 +1,23 @@
-"""Footer strips: a small story at the foot of every page, about what that page says.
+"""Footer strips: a scene at the foot of every page, and which scene goes on which page.
 
-Footers that are all alike mean nothing, so every page gets its own scene with a story of its own, tied to the page's
-content and to the plots of the printed original, so the reader wants to stop and look at it. So a footer is an
-*episode* from `episodes.py`, chosen for the page:
+A chapter lives in a world (`world:` in its front matter, `worlds.py`): its footers are a camera moving along the
+world's machine, station by station, and a chapter is planned from its own pages only, so `--only` draws what the full
+build draws. A chapter of the main matter not given a world yet lives in the introduction's courtyard; the front pages
+and the contents show the professor's courtyard (the world `front`, `world_courtyard.py`), a moment chosen by a
+phrase of the page's text.
 
-* the paginator hands over each page's headings and text;
-* every episode has a list of topic words in the locale (`footers:` - the words are Russian, so they live there,
-  not in the code); an episode scores by how often its words occur on the page, headings counting triple;
-* within a chapter no episode is used twice; the chapter's place in the book picks the time of day and the
-  season the episodes are painted in, so the same episode in another chapter is still another picture;
-* pages that match nothing take the next unused episode of the general pool, in a fixed order.
-
-Selection restarts with every chapter (only the chapter's own pages count), so `--only` draws what the full build
-draws.
-
-An episode draws on a `Strip`: the same composition tools as the chapter openers (boxes, groups, scatter, the
-no-overlap check), at any height from the 34 mm strip to the 190 mm panorama. Units: 840 across, `h` down.
+A footer draws on a `Strip`: the same composition tools as the chapter openers (boxes, groups, the no-overlap check),
+at any height from the 34 mm strip to the 190 mm panorama. Units: 840 across, `h` down.
 """
 from __future__ import annotations
 
-import contextlib
 import math
 import zlib
-from collections.abc import Callable
 from dataclasses import dataclass, replace
 
 from .. import design as P
 from ..design import darken, lighten, mix
-from . import props, sets, things
+from . import props, sets
 from .characters import module
 from .ink import Canvas
 from .openers import W, Box, Stage, conflicts
@@ -415,127 +405,6 @@ class Strip(Stage):
         return self.actor(name, x, feet, pose, mood, flip=x > W / 2, tall=self.tall)
 
 
-
-
-# ============================================================================ the far distance of a panorama
-def wall_decor(s: Strip) -> None:
-    """In a tall room the wall is big: a window showing the time of day, a picture, a clock - where it is free."""
-    rnd = s.rnd
-    top_free = min((b.top for b in s.boxes), default=s.base) - 16
-    if top_free < 90:
-        return
-    k = min(1.4, (top_free - 10) / 130)
-    makers = [
-        (lambda x, y: props.window(x, y, k), 64 * k, 60 * k),
-        (lambda x, y: props.picture(x, y, k * 1.2, rnd.randrange(3)), 40 * k, 40 * k),
-        (lambda x, y: things.wall_clock(x, y, k), 26 * k, 26 * k),
-    ]
-    for make, hw, hh in makers:
-        for _ in range(16):
-            x = rnd.uniform(s.lo + hw, s.hi - hw)
-            y = rnd.uniform(hh + 8, max(hh + 9, top_free - hh))
-            box = (x - hw, y - hh, x + hw, y + hh)
-            if s.free(box, 14):
-                s.put(2, make(x, y), box, f"wall{len(s.boxes)}")
-                break
-
-
-def sky_dressing(s: Strip) -> None:
-    """The sun, a few clouds and birds, put where the sky is free once the story stands - below the strip's
-    melting top, never on anything (clouds used to cross the bunting and the sun)."""
-    if not s.dress or s.base < 70:
-        return
-    rnd = s.rnd
-    top = min(s.base * 0.6, 150) * 0.55          # under the part of the sky that melts into the paper
-    low = s.base - 26
-    if low - top < 30:
-        return
-    k = min(1.0, max(0.55, (low - top) / 190))
-    makers = []
-    if s.h >= 160:
-        evening = s.look.time == "evening"
-        sk = k * (0.85 if evening else 1)
-        makers.append((lambda x, y: props.sun(x, y, sk), 44 * sk, 44 * sk))
-    for kk in [rnd.uniform(0.6, 0.95) * k for _ in range(1 if s.h < 200 else 3)]:
-        makers.append((lambda x, y, kk=kk: props.cloud(x, y, kk), 60 * kk, 30 * kk))
-    makers += [(lambda x, y: props.bird(x, y, k * 1.1), 14 * k, 8 * k) for _ in range(2)]
-    for make, hw, hh in makers:
-        for _ in range(24):
-            x = rnd.uniform(s.lo + hw, s.hi - hw)
-            y = rnd.uniform(top + hh, max(top + hh + 1, low - hh))
-            box = (x - hw, y - hh, x + hw, y + hh)
-            if s.free(box, 10):
-                s.put(0.5, make(x, y), box, f"sky{len(s.boxes)}")
-                break
-
-
-def distance(s: Strip) -> None:
-    """In a tall footer the sky is big: put a little story far away on the horizon, where nothing stands."""
-    if s.indoor:
-        if s.h >= 200 and s.decor:
-            wall_decor(s)
-        return
-    if not s.big or s.base < 200:
-        return
-    rnd = s.rnd
-    far = s.base - 4
-    k = min(0.6, s.unit * 0.5)
-    lift = s.base * 0.35          # the balloon flies this high over the horizon; its box covers the whole height
-    makers = [
-        lambda x: (sets.windmill(x, far, k, rnd.randrange(60)), 70 * k, 170 * k),
-        lambda x: (sets.barn(x, far, k * 0.8), 90 * k, 160 * k),
-        lambda x: (props.tree(x, far, k * 1.2, rnd.choice(("oak", "fir", "birch"))), 90 * k, 200 * k),
-        lambda x: (sets.hot_air_balloon(x, far - lift, k * 0.8, (P.BLUE, P.YELLOW)),
-                   60 * k, 170 * k + lift),
-    ]
-    rnd.shuffle(makers)
-    for make in makers[:2]:
-        for _ in range(12):
-            x = rnd.uniform(s.lo + 60, s.hi - 60)
-            svg, w, h = make(x)
-            box = (x - w, far - h, x + w, far)
-            if s.free(box, 10):
-                s.put(1, svg, box, f"far{len(s.boxes)}")
-                break
-
-
-# ============================================================================ episodes
-@dataclass(frozen=True)
-class Episode:
-    name: str
-    draw: Callable[[Strip], None]
-
-
-EPISODES: dict[str, Episode] = {}
-
-
-def episode(name: str):
-    """Register an episode under its name; its topic words and lettering are under `footers: name:` in the
-    locale."""
-    def register(function: Callable[[Strip], None]) -> Callable[[Strip], None]:
-        if name in EPISODES:
-            raise ValueError(f"episode {name!r} registered twice")
-        EPISODES[name] = Episode(name, function)
-        return function
-    return register
-
-
-def draw_footer(name: str, h: float, seed: int, clear: str | None, look: Look, words: dict | None = None,
-                marks: bool = True, flip: int | None = None) -> tuple[str, Strip]:
-    """Draw one episode as a footer `h` units tall; `flip` is the page's place in its chapter, for the flip-book
-    sparrow by the page-number tag (`flipbook.py`), None on a page outside the chapters."""
-    from .flipbook import flipbook
-
-    s = Strip(h, seed, clear, look, words)
-    EPISODES[name].draw(s)
-    distance(s)
-    if not s.indoor:
-        sky_dressing(s)
-    if flip is not None:
-        flipbook(s, flip)
-    return s.svg("scene-svg", align="xMidYMax", marks=marks), s
-
-
 def footer_conflicts(s: Strip) -> list[str]:
     return conflicts(s, air=3)
 
@@ -545,118 +414,36 @@ def _stable(text: str) -> int:
     return zlib.crc32(text.encode("utf-8"))
 
 
+UNSET = "courtyard"     # the world of a chapter of the main matter that has no `world:` yet: the introduction's
+
+
 def _chapter_index(chapter: str) -> int:
     """A number for the chapter that does not depend on what else is built (so `--only` matches)."""
     return int(chapter) if str(chapter).isdigit() else _stable(str(chapter)) % 97
 
 
-def _counts(topics: list[str], text: str, heads: str) -> dict[str, tuple[int, int]]:
-    """How often each topic word occurs on the page: (in the text, in the headings)."""
-    return {topic: (text.count(topic.lower()), heads.count(topic.lower())) for topic in topics}
-
-
-TALL_FOOTER = 105    # mm: a footer this tall is a panorama, and an outdoor episode fills it better than a room
-_OUTDOOR: dict[str, bool] = {}
-
-
-def outdoor(name: str) -> bool:
-    """Whether an episode happens under the sky (found once by drawing it small)."""
-    if name not in _OUTDOOR:
-        s = Strip(136, 0, None, LOOKS[0], {})
-        with contextlib.suppress(KeyError):   # no lettering in an empty vocabulary: the setting is drawn first
-            EPISODES[name].draw(s)
-        _OUTDOOR[name] = not s.indoor
-    return _OUTDOOR[name]
-
-
-def plan(requests: list[dict], vocabulary: dict) -> list[tuple[str, Look, int]]:
-    """Pick an episode for every footer: (episode, look, seed), one per request, in order.
-
-    A request is `{"page", "chapter", "text", "heads"}`. Each chapter is planned on its own, so `--only` draws
-    what the full build draws:
-
-    * a page scores an episode by the episode's topic words found on it; a word counts at most three times, a
-      word in a heading counts triple, and a word met on many pages of the chapter weighs less than one met on
-      few (so a page gets the episode about what is special on it, not about what the whole chapter says);
-    * the best page-episode pairs of the chapter are matched first, and no episode is used twice in a chapter;
-    * pages that match nothing take the unused episodes in a fixed order turned by the chapter;
-    * a panorama (a page that ends early) prefers an episode under the sky, which fills the height.
-    """
-    order = sorted(EPISODES)
-    chapters: dict[str, list[int]] = {}
-    for i, request in enumerate(requests):
-        chapters.setdefault(str(request.get("chapter", "")), []).append(i)
-    chosen: list[tuple[str, Look, int] | None] = [None] * len(requests)
-    for chapter, indexes in chapters.items():
-        number = _chapter_index(chapter)
-        look = look_for(number, str(requests[indexes[0]].get("accent") or P.YELLOW))
-        counts = {i: {name: _counts((vocabulary.get(name) or {}).get("topics") or [],
-                                    str(requests[i].get("text", "")).lower(), str(requests[i].get("heads", "")).lower())
-                      for name in order} for i in indexes}
-        pages_with: dict[tuple[str, str], int] = {}
-        for i in indexes:
-            for name in order:
-                for topic, (in_text, in_heads) in counts[i][name].items():
-                    if in_text or in_heads:
-                        pages_with[(name, topic)] = pages_with.get((name, topic), 0) + 1
-        pairs = []
-        for i in indexes:
-            for name in order:
-                score = 0.0
-                for topic, (in_text, in_heads) in counts[i][name].items():
-                    if in_text or in_heads:
-                        weight = math.log(1 + len(indexes) / pages_with[(name, topic)])
-                        score += weight * (min(in_text, 3) + 3 * min(in_heads, 1))
-                if float(requests[i].get("mm", 0)) >= TALL_FOOTER and not outdoor(name):
-                    score *= 0.25
-                if score > 0:
-                    pairs.append((-score, i, name))
-        used: set[str] = set()
-        for _, i, name in sorted(pairs):
-            if chosen[i] is None and name not in used:
-                chosen[i] = (name, look, 0)
-                used.add(name)
-        for nth, i in enumerate(indexes):
-            seed = _stable(f"{chapter}/{nth}") % 10_000
-            if chosen[i] is None:
-                free = [name for name in order if name not in used] or order
-                if float(requests[i].get("mm", 0)) >= TALL_FOOTER:
-                    free = [name for name in free if outdoor(name)] or free
-                name = free[(number * 7 + nth * 3) % len(free)]
-                used.add(name)
-                if len(used) == len(order):
-                    used.clear()
-                chosen[i] = (name, look, seed)
-            else:
-                chosen[i] = (chosen[i][0], look, seed)
-    return [item for item in chosen if item is not None]
-
-
 def footers(requests: list[dict], vocabulary: dict, trace: list | None = None) -> list[str]:
     """The SVG of every footer, in the order of the requests. A chapter living in a world (`world:`) gets the
-    camera along its machine (`worlds.py`); the front pages and the contents get the professor's courtyard (the world
-    `front`), each page its own moment (`world_courtyard.front_place`), once the locale names them; anything else
-    gets episodes. `trace`, when given, is filled with what each footer shows and the strip it was drawn on, in the
-    order of the requests (`worlds.moment`), for `book audit`."""
-    from .worlds import WORLDS, moment, world_footers
+    camera along its machine (`worlds.py`), and so does a chapter of the main matter not given a world yet, in the
+    introduction's courtyard (`UNSET`); the front pages and the contents get the professor's courtyard (the world
+    `front`), each page its own moment (`world_courtyard.front_place`). `trace`, when given, is filled with what each
+    footer shows and the strip it was drawn on, in the order of the requests (`worlds.moment`), for `book audit`."""
+    from .worlds import WORLDS, frame, moment, world_footers      # first: it loads every world in order
+    from .world_courtyard import FRONT, front_place
 
     moments: list[dict | None] = [None] * len(requests)
-
     out: list[str | None] = [None] * len(requests)
     in_world: dict[str, list[int]] = {}
-    plain: list[int] = []
     front: list[int] = []                                # the front pages and the contents: the courtyard
-    courtyard = ((vocabulary.get("worlds") or {}).get("front") or {}).get("pages")
     for i, request in enumerate(requests):
-        name = str(request.get("world") or "")
-        if not name and courtyard and not str(request.get("chapter", "")).isdigit():
+        chapter = str(request.get("chapter", ""))
+        name = str(request.get("world") or "") or (UNSET if chapter.isdigit() else "")
+        if not name:
             front.append(i)
-        elif name:
-            if name not in WORLDS:
-                raise ValueError(f"no world {name!r}; available: {', '.join(WORLDS)}")
-            in_world.setdefault(f"{request.get('chapter', '')}\0{name}", []).append(i)
-        else:
-            plain.append(i)
+            continue
+        if name not in WORLDS:
+            raise ValueError(f"no world {name!r}; available: {', '.join(WORLDS)}")
+        in_world.setdefault(f"{chapter}\0{name}", []).append(i)
     for key, indexes in in_world.items():
         chapter, name = key.split("\0")
         shown: list[dict] = []
@@ -665,36 +452,18 @@ def footers(requests: list[dict], vocabulary: dict, trace: list | None = None) -
             out[i] = svg
         for i, what in zip(indexes, shown, strict=True):
             moments[i] = what
-    if front:
-        from .world_courtyard import FRONT, front_place
-        from .worlds import frame
-        words = (vocabulary.get("worlds") or {}).get("front") or {}
-        seen: dict[str, int] = {}                        # each page's place in its own front chapter
-        for nth, i in enumerate(front):
-            request = dict(requests[i])
-            chapter = str(request.get("chapter", ""))
-            request["nth_in_chapter"] = seen.get(chapter, 0)
-            seen[chapter] = seen.get(chapter, 0) + 1
-            h = round(float(request["mm"]) * P.SCENE_UNITS_PER_PAGE_MM)
-            place = front_place(request, words, nth)
-            out[i], strip = frame(FRONT, h, place, request.get("clear"), 0, str(request.get("accent") or P.YELLOW),
-                                  words, seed=nth)
-            moments[i] = moment(FRONT, place, strip)
-    subset = [requests[i] for i in plain]
-    nth_in: dict[str, int] = {}                          # each page's place in its chapter, for the flip-book
-    for i, request, (name, look, seed) in zip(plain, subset, plan(subset, vocabulary), strict=True):
-        h = round(float(request["mm"]) * P.SCENE_UNITS_PER_PAGE_MM)
-        words = (vocabulary.get(name) or {}).get("words") or {}
+    words = (vocabulary.get("worlds") or {}).get("front") or {}
+    seen: dict[str, int] = {}                            # each page's place in its own front chapter
+    for nth, i in enumerate(front):
+        request = dict(requests[i])
         chapter = str(request.get("chapter", ""))
-        flip = nth_in.setdefault(chapter, 0) if chapter.isdigit() else None   # the main matter only
-        nth_in[chapter] = nth_in.get(chapter, 0) + 1
-        out[i], strip = draw_footer(name, h, seed, request.get("clear"), look, words, flip=flip)
-        moments[i] = {"kind": "episode", "episode": name, "strip": strip}
+        request["nth_in_chapter"] = seen.get(chapter, 0)
+        seen[chapter] = seen.get(chapter, 0) + 1
+        h = round(float(request["mm"]) * P.SCENE_UNITS_PER_PAGE_MM)
+        place = front_place(request, words, nth)
+        out[i], strip = frame(FRONT, h, place, request.get("clear"), 0, str(request.get("accent") or P.YELLOW),
+                              words, seed=nth)
+        moments[i] = moment(FRONT, place, strip)
     if trace is not None:
         trace.extend(moments)
     return [svg or "" for svg in out]
-
-
-# The episodes register themselves on import.
-from . import episodes, episodes_a, episodes_b, episodes_c, episodes_d, episodes_e  # noqa: E402,F401
-

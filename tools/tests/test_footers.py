@@ -1,51 +1,56 @@
-"""Footer episodes: every one draws without overlaps, has its words, and the choice is fair and reproducible."""
-import pytest
+"""Which footer goes on which page: a chapter not given a world yet lives in the introduction's courtyard, the front
+pages in the professor's yard; clean, never one moment on two pages in a row, and a chapter alone draws what it draws
+in the whole book."""
+import re
+
 import yaml
 
-from bookkit.art.footers import EPISODES, LOOKS, draw_footer, footer_conflicts, plan
+from bookkit import design
+from bookkit.art.footers import UNSET, footer_conflicts, footers
 from bookkit.config import LOCALES
 
-VOCABULARY = yaml.safe_load((LOCALES / "ru.yml").read_text(encoding="utf-8"))["footers"]
+LOCALE = yaml.safe_load((LOCALES / "ru.yml").read_text(encoding="utf-8"))
+VOCABULARY = {"worlds": LOCALE["worlds"], "easter": LOCALE["easter"]}
+SAME = re.compile(r'(id="|url\(#|href="#)[^")]+')       # ids are numbered per build
 
 
-@pytest.mark.parametrize("name", sorted(EPISODES))
-def test_every_episode_draws_without_overlaps(name):
-    words = (VOCABULARY.get(name) or {}).get("words")
-    for i, look in enumerate(LOOKS):
-        for h in (136, 220, 320, 560):
-            for clear in ("left", "right"):
-                svg, strip = draw_footer(name, h, i, clear, look, words)
-                assert svg.startswith("<svg") and f'viewBox="0 0 840 {h}"' in svg
-                assert footer_conflicts(strip) == [], (name, h, look, clear)
-                assert "<mask" not in svg and "stop-opacity" not in svg, name   # they print as rasters
+def _requests(chapter, sizes, text="ничего особенного"):
+    return [{"page": i, "chapter": chapter, "text": text, "heads": "", "mm": mm, "clear": "left" if i % 2 else "right",
+             "accent": design.ORANGE} for i, mm in enumerate(sizes)]
 
 
-@pytest.mark.parametrize("name", sorted(EPISODES))
-def test_every_episode_has_topic_words(name):
-    assert len((VOCABULARY.get(name) or {}).get("topics") or []) >= 3, name
+def test_a_chapter_without_a_world_is_drawn_in_the_courtyard_clean_and_never_twice_in_a_row():
+    trace: list = []
+    svgs = footers(_requests("4", (34, 55, 55, 34, 90, 34, 120)), VOCABULARY, trace)
+    assert all(svg.startswith("<svg") for svg in svgs)
+    assert {moment["world"] for moment in trace} == {UNSET} and trace[-1]["station"] is None   # ends on the finale
+    for moment in trace:
+        assert footer_conflicts(moment["strip"]) == [], (moment["station"], moment["beat"])
+    shown = [(moment["station"], moment["beat"]) for moment in trace]
+    assert all(a != b for a, b in zip(shown, shown[1:], strict=False)), shown
 
 
-def _requests(chapter, pages, text="ничего особенного"):
-    return [{"page": i, "chapter": chapter, "text": text, "heads": "", "mm": 34, "clear": "left"} for i in range(pages)]
+def test_a_front_page_shows_the_moment_its_text_names():
+    pages = LOCALE["worlds"]["front"]["pages"]
+    phrase, station = next(iter(pages.items()))
+    trace: list = []
+    footers([{"chapter": "Кто автор", "text": f"… {phrase} …", "heads": "", "mm": 55, "clear": "right"}],
+             VOCABULARY, trace)
+    assert trace[0]["world"] == "front" and trace[0]["station"] == station
 
 
-def test_no_episode_repeats_within_a_chapter():
-    chosen = plan(_requests("1", min(30, len(EPISODES))), VOCABULARY)
-    names = [name for name, _, _ in chosen]
-    assert len(names) == len(set(names))
+def test_a_chapter_without_a_world_alone_draws_what_it_draws_in_the_whole_book():
+    """`--only` builds one chapter: its footers must not depend on the pages before it."""
+    alone = _requests("5", (55, 34, 120, 55))
+    before = _requests("Кто автор", (55,)) + _requests("4", (34, 55))
+    together = footers(before + alone, VOCABULARY)[len(before):]
+    assert [SAME.sub("", svg) for svg in together] == [SAME.sub("", svg) for svg in footers(alone, VOCABULARY)]
 
 
-def test_a_page_gets_the_episode_its_text_is_about():
-    name = sorted(EPISODES)[0]
-    topic = VOCABULARY[name]["topics"][0]
-    chosen = plan([{"chapter": "2", "text": f"здесь про {topic} и снова {topic}", "heads": ""}], VOCABULARY)
-    assert chosen[0][0] == name
-
-
-def test_a_chapter_is_drawn_alike_in_the_full_build_and_alone():
-    one = _requests("3", 6, "токен модель тест")
-    both = _requests("2", 5) + one
-    assert plan(one, VOCABULARY) == plan(both, VOCABULARY)[5:]
+def test_a_page_without_a_world_draws_without_the_locale():
+    trace: list = []
+    assert footers(_requests("1", (34, 160)), {}, trace)[0].startswith("<svg")
+    assert all(footer_conflicts(moment["strip"]) == [] for moment in trace)
 
 
 def test_lettering_shrunk_on_the_page_is_set_flat():
