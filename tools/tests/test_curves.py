@@ -79,3 +79,9 @@ def test_every_line_in_a_world_bends_smoothly_and_goes_in_straight(where, link):
 
 def test_the_worlds_do_draw_lines():
     assert any(link.kind == "cable" for _, link in LINKS) and any(link.kind == "tube" for _, link in LINKS)
+
+
+def test_a_corner_too_slight_to_bend_runs_straight_through():
+    """A corner of a few hundred-thousandths of a radian is a straight run, not a division by zero."""
+    line = eased_points([(0, 0), (100, 0), (200, 0.002)])
+    assert line[0] == (0, 0) and line[-1] == (200, 0.002) and len(line) == 3

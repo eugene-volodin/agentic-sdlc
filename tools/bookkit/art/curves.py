@@ -105,7 +105,9 @@ def eased_points(points: list[Point], keep_start: float = 0.0, keep_end: float =
         uin = ((b[0] - a[0]) / lengths[i - 1], (b[1] - a[1]) / lengths[i - 1])
         uout = ((c[0] - b[0]) / lengths[i], (c[1] - b[1]) / lengths[i])
         t = min(room(i - 1, True), room(i, False))
-        if t <= 1e-6 or uin[0] * uout[0] + uin[1] * uout[1] < -0.999:
+        dot = uin[0] * uout[0] + uin[1] * uout[1]
+        slight = round(math.atan2(abs(uin[0] * uout[1] - uin[1] * uout[0]), dot), 4) == 0   # below `_bend`'s table
+        if t <= 1e-6 or dot < -0.999 or slight:
             run_to(b)
             continue
         bend = _bend(b, uin, uout, t)
