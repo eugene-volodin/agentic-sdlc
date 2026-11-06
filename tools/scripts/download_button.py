@@ -11,7 +11,8 @@ committed file is written into a comment at its top. Run from `tools/`:
 
     uv run python scripts/download_button.py HEADLINE SUBLINE [--out PATH] [--png DIR]
 
-`--png` also renders previews at 1x and 2x on a white and on a dark page, through the installed Chrome.
+`--png` also renders previews at 1x and 2x on a white and on a dark page, in the build's browser (Playwright's
+Chromium).
 """
 from __future__ import annotations
 
@@ -257,10 +258,12 @@ def previews(svg_path: Path, out: Path) -> list[Path]:
     """PNG previews at 1x and 2x on a white and on a dark page."""
     from playwright.sync_api import sync_playwright
 
+    from bookkit.render import _launch
+
     out.mkdir(parents=True, exist_ok=True)
     made = []
     with sync_playwright() as pw:
-        browser = pw.chromium.launch(channel="chrome")
+        browser = _launch(pw)
         for theme, bg in (("light", P.WHITE), ("dark", DARK_PAGE)):
             for scale in (1, 2):
                 page = browser.new_page(viewport={"width": 460, "height": 160}, device_scale_factor=scale)
@@ -273,6 +276,7 @@ def previews(svg_path: Path, out: Path) -> list[Path]:
                 page.screenshot(path=str(target), full_page=True)
                 made.append(target)
                 page.close()
+                html.unlink()
         browser.close()
     return made
 
