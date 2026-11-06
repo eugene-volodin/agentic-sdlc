@@ -1,8 +1,4 @@
 <p align="center">
-  <img src="docs/images/cover.png" alt="Обложка книги" width="360">
-</p>
-
-<p align="center">
   <a href="https://github.com/pulyavin/agentic-sdlc/releases/latest/download/agentic-sdlc.pdf"><img src="docs/images/download.svg" alt="Скачать книгу (PDF)" width="420"></a>
 </p>
 
