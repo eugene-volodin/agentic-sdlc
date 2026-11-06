@@ -230,14 +230,16 @@ def scale(road: Road, y: float) -> float:
     return 0.5 * (y - road.hz)
 
 
-def body_box(name: str, x: float, feet: float, tall: float) -> tuple[float, float, float, float]:
-    """Where a character stood at (x, feet), `tall` being the professor's height there, is boxed on a stage."""
-    from .characters import module
+def body_box(name: str, x: float, feet: float, tall: float, pose: str | None = None,
+             flip: bool = False) -> tuple[float, float, float, float]:
+    """Where a character stood at (x, feet) in `pose`, `tall` being the professor's height there, is boxed on a
+    stage (`Stage.actor`)."""
+    from .characters import module, span
     from .scenes import PROFESSOR_HEIGHT
     mod = module(name)
     k = tall / PROFESSOR_HEIGHT * mod.SCENE_SCALE
-    half = mod.SIZE[0] * 0.40 * k
-    return (x - half, feet - (mod.FEET_Y - mod.HEAD_TOP) * k, x + half, feet)
+    left, right = span(name, pose, x, k, flip)
+    return (left, feet - (mod.FEET_Y - mod.HEAD_TOP) * k, right, feet)
 
 
 def walk_along(stage, road: Road, names: tuple[str, ...], lead: int, size: float = 1.0, u: float = 0.12,
@@ -261,14 +263,14 @@ def walk_along(stage, road: Road, names: tuple[str, ...], lead: int, size: float
         while i < len(road.line) - 1:
             x, y = road.page(*road.at(i, u))
             tall = one * min(1.1, max(1.0, scale(road, y) / max(1e-6, scale(road, lead_y))))  # nearer, a little larger
-            box = body_box(name, x, y, tall)
+            pose = (poses or {}).get(name) or ("stride" if "stride" in module(name).POSES else "walk")
+            box = body_box(name, x, y, tall, pose)
             ok = box[0] >= lo and box[2] <= hi and box[1] >= 6 and (bottom is None or y <= bottom)
             if ok and all(box[0] > b.right + gap or box[2] < b.left - gap or box[3] < b.top - gap
                           or box[1] > b.bottom + gap for b in placed) and _free(stage, box):
                 if dry:
                     placed.append(Box(*box, name, name, "actor"))
                     break
-                pose = (poses or {}).get(name) or ("stride" if "stride" in module(name).POSES else "walk")
                 if sun is not None:
                     long_shadow(stage, box, sun)
                 else:

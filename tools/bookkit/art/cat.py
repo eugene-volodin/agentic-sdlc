@@ -325,10 +325,12 @@ def draw(pose: str = "stand", mood: str = "smile", tail: bool = True, grips: tup
         hand(c, f.x, f.y, f.rotation, FUR, kind, f.scale, mirror=f.mirror)
         if side == "right" and side not in palms:
             _watch(c, limb[0], limb[1])
-    if pose == "read":  # an open book held up in both paws by its edges
-        _book(c, frames)
-        for f in frames.values():
-            fingers(c, f, FUR)
+    if pose == "read":  # an open book held up in both paws by its edges, unless a paw is given a thing of its own
+        if not grips:
+            _book(c, frames)
+        for side, f in frames.items():
+            if side not in grips:
+                fingers(c, f, FUR)
     return c
 
 

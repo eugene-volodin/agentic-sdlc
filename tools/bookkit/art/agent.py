@@ -220,17 +220,6 @@ def _held(c: Canvas, pose: str, held: str, frames: dict[str, HandFrame]) -> None
             c.shape(f"M{n(left)},{n(top)} H{n(left + 14)} L{n(left + 18)},{n(top - 4)} H{n(right)} V{n(top + 11)} "
                     f"H{n(left)} Z", color, sw=2.2, light=(-2, -2))
             c.add("</g>")
-    elif held == "old":  # a dusty binder, a puff of dust rising from it
-        c.add(f'<g transform="rotate(-3 {n(mid)} {n(y)})">')
-        c.shape(f"M{n(left)},{n(y - 34)} H{n(right)} V{n(y + 28)} H{n(left)} Z", P.STONE, 2.2, light=(-2, -2),
-                shade_k=0.86, stipple=(left, y - 34, right - left, 62, 70, "even"))
-        c.shape(f"M{n(mid - 10)},{n(y - 26)} H{n(mid + 26)} V{n(y - 10)} H{n(mid - 10)} Z", P.CARD, 1.6, light=None)
-        c.line(f"M{n(mid - 6)},{n(y - 20)} h26 M{n(mid - 6)},{n(y - 15)} h18", 1.1, opacity=0.5)
-        c.line(f"M{n(left)},{n(y - 34)} l18,0 M{n(left)},{n(y - 34)} l0,16 M{n(left)},{n(y - 22)} q8,-2 12,-12",
-               0.9, opacity=0.7)
-        c.add("</g>")
-        for x, yy, r in ((88, 140, 7), (100, 132, 9), (118, 136, 6), (132, 128, 8), (146, 138, 5)):
-            c.add(f'<circle cx="{x}" cy="{yy}" r="{r}" fill="{P.STONE}" fill-opacity=".55"/>')
     else:  # a sheet of instructions, held a little askew by its sides
         c.add(f'<g transform="rotate(-3 {n(mid)} {n(y)})">')
         c.shape(f"M{n(left)},{n(y - 30)} H{n(right)} V{n(y + 26)} H{n(left)} Z", P.WHITE, 2.2, light=None)
@@ -245,15 +234,13 @@ def _spread(a: float, b: float, count: int) -> list[float]:
     return [a + (b - a) * i / (count - 1) for i in range(count)]
 
 
-def draw(pose: str = "stand", mood: str = "smile", held: str = "sheet", wear: str = "",
-         grips: tuple[str, ...] = ()) -> Canvas:
+def draw(pose: str = "stand", mood: str = "smile", held: str = "sheet", grips: tuple[str, ...] = ()) -> Canvas:
     """Draw the Agent. See `POSES` and `MOODS` for the options.
 
-    `held` is what it reads in the `read` pose: a clean `sheet`, or an `old` module - a grey binder thick with
-    dust, taken off the bottom shelf (the `morning` story); in the `carry` pose a `crate` of apples instead of the
-    stack of folders (the farewell's fields). `wear="harness"` puts on braces and a
-    tool belt with a wrench: the agent trying on a harness at the fair (the `fair` story). `grips` closes
-    those hands ("left", "right") round a handle for `rig.hold` (see `characters.draw(hold=...)`)."""
+    In the `read` pose it holds a sheet between its hands; in the `carry` pose a stack of folders, or with
+    `held="crate"` a crate of apples (the farewell's fields). `grips` closes those hands ("left", "right") round a
+    handle for `rig.hold` (see `characters.draw(hold=...)`); a hand given a thing of its own lets go of the sheet,
+    the folders or the crate."""
     stance, left, right = POSES[pose]
     if stance == "stride":
         return _stride(pose, mood, grips, left, right)
@@ -269,16 +256,6 @@ def draw(pose: str = "stand", mood: str = "smile", held: str = "sheet", wear: st
     for x, y, color in ((96, 192, P.RED), (110, 194, P.YELLOW), (124, 191, P.GREEN)):
         c.add(f'<circle cx="{x}" cy="{y}" r="3.6" fill="{color}" stroke="{P.INK}" stroke-width="1.5"/>')
     c.place(_head(mood), "rotate(-3 110 84)")
-    if wear == "harness":
-        for x0, x1 in ((84, 88), (136, 132)):
-            c.line(f"M{x0},134 Q{(x0 + x1) / 2 + (2 if x0 < 100 else -2)},170 {x1},198", 7, P.LEATHER)
-            c.line(f"M{x0 - 3},134 Q{(x0 + x1) / 2 - 1},170 {x1 - 3},198 M{x0 + 3},134 Q{(x0 + x1) / 2 + 3},170 "
-                   f"{x1 + 3},198", 1.1)
-        c.shape("M72,194 Q110,202 148,194 L148,206 Q110,214 72,206 Z", P.LEATHER, 2, light=None)
-        c.shape("M102,195 H118 V211 H102 Z", P.SUN, 1.8, light=None)
-        c.line("M106,203 h8", 1.6)
-        c.line("M140,206 L146,232", 4, P.METAL_DARK)
-        c.add(f'<circle cx="147" cy="236" r="5" fill="none" stroke="{P.METAL_DARK}" stroke-width="3.4"/>')
     outside = uid()
     c.add(f'<clipPath id="{outside}"><path clip-rule="evenodd" d="M-400,-400 H700 V800 H-400 Z {BODY}"/>'
           "</clipPath>")
@@ -294,8 +271,13 @@ def draw(pose: str = "stand", mood: str = "smile", held: str = "sheet", wear: st
             f = frames[side]
             hand(c, f.x, f.y, f.rotation, GLOVE, kind, f.scale, mirror=f.mirror)
         _joint(c, *shoulder)
-    if pose in ("carry", "read"):
-        _held(c, pose, held, frames)
+    if pose in ("carry", "read"):   # the thing between the two grips, unless a hand is given a thing of its own
+        if grips:
+            for side, f in frames.items():
+                if side not in grips:
+                    fingers(c, f, GLOVE)
+        else:
+            _held(c, pose, held, frames)
     return c
 
 

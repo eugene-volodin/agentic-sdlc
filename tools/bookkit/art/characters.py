@@ -20,6 +20,8 @@ nothing else in the code base needs to know its name. The module must define:
 Optional:
 
     VIEW_BOX          a wider view box when gestures reach outside the canvas
+    SPAN              {pose: (left, right)} the canvas x a pose's drawing spans when it reaches past the box
+                      the stage gives every character (0.4 of its width each side of CENTER_X)
     PORTRAIT_OPTIONS  extra `draw` options for cropped views (the cat hides its tail)
     SEAT              "chair" or "desk": where the character sits in the study scene
     BALLOON_GRIP      {pose: (x, y)} where a balloon string ends, for characters that carry one
@@ -83,6 +85,21 @@ def resolve(name: str) -> str:
 def module(name: str) -> ModuleType:
     """The drawing module of a character, by any accepted spelling."""
     return MODULES[resolve(name)]
+
+
+def span(name: str, pose: str | None, x: float, k: float, flip: bool = False) -> tuple[float, float]:
+    """The left and right of the box a character stood at x, `k` times its drawn size, takes on a stage: 0.4 of its
+    canvas width each side of x, widened to what a pose declares in the module's `SPAN` (a tail trailing behind)."""
+    mod = module(name)
+    half = mod.SIZE[0] * 0.40 * k
+    left, right = x - half, x + half
+    wide = getattr(mod, "SPAN", {}).get(pose)
+    if wide:
+        a, b = ((edge - mod.CENTER_X) * k for edge in wide)
+        if flip:
+            a, b = -b, -a
+        left, right = min(left, x + a), max(right, x + b)
+    return left, right
 
 
 def check(name: str, pose: str | None = None, mood: str | None = None) -> None:

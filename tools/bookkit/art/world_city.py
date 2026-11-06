@@ -501,8 +501,8 @@ def signpost(st: Stage, x: float, foot: float, k: float, city_way: int = 1) -> t
 
 
 WALK_TALL = 250                   # the professor's height where the three walk: a step behind him
-WALKERS = (("cat", 309, 1082, "wave"), ("agent", 434, 1072, "stride"), ("caterpillar", 543, 1064, "stride"))
-POST = (680, 1130.0, 1.0)        # the fingerpost on the verge of the near bend: x, foot, scale
+WALKERS = (("cat", 305, 1082, "wave"), ("agent", 426, 1072, "stride"), ("caterpillar", 549, 1064, "stride"))
+POST = (684, 1130.0, 1.0)        # the fingerpost on the verge of the near bend: x, foot, scale
 
 
 def opener(st: Stage, accent: str):
@@ -587,7 +587,7 @@ def opener(st: Stage, accent: str):
     # own size beside him: walking together towards the bend, the cat at the back turning to wave to us
     sun_ = (vx + 40, hz - 18)
     for name, x, feet, pose in WALKERS:
-        box = body_box(name, x, feet, WALK_TALL)
+        box = body_box(name, x, feet, WALK_TALL, pose)
         long_shadow(st, box, sun_)
         who = st.actor(name, x, feet, pose, "smile", tall=WALK_TALL, group=name)
         rim(st, who, sun_)

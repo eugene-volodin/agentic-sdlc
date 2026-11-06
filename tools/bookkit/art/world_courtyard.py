@@ -33,7 +33,7 @@ The front pages are the world `front`; each page picks its moment from its text 
             open, the caterpillar in the open gate waves the reader in; "give": the agent holds a copy out from it;
 6. pack     the contents (yard): "pack" - real rucksacks open on the paving, the agent packs the book, the caterpillar
             ticks her list; "route" - the map spread on the bench, the professor shows the way, the cat holds the
-            compass; "ready" - the rucksacks buckled, the mats rolled on top, the professor points the way.
+            compass; "ready" - the rucksacks buckled, the mats rolled on top, the professor shows the way.
 
 The introduction lives in the same yard as the world `courtyard` (see its own part below). No words in the pictures.
 """
@@ -1852,7 +1852,7 @@ def tea_moment(s: Strip, beat: str) -> None:
 def pack_moment(s: Strip, beat: str) -> None:
     """The contents, ready for the road: "pack" - the rucksacks open on the paving, the agent puts the book in, the
     caterpillar ticks her list; "route" - the map spread on the bench, the thermos by it, the professor shows the
-    way on it, the cat holds the compass; "ready" - the rucksacks buckled, mats rolled on top, the professor points
+    way on it, the cat holds the compass; "ready" - the rucksacks buckled, mats rolled on top, the professor shows
     the way, the cat waves."""
     u = U(s)
     w = way(s)
@@ -1893,7 +1893,7 @@ def pack_moment(s: Strip, beat: str) -> None:
             max(x0 + 54 * u, x0 - w * 64 * u - w * 30 * u), feet - up)
     s.put(feet - 2 - up, c.render(), span, "packs", group="packs", backdrop=bool(up))
     if packed:
-        join(s, "professor", span[2] + 30 * u if w > 0 else span[0] - 30 * u, "pointer", w)
+        join(s, "professor", span[2] + 30 * u if w > 0 else span[0] - 30 * u, "present", w)
         if not low(s):
             join(s, "cat", span[0] - 30 * u if w > 0 else span[2] + 30 * u, "wave", w)
             sparrow_on(s, x0, feet - 50 * u, "packs")

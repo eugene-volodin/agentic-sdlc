@@ -107,11 +107,15 @@ def camera(s: Strip) -> None:
     s._room = None
 
 
+# The caterpillar writing on her clipboard: held in her left hand instead of her notebook, the pencil in her right.
+CLIPBOARD = (handheld.clipboard, "left", -18)
+
+
 def stand(s: Strip, name: str, fracs: tuple[float, ...], pose: str, mood: str = "smile", face: float | None = None,
           mark: str | None = None, hold=None):
     """An onlooker on the deck at the first of `fracs` where it stands whole and clear of everything - failing
     those, at the nearest free spot along the deck - at the frame's one scale, facing the point `face`; None if the
-    deck has no room for it."""
+    deck has no room for it. `hold`: (make, side, turn), a thing put into one hand (`Stage.hold`)."""
     feet = s.feet(0)
     first = [s.x(f) for f in fracs]
     sweep = sorted((s.lo + (s.hi - s.lo) * i / 40 for i in range(41)), key=lambda x: abs(x - first[0]))
@@ -128,7 +132,7 @@ def stand(s: Strip, name: str, fracs: tuple[float, ...], pose: str, mood: str = 
                 s.put(feet + 1, props.mark(mx, my, mark, k), (mx - 17 * k, my - 17 * k, mx + 17 * k, my + 17 * k),
                       group=actor.group)
             if hold is not None:
-                s.hold(actor, hold)
+                s.hold(actor, *hold)
             return actor
     return None
 
@@ -1241,7 +1245,7 @@ def check(s: Strip, beat: str) -> None:
         right = frac_of(s, legs[2] + 6 + height_of("caterpillar", s) * 0.45)
         left = frac_of(s, legs[0] - 6 - height_of("cat", s) * 0.5)
         stand(s, "caterpillar", (right, right + 0.02, right + 0.05), "wave" if alarm else "write",
-              "worry" if alarm else "smile", face=ax, hold=None if alarm else handheld.clipboard)
+              "worry" if alarm else "smile", face=ax, hold=None if alarm else CLIPBOARD)
         stand(s, "cat" if alarm else "agent", (left, left - 0.02, left - 0.05), "point" if alarm else "think",
               "talk" if alarm else "smile", face=ax)
         finish(s, 4, beat, ax)
@@ -1346,8 +1350,7 @@ def panel(s: Strip, beat: str) -> None:
                     flip=False, tall=size_ / 0.42 / 0.95, group="button")
         stand(s, "cat", (0.6, 0.62, 0.56, 0.66), "think", "surprise", face=bx)
     else:
-        stand(s, "caterpillar", (0.78, 0.04, 0.06), "write", "smile", face=xs[-1],
-              hold=handheld.clipboard)
+        stand(s, "caterpillar", (0.78, 0.04, 0.06), "write", "smile", face=xs[-1], hold=CLIPBOARD)
     finish(s, 5, beat, (xs[0] + xs[-1]) / 2)
 
 

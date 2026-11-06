@@ -40,6 +40,7 @@ POSES = {
     "knit": ("stand", ((52, 170), (76, 188), "grip", -30), ((158, 168), (136, 186), "grip", 30)),   # needles in
 }
 CENTER_X = 104
+SPAN = {"stride": (-16, 186)}   # walking, her tail trails on the ground behind her, left of the usual box
 HEAD_TOP = 4
 MOUTH = (100, 106)          # where speech comes from, on the canvas: a bubble's tail points here
 PEEK_Y = 96            # an edge the character looks over hides everything below: under the nose
@@ -157,11 +158,13 @@ def draw(pose: str = "wave", mood: str = "smile", grips: tuple[str, ...] = ()) -
         arm(c, SHOULDER_L, left[0], left[1], kind=left[2], hand_turn=left[3], **GLOVE)
     if reaches_across(right) and pose != "think":
         arm(c, SHOULDER_R, right[0], right[1], kind=right[2], hand_turn=right[3], **GLOVE)
-    if pose == "write":  # a notebook held up in the left hand by its corner, the pencil in the right on its page
-        frames = hands(pose, ("left", "right"))
+    if pose == "write":  # a notebook held up in the left hand by its corner, the pencil in the right on its page;
+        frames = hands(pose, ("left", "right"))   # a hand given a thing of its own (`grips`) holds only that
         k = (FEET_Y - HEAD_TOP) / 100
-        hold(c, frames["left"], YELLOW, notebook, k, 18)
-        hold(c, frames["right"], YELLOW, pencil, k, -30)
+        if "left" not in grips:
+            hold(c, frames["left"], YELLOW, notebook, k, 18)
+        if "right" not in grips:
+            hold(c, frames["right"], YELLOW, pencil, k, -30)
     _head(c, mood)
     if pose == "think":  # the finger rests on the cheek, so this arm goes over the head
         arm(c, SHOULDER_R, right[0], right[1], kind=right[2], hand_turn=right[3], **GLOVE)
