@@ -195,9 +195,6 @@ WATER_LIGHT = "#b9e4f1"
 SWEATER = "#74a7dc"
 SWEATER_RIB = "#4f86c6"
 TROUSERS = "#3f5f96"
-SUIT = "#66706b"
-SUIT_DARK = "#4d5753"
-SUIT_TROUSERS = "#5a6460"
 
 # --- terminal and syntax highlighting
 TERMINAL = "#26221f"
