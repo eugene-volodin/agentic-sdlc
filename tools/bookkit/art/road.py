@@ -321,19 +321,21 @@ def _free(stage, box: tuple) -> bool:
                    for b in stage.boxes)
 
 
-def birds(c: Canvas, region: tuple[float, float, float, float], count: int, seed: int, color: str = INK) -> None:
+def birds(c: Canvas, region: tuple[float, float, float, float], count: int, seed: int,
+          color: str = mix(P.INDIGO, INK, 0.5)) -> None:
     """Birds flying home across the evening sky: little gull wings, nearer ones bigger."""
     rnd = random.Random(seed)
     x0, y0, x1, y1 = region
     for _ in range(count):
         x, y, k = rnd.uniform(x0, x1), rnd.uniform(y0, y1), rnd.uniform(0.5, 1.1)
         c.line(f"M{n(x - 10 * k)},{n(y)} q{n(5 * k)},{n(-7 * k)} {n(10 * k)},0 q{n(5 * k)},{n(-7 * k)} {n(10 * k)},0",
-               max(1.2, 2.2 * k), mix(P.INDIGO, INK, 0.5))
+               max(1.2, 2.2 * k), color)
 
 
 def furnish(stage, road: Road, seed: int = 3) -> None:
     """The road's furniture, each on its own verge and only where it stands free: a wooden bench facing the road,
-    a hedge of round bushes behind the crosswise stretch and a low rail fence along the straight's far side."""
+    a hedge of round bushes behind the bend and the crosswise stretch, and a low rail fence along the straight's
+    inner side."""
     rnd = random.Random(seed)
     straight = [i for i, (_, _, tx, tz) in enumerate(road.line) if tz < -0.99]
     if not straight:
@@ -367,20 +369,18 @@ def furnish(stage, road: Road, seed: int = 3) -> None:
                        f'stroke="{INK}" stroke-width="1"/><path d="M{n(x - r * 0.6)},{n(y - r * 1.1)} '
                        f'q{n(r * 0.5)},{n(-r * 0.4)} {n(r)},0" stroke="{P.LEAF_LIGHT}" stroke-width="1.6" '
                        f'fill="none"/>')
-    # the bench on the straight's verge
-    for kind, at_, side in (("bench", 0.8, -1),):
-        i = straight[int(len(straight) * at_)]
-        u = side * (road.half + road.kerb + road.verge * 0.55)
-        x, y = road.page(*road.at(i, u))
-        k = scale(road, y) / 100
-        if k < 0.25:
-            continue
-        art, box = _thing(kind, x, y, k)
-        if box[0] > 6 and box[2] < 834 and stage.free(box, 4):
-            stage.put(y, art, box, kind, group=kind, backdrop=True)
+    # the bench on the straight's inner verge
+    i = straight[int(len(straight) * 0.8)]
+    x, y = road.page(*road.at(i, -(road.half + road.kerb + road.verge * 0.55)))
+    k = scale(road, y) / 100
+    if k < 0.25:
+        return
+    art, box = _bench(x, y, k)
+    if box[0] > 6 and box[2] < 834 and stage.free(box, 4):
+        stage.put(y, art, box, "bench", group="bench", backdrop=True)
 
 
-def _thing(kind: str, x: float, y: float, k: float) -> tuple[str, tuple]:
+def _bench(x: float, y: float, k: float) -> tuple[str, tuple]:
     """A bench (two cast-iron ends, three slats, a back) standing at (x, y), `k` a hundredth of the professor."""
     c = Canvas()
     sw = max(0.8, 1.6 * k)

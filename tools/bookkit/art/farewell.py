@@ -1,9 +1,8 @@
 """The farewell: the last page of the book, the five walking up a bright cobbled road into a computer city at sunset.
 
-On the last page all our heroes go away into a computer city, as in the original book of professor Fortran, a picture
-over the whole page: a beautiful sunset, AI agents working tirelessly in the fields in the background, and an even,
-super bright cobbled road leading our heroes to the gate of this beautiful city. A homage to the last picture of the
-Soviet encyclopedia of professor Fortran, drawn as our own scene in this book's manner, not a copy of the original.
+A picture over the whole page: a bright sunset, agents at work in the fields, and a cobbled road leading the five to
+the city's gate. A homage to the last picture of the Soviet book of professor Fortran, drawn as a scene of its own in
+this book's manner, not a copy of the original.
 
 One-point perspective: everything runs to the gate at (VP_X, HORIZON).
 
@@ -16,8 +15,7 @@ One-point perspective: everything runs to the gate at (VP_X, HORIZON).
   with its gold contacts, between two heat-sink pillars, lit from inside.
 - The fields on both sides, in rows running to the city: wheat, an orchard, a vineyard, cabbages. Agents work in
   them: picking apples, carrying crates, driving a tractor with a trailer, loading a cart, watering, picking grapes.
-- The road (`road.py`; a straight road of slabs would read as a staircase, and the five seen from behind with
-  their heads turned back would look twisted): from the gate it comes straight towards the reader through
+- The road (`road.py`): from the gate it comes straight towards the reader through
   the fields, bends near him and runs off across the foot of the page - granite setts in courses that shrink with
   distance, staggered, each with its light edge and its shade, smooth kerbs along both edges, grass verges with
   flowers, street lamps where they stand free. The five walk along the near stretch towards the bend in their
@@ -33,7 +31,7 @@ import random
 
 from .. import design as P
 from ..design import darken, lighten, mix
-from .ink import INK, Canvas, ellipse_d, n, rounded_rect_d
+from .ink import INK, Canvas, circle_d, ellipse_d, n, poly_d, rect_d, rounded_rect_d
 from .openers import H, W, Opener, Stage
 from .road import Road, birds, body_box, furnish, walk_along
 from .world_kit import connect, ledger, port
@@ -57,18 +55,6 @@ def scale_at(y: float) -> float:
     return 0.5 * (y - HORIZON)
 
 
-def _rect(x: float, y: float, w: float, h: float) -> str:
-    return f"M{n(x)},{n(y)} H{n(x + w)} V{n(y + h)} H{n(x)} Z"
-
-
-def _poly(points) -> str:
-    return "M" + " L".join(f"{n(x)},{n(y)}" for x, y in points) + " Z"
-
-
-def _circle(x: float, y: float, r: float) -> str:
-    return ellipse_d(x, y, r, r)
-
-
 def _steps(a: float, b: float, step: float):
     x = a
     while x <= b + 1e-6:
@@ -78,7 +64,7 @@ def _steps(a: float, b: float, step: float):
 
 def _quad(y0: float, y1: float, f0: float, f1: float) -> str:
     """A patch of ground between heights y0, y1 and the converging lines with feet f0, f1."""
-    return _poly([(edge_x(y0, f0), y0), (edge_x(y0, f1), y0), (edge_x(y1, f1), y1), (edge_x(y1, f0), y1)])
+    return poly_d([(edge_x(y0, f0), y0), (edge_x(y0, f1), y0), (edge_x(y1, f1), y1), (edge_x(y1, f0), y1)])
 
 
 def _depths(near: float, far: float, step: float) -> list[float]:
@@ -109,7 +95,7 @@ def _sky(c: Canvas) -> None:
     rays = []
     for i in range(15):                                          # rays fanning out of the sun, every other one lit
         a0, a1 = math.radians(-180 + i * 12 + 2), math.radians(-180 + i * 12 + 8)
-        rays.append(_poly([(sx, sy), (sx + 1200 * math.cos(a0), sy + 1200 * math.sin(a0)),
+        rays.append(poly_d([(sx, sy), (sx + 1200 * math.cos(a0), sy + 1200 * math.sin(a0)),
                            (sx + 1200 * math.cos(a1), sy + 1200 * math.sin(a1))]))
     c.add(f'<path d="{" ".join(rays)}" fill="{P.YELLOW_PALE}" fill-opacity=".13"/>')
     for rr, a in ((r + 120, 0.10), (r + 70, 0.14), (r + 32, 0.22)):
@@ -152,18 +138,18 @@ def _lit(c: Canvas, x0: float, x1: float, top: float, bottom: float, cols: int, 
     on, off = [], []
     for y in _steps(top, bottom - row * 0.55, row):
         for i in range(cols):
-            (on if rnd.random() < share else off).append(_rect(x0 + i * w + w * 0.22, y, w * 0.56, row * 0.55))
+            (on if rnd.random() < share else off).append(rect_d(x0 + i * w + w * 0.22, y, w * 0.56, row * 0.55))
     c.add(f'<path d="{"".join(off)}" fill="{backlit(P.SCREEN_DARK)}"/><path d="{"".join(on)}" fill="{P.YELLOW_PALE}"/>')
 
 
 def server_rack(c: Canvas, x0: float, x1: float, top: float, base: float, seed: int, rim: float) -> tuple:
     """A server rack as a tower: its steel cabinet, servers stacked in it with drive bays and blinking lights."""
     rnd = random.Random(seed)
-    c.shape(_rect(x0, top, x1 - x0, base - top), backlit(P.METAL_DARK), sw=2.6, light=None)
-    c.shape(_rect(x0 + 6, top + 10, x1 - x0 - 12, base - top - 10), backlit(P.CHARCOAL), sw=1.5, light=None)
+    c.shape(rect_d(x0, top, x1 - x0, base - top), backlit(P.METAL_DARK), sw=2.6, light=None)
+    c.shape(rect_d(x0 + 6, top + 10, x1 - x0 - 12, base - top - 10), backlit(P.CHARCOAL), sw=1.5, light=None)
     units, bays, leds = [], [], {P.GLOW: [], P.SUN: [], P.TERMINAL_GREEN: []}
     for y in _steps(top + 14, base - 14, 15):
-        units.append(_rect(x0 + 9, y, x1 - x0 - 18, 12))
+        units.append(rect_d(x0 + 9, y, x1 - x0 - 18, 12))
         for k in range(2):
             leds[rnd.choice(list(leds))].append((x0 + 15 + k * 6, y + 6))
         bays.extend(f"M{n(bx)},{n(y + 3)} v6" for bx in _steps(x0 + 30, x1 - 13, 7))
@@ -172,7 +158,7 @@ def server_rack(c: Canvas, x0: float, x1: float, top: float, base: float, seed: 
           f'stroke-opacity=".6"/>')
     for color, points in leds.items():
         c.add("".join(f'<circle cx="{n(px)}" cy="{n(py)}" r="2.1" fill="{color}"/>' for px, py in points))
-    c.shape(_rect(x0 - 3, top - 7, x1 - x0 + 6, 8), backlit(P.METAL), sw=2, light=None)
+    c.shape(rect_d(x0 - 3, top - 7, x1 - x0 + 6, 8), backlit(P.METAL), sw=2, light=None)
     _rim(c, rim, top, base)
     return (x0 - 3, top - 7, x1 + 3, base)
 
@@ -201,20 +187,20 @@ def memory_stick(c: Canvas, x0: float, x1: float, top: float, base: float, rim: 
     """A memory stick as a tower: the green board standing in its black slot between white latches, its black
     chips one above another lit from inside, the notch in its edge, gold contacts at its foot."""
     slot = base - 16
-    c.shape(_rect(x0 - 8, slot, x1 - x0 + 16, 16), backlit(P.CHARCOAL), sw=2.2, light=None)
+    c.shape(rect_d(x0 - 8, slot, x1 - x0 + 16, 16), backlit(P.CHARCOAL), sw=2.2, light=None)
     for x in (x0 - 14, x1 + 4):                                                         # the latches
         c.shape(rounded_rect_d(x, slot - 34, 10, 50, 3), backlit(P.CARD), sw=1.8, light=None)
     d = (f"M{n(x0)},{n(top)} H{n(x1)} V{n(slot + 4)} H{n(x0)} V{n((top + slot) / 2 + 8)} "
          f"A6,6 0 0 0 {n(x0)},{n((top + slot) / 2 - 4)} Z")                               # with its notch
     c.shape(d, backlit(mix(P.GREEN, P.PINE, 0.5)), sw=2.4, light=None)
-    c.add(f'<path d="{"".join(_rect(x0 + 4 + i * 5, slot - 6, 3, 8) for i in range(int((x1 - x0 - 6) // 5)))}" '
+    c.add(f'<path d="{"".join(rect_d(x0 + 4 + i * 5, slot - 6, 3, 8) for i in range(int((x1 - x0 - 6) // 5)))}" '
           f'fill="{P.GOLD}"/>')
     rnd = random.Random(int(x0))
     for y in _steps(top + 10, slot - 40, 30):
-        c.shape(_rect(x0 + 8, y, x1 - x0 - 16, 22), P.TERMINAL, sw=1.4, light=None)
+        c.shape(rect_d(x0 + 8, y, x1 - x0 - 16, 22), P.TERMINAL, sw=1.4, light=None)
         for j in range(3):
             if rnd.random() < 0.8:
-                c.add(f'<path d="{_rect(x0 + 12 + j * (x1 - x0 - 24) / 3, y + 7, (x1 - x0 - 24) / 3 - 4, 8)}" '
+                c.add(f'<path d="{rect_d(x0 + 12 + j * (x1 - x0 - 24) / 3, y + 7, (x1 - x0 - 24) / 3 - 4, 8)}" '
                       f'fill="{P.YELLOW_PALE}"/>')
     _rim(c, rim, top, slot)
     return (x0 - 14, top, x1 + 14, base)
@@ -229,10 +215,10 @@ def capacitor(c: Canvas, x0: float, x1: float, top: float, base: float, color: s
     clip = c.shape(body, backlit(color), sw=2.4, light=None, clip=True)
     side = x0 + r * 0.2 if rim > cx else x1 - r * 0.56
     marks = "".join(f"M{n(side + r * 0.09)},{n(y)} h{n(r * 0.18)}" for y in _steps(top + 16, base - 10, 15))
-    c.add(f'<g clip-path="url(#{clip})"><path d="{_rect(side, top - ry, r * 0.36, base - top + ry)}" '
+    c.add(f'<g clip-path="url(#{clip})"><path d="{rect_d(side, top - ry, r * 0.36, base - top + ry)}" '
           f'fill="{lighten(backlit(color), 0.45)}"/><path d="{marks}" fill="none" stroke="{darken(color, 0.55)}" '
           f'stroke-width="2.4"/></g>')
-    rows = [_rect(cx + t * r - 3, y, 6, 7) for y in _steps(top + 24, base - 14, 18) for t in (-0.3, 0.0, 0.3)
+    rows = [rect_d(cx + t * r - 3, y, 6, 7) for y in _steps(top + 24, base - 14, 18) for t in (-0.3, 0.0, 0.3)
             if not side - 4 < cx + t * r < side + r * 0.36 + 4]
     c.add(f'<path d="{"".join(rows)}" fill="{P.YELLOW_PALE}"/>')
     c.shape(ellipse_d(cx, top, r, ry), backlit(P.METAL_LIGHT), sw=2, light=None)
@@ -246,7 +232,7 @@ def fan_hall(c: Canvas, cx: float, base: float, r: float) -> tuple:
     """The hall under the dome of a cooling fan: the round frame, the curved blades round the hub, the guard's
     wires; the dome's rim lit by the sun behind it; below, the hall's lit front."""
     top = base - 70
-    c.shape(_rect(cx - r, top, 2 * r, base - top), backlit(P.METAL_PALE), sw=2.6, light=None)
+    c.shape(rect_d(cx - r, top, 2 * r, base - top), backlit(P.METAL_PALE), sw=2.6, light=None)
     _lit(c, cx - r + 10, cx + r - 10, top + 12, base, 12, 16, 9, 0.8)
     dome = f"M{n(cx - r)},{n(top)} A{n(r)},{n(r)} 0 0 1 {n(cx + r)},{n(top)} Z"
     clip = c.shape(dome, backlit(P.CHARCOAL), sw=2.8, light=None, clip=True)
@@ -283,10 +269,10 @@ def cable_car(x: float, y: float, k: float) -> tuple[str, tuple]:
     c = Canvas()
     c.shape(rounded_rect_d(x - 10 * k, y - 5 * k, 20 * k, 9 * k, 3 * k), backlit(P.METAL_DARK), sw=1.6, light=None)
     for dx in (-5, 5):
-        c.shape(_circle(x + dx * k, y - 1 * k, 3.2 * k), P.METAL_LIGHT, sw=1.2, light=None)
+        c.shape(circle_d(x + dx * k, y - 1 * k, 3.2 * k), P.METAL_LIGHT, sw=1.2, light=None)
     c.line(f"M{n(x)},{n(y + 4 * k)} V{n(y + 14 * k)}", 2.6 * k)
     c.shape(rounded_rect_d(x - 22 * k, y + 14 * k, 44 * k, 30 * k, 6 * k), P.TEAL, sw=2, light=(-3, -3))
-    c.add(f'<path d="{"".join(_rect(x + dx * k, y + 19 * k, 9 * k, 10 * k) for dx in (-17, -5, 7))}" '
+    c.add(f'<path d="{"".join(rect_d(x + dx * k, y + 19 * k, 9 * k, 10 * k) for dx in (-17, -5, 7))}" '
           f'fill="{P.YELLOW_PALE}" stroke="{INK}" stroke-width="1.1"/>')
     return c.render(), (x - 23 * k, y - 6 * k, x + 23 * k, y + 45 * k)
 
@@ -295,7 +281,7 @@ def _wall(c: Canvas) -> None:
     """The city wall: panels of circuit board with glowing traces, lights along the top, the edge's gold
     contacts at its foot; the apron of board in front with traces running to the gate."""
     pcb = backlit(mix(P.PINE, P.LEAF_DARK, 0.35))
-    c.shape(_rect(-6, WALL_TOP, W + 12, WALL_FOOT - WALL_TOP), pcb, sw=2.6, light=None)
+    c.shape(rect_d(-6, WALL_TOP, W + 12, WALL_FOOT - WALL_TOP), pcb, sw=2.6, light=None)
     joints = " ".join(f"M{n(x)},{n(WALL_TOP + 8)} V{n(WALL_FOOT - 12)}" for x in range(60, W, 120))
     c.line(joints, 1.4, darken(pcb, 0.7))
     rnd = random.Random(4)
@@ -309,11 +295,11 @@ def _wall(c: Canvas) -> None:
           f'stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>')
     leds = "".join(rounded_rect_d(x, WALL_TOP - 3, 10, 6, 3) for x in range(6, W, 22))
     c.add(f'<path d="{leds}" fill="{P.GLOW}" stroke="{INK}" stroke-width="1.2"/>')            # the light strip
-    fingers = "".join(_rect(x, WALL_FOOT - 9, 6, 7) for x in range(4, W, 11))
+    fingers = "".join(rect_d(x, WALL_FOOT - 9, 6, 7) for x in range(4, W, 11))
     c.add(f'<path d="{fingers}" fill="{P.GOLD}" stroke="{INK}" stroke-width=".8"/>')
     # the apron
     apron = mix(P.PINE, P.LEAF_DARK, 0.25)
-    c.add(f'<path d="{_rect(-6, WALL_FOOT, W + 12, PLAZA - WALL_FOOT)}" fill="{apron}"/>')
+    c.add(f'<path d="{rect_d(-6, WALL_FOOT, W + 12, PLAZA - WALL_FOOT)}" fill="{apron}"/>')
     streets = " ".join(f"M{n(edge_x(PLAZA, f))},{PLAZA} L{n(edge_x(WALL_FOOT + 2, f))},{n(WALL_FOOT + 2)}"
                        for f in (-2600, -1800, -1100, -500, 1340, 1940, 2640, 3440))
     c.add(f'<path d="{streets} M-6,{n(WALL_FOOT + 11)} H{W + 6}" fill="none" stroke="{P.GOLD_LIGHT}" '
@@ -333,11 +319,11 @@ def gate(s: Stage) -> tuple:
     shell_l, shell_r, shell_t = lo - 24, hi + 24, open_top - 30
     # the pillars: stacks of fins on a base, a capping block
     for x0 in (shell_l - 62, shell_r + 8):
-        c.shape(_rect(x0, shell_t - 26, 54, WALL_FOOT - shell_t + 26), backlit(P.METAL_DARK), sw=2.4, light=None)
-        fins = "".join(_rect(x0 - 6, y, 66, 5) for y in _steps(shell_t - 14, WALL_FOOT - 22, 11))
+        c.shape(rect_d(x0, shell_t - 26, 54, WALL_FOOT - shell_t + 26), backlit(P.METAL_DARK), sw=2.4, light=None)
+        fins = "".join(rect_d(x0 - 6, y, 66, 5) for y in _steps(shell_t - 14, WALL_FOOT - 22, 11))
         c.add(f'<path d="{fins}" fill="{backlit(P.METAL_LIGHT)}" stroke="{INK}" stroke-width="1.1"/>')
-        c.shape(_rect(x0 - 8, shell_t - 38, 70, 13), backlit(P.METAL), sw=2.2, light=None)
-        c.shape(_rect(x0 - 4, WALL_FOOT - 18, 62, 18), backlit(P.METAL), sw=2.2, light=None)
+        c.shape(rect_d(x0 - 8, shell_t - 38, 70, 13), backlit(P.METAL), sw=2.2, light=None)
+        c.shape(rect_d(x0 - 4, WALL_FOOT - 18, 62, 18), backlit(P.METAL), sw=2.2, light=None)
     # the shell, its seams and bolts, the lit edge
     shell = (f"M{n(shell_l)},{n(WALL_FOOT)} V{n(shell_t + 22)} Q{n(shell_l)},{n(shell_t)} {n(shell_l + 22)},"
              f"{n(shell_t)} H{n(shell_r - 22)} Q{n(shell_r)},{n(shell_t)} {n(shell_r)},{n(shell_t + 22)} "
@@ -347,14 +333,14 @@ def gate(s: Stage) -> tuple:
            f"{n(shell_t + 8)} H{n(shell_r - 22)}", 2.4, P.SUN, 0.9)
     seams = " ".join(f"M{n(x)},{n(shell_t + 20)} V{n(WALL_FOOT - 2)}" for x in (lo - 12, hi + 12))
     c.line(seams, 1.4, darken(backlit(P.METAL_PALE), 0.75))
-    bolts = "".join(_circle(x, y, 1.8) for x in (lo - 18, lo - 6, hi + 6, hi + 18)
+    bolts = "".join(circle_d(x, y, 1.8) for x in (lo - 18, lo - 6, hi + 6, hi + 18)
                     for y in _steps(shell_t + 30, WALL_FOOT - 8, 14))
     c.add(f'<path d="{bolts}" fill="{backlit(P.METAL)}" stroke="{INK}" stroke-width=".8"/>')
     # the lights along the top of the shell: bulbs in a strip, each with its glow
     bulbs = list(_steps(shell_l + 30, shell_r - 30, 15))
     c.add("".join(f'<circle cx="{n(x)}" cy="{n(shell_t + 13)}" r="6" fill="{P.GLOW}" fill-opacity=".3"/>'
                   for x in bulbs))
-    c.add(f'<path d="{"".join(_circle(x, shell_t + 13, 3) for x in bulbs)}" fill="{lighten(P.GLOW, 0.4)}" '
+    c.add(f'<path d="{"".join(circle_d(x, shell_t + 13, 3) for x in bulbs)}" fill="{lighten(P.GLOW, 0.4)}" '
           f'stroke="{INK}" stroke-width="1"/>')
     # the opening, and through it the city's street
     opening = (f"M{n(lo)},{n(WALL_FOOT)} V{n(open_top + 16)} Q{n(lo)},{n(open_top)} {n(lo + 16)},{n(open_top)} "
@@ -363,18 +349,18 @@ def gate(s: Stage) -> tuple:
     c.add(f'<g clip-path="url(#{clip})">{_street(lo, hi, open_top)}</g>')
     c.path(opening, sw=2.6)
     # the connector's gold pins round the opening: along its top and down both sides
-    pins = "".join(_rect(x, open_top - 9, 5, 7) for x in _steps(lo + 14, hi - 18, 9))
-    pins += "".join(_rect(x, y, 7, 5) for x in (lo - 9, hi + 2) for y in _steps(open_top + 18, WALL_FOOT - 12, 10))
+    pins = "".join(rect_d(x, open_top - 9, 5, 7) for x in _steps(lo + 14, hi - 18, 9))
+    pins += "".join(rect_d(x, y, 7, 5) for x in (lo - 9, hi + 2) for y in _steps(open_top + 18, WALL_FOOT - 12, 10))
     c.add(f'<path d="{pins}" fill="{P.GOLD}" stroke="{INK}" stroke-width=".9"/>')
     # the keystone plate over the opening, bolted, with a chip on it
     kx, ky = VP_X, shell_t
     c.shape(f"M{n(kx - 20)},{n(ky - 6)} H{n(kx + 20)} L{n(kx + 14)},{n(ky + 22)} H{n(kx - 14)} Z", P.GOLD, sw=2,
             light=None)
-    bolts = "".join(_circle(kx + dx, ky + dy, 1.6) for dx, dy in ((-15, -1), (15, -1), (-11, 17), (11, 17)))
+    bolts = "".join(circle_d(kx + dx, ky + dy, 1.6) for dx, dy in ((-15, -1), (15, -1), (-11, 17), (11, 17)))
     c.add(f'<path d="{bolts}" fill="{backlit(P.METAL)}" stroke="{INK}" stroke-width=".8"/>')
     chip_pins = " ".join(f"M{n(kx - 7)},{n(y)} h-3 M{n(kx + 7)},{n(y)} h3" for y in (ky + 4, ky + 8, ky + 12))
     c.line(chip_pins, 1.2, INK)
-    c.add(f'<path d="{_rect(kx - 7, ky + 1, 14, 14)}" fill="{P.CHARCOAL}" stroke="{INK}" stroke-width="1"/>'
+    c.add(f'<path d="{rect_d(kx - 7, ky + 1, 14, 14)}" fill="{P.CHARCOAL}" stroke="{INK}" stroke-width="1"/>'
           f'<circle cx="{n(kx - 3.5)}" cy="{n(ky + 4.5)}" r="1.2" fill="{P.METAL}"/>')
     s.put(WALL_FOOT, c.render(), [(shell_l - 70, shell_t - 38, shell_r + 70, WALL_FOOT)], "gate", group="city",
           backdrop=True)
@@ -396,12 +382,12 @@ def _street(lo: float, hi: float, top: float) -> str:
 
     def side(x: float, y0: float, y1: float, ta: float, tb: float) -> str:
         """A face along the street: plane x, from height y0 to y1, from depth ta back to tb."""
-        return _poly([at(x, y0, ta), at(x, y0, tb), at(x, y1, tb), at(x, y1, ta)])
+        return poly_d([at(x, y0, ta), at(x, y0, tb), at(x, y1, tb), at(x, y1, ta)])
 
     def front(x0: float, x1: float, y0: float, y1: float, t: float) -> str:
         """A face across the street at depth t."""
         (a0, b0), (a1, b1) = at(x0, y0, t), at(x1, y1, t)
-        return _rect(min(a0, a1), min(b0, b1), abs(a1 - a0), abs(b1 - b0))
+        return rect_d(min(a0, a1), min(b0, b1), abs(a1 - a0), abs(b1 - b0))
 
     paths: dict[tuple, list[str]] = {}
 
@@ -416,12 +402,12 @@ def _street(lo: float, hi: float, top: float) -> str:
 
     # the sky over the far end, and the bottom of the sun behind the far city
     sky = c.gradient([(0, mix(P.ORANGE, P.SUN, 0.5)), (1, mix(P.SUN, P.YELLOW_PALE, 0.7))], 0, top, 0, HORIZON)
-    c.add(f'<path d="{_rect(lo - 4, top - 4, hi - lo + 8, HORIZON - top + 8)}" fill="{sky}"/>')
+    c.add(f'<path d="{rect_d(lo - 4, top - 4, hi - lo + 8, HORIZON - top + 8)}" fill="{sky}"/>')
     sx, sy, r = SUN
     c.add(f'<circle cx="{n(sx)}" cy="{n(sy)}" r="{n(r)}" fill="{mix(P.SUN, P.YELLOW_PALE, 0.45)}"/>')
     # the avenue from the square on to the far end, under everything standing on it
     mid = 0.4
-    avenue = _poly([at(380, WALL_FOOT, mid), at(460, WALL_FOOT, mid), (VP_X + 2, HORIZON), (VP_X - 2, HORIZON)])
+    avenue = poly_d([at(380, WALL_FOOT, mid), at(460, WALL_FOOT, mid), (VP_X + 2, HORIZON), (VP_X - 2, HORIZON)])
     c.add(f'<path d="{avenue}" fill="{mix(P.CRUST, P.CHARCOAL, 0.3)}"/>')
     # far off: the skyline - chip towers, server towers, a fan dome, bridges between them
     far = 0.12
@@ -440,10 +426,10 @@ def _street(lo: float, hi: float, top: float) -> str:
         put(front(x0, x1, WALL_FOOT, WALL_FOOT - h, far), tone, INK, 0.7)
         if kind == "chip":
             for xp in (x0, x1):
-                pins = (_rect(at(xp, y, far)[0] - 1, at(xp, y, far)[1], 2, 0.8)
+                pins = (rect_d(at(xp, y, far)[0] - 1, at(xp, y, far)[1], 2, 0.8)
                         for y in _steps(WALL_FOOT - h + 30, WALL_FOOT - 20, 24))
                 put(" ".join(pins), P.METAL_LIGHT, P.METAL_LIGHT, 0.2)
-        put(" ".join(_rect(*at(x, y, far), 1.4, 1.2) for x in _steps(x0 + 12, x1 - 14, 18)
+        put(" ".join(rect_d(*at(x, y, far), 1.4, 1.2) for x in _steps(x0 + 12, x1 - 14, 18)
                      for y in _steps(WALL_FOOT - h + 24, WALL_FOOT - 30, 26) if rnd.random() < 0.7),
             P.YELLOW_PALE, P.YELLOW_PALE, 0.1)
     c.line(" ".join(f"M{n(at(a, WALL_FOOT - 250, far)[0])},{n(at(a, WALL_FOOT - 250, far)[1])} "
@@ -473,13 +459,13 @@ def _street(lo: float, hi: float, top: float) -> str:
         put(front(x0 + 8, x1 - 8, WALL_FOOT - 30, WALL_FOOT - 4, mid), mix(P.SUN, P.YELLOW_PALE, 0.5), INK, 0.5)
     for x, y, color in ((300, WALL_FOOT - 60, P.PINK), (520, WALL_FOOT - 70, P.GREEN)):   # signs: a heart, a leaf
         cx, cy = at(x, y, mid)
-        put(_circle(cx, cy, 5), P.CARD, INK, 0.7)
+        put(circle_d(cx, cy, 5), P.CARD, INK, 0.7)
         put(f"M{n(cx)},{n(cy + 2.6)} l-2.8,-2.8 a1.6,1.6 0 0 1 2.8,-1.6 a1.6,1.6 0 0 1 2.8,1.6 Z"
             if color == P.PINK else ellipse_d(cx, cy, 1.6, 3.2), color, INK, 0.4)
     flush()
     # the square: warm paving in rings, the fountain, market stalls, trees in planters
     sq0, sq1 = 0.62, mid
-    square = _poly([at(lo - 80, WALL_FOOT, sq0), at(hi + 80, WALL_FOOT, sq0), at(hi + 300, WALL_FOOT, sq1),
+    square = poly_d([at(lo - 80, WALL_FOOT, sq0), at(hi + 80, WALL_FOOT, sq0), at(hi + 300, WALL_FOOT, sq1),
                     at(lo - 300, WALL_FOOT, sq1)])
     c.add(f'<path d="{square}" fill="{mix(P.SAND, P.SUN, 0.35)}"/>')
     fx, fy = at(VP_X, WALL_FOOT, 0.5)
@@ -489,35 +475,35 @@ def _street(lo: float, hi: float, top: float) -> str:
     put(ellipse_d(fx, fy - 3, 17, 3), P.WATER, INK, 0.8)
     c.line(" ".join(f"M{n(fx)},{n(fy - 10)} Q{n(fx + d)},{n(fy - 20)} {n(fx + 2.2 * d)},{n(fy - 4)}"
                     for d in (-6, -3, 3, 6)), 1.4, P.WATER_LIGHT)
-    put(_rect(fx - 1.4, fy - 11, 2.8, 8), P.METAL, INK, 0.5)
+    put(rect_d(fx - 1.4, fy - 11, 2.8, 8), P.METAL, INK, 0.5)
     for x, way in ((392, -1), (448, 1)):                                      # the stalls, striped awnings
         (sx0, sy0), (sx1, sy1) = at(x - 22, WALL_FOOT - 30, 0.56), at(x + 22, WALL_FOOT, 0.56)
-        put(_rect(sx0, sy0 + 3, sx1 - sx0, sy1 - sy0 - 3), P.WOOD, INK, 0.6)
-        stripes = [_rect(sx0 + i * (sx1 - sx0) / 6, sy0, (sx1 - sx0) / 12, 4) for i in range(6)]
-        put(_rect(sx0 - 1, sy0, sx1 - sx0 + 2, 4), P.CARD, INK, 0.6)
+        put(rect_d(sx0, sy0 + 3, sx1 - sx0, sy1 - sy0 - 3), P.WOOD, INK, 0.6)
+        stripes = [rect_d(sx0 + i * (sx1 - sx0) / 6, sy0, (sx1 - sx0) / 12, 4) for i in range(6)]
+        put(rect_d(sx0 - 1, sy0, sx1 - sx0 + 2, 4), P.CARD, INK, 0.6)
         put(" ".join(stripes), P.RED if way < 0 else P.TEAL, P.RED if way < 0 else P.TEAL, 0.1)
-        put(" ".join(_circle(sx0 + 3 + i * 3.4, sy0 + 8, 1.3) for i in range(5)),
+        put(" ".join(circle_d(sx0 + 3 + i * 3.4, sy0 + 8, 1.3) for i in range(5)),
             P.ORANGE if way < 0 else P.GREEN, INK, 0.3)
     for x, t in ((374, 0.46), (466, 0.46), (404, 0.6), (436, 0.6)):        # trees in planters
         bx, by = at(x, WALL_FOOT, t)
         k = t * 0.9
-        put(_rect(bx - 6 * k, by - 7 * k, 12 * k, 7 * k), P.TERRACOTTA, INK, 0.6)
-        put(_rect(bx - 0.8 * k, by - 18 * k, 1.6 * k, 11 * k), P.TRUNK, INK, 0.3)
-        put(_circle(bx, by - 22 * k, 8 * k), P.LEAF_LIGHT if x > VP_X else P.LEAF, INK, 0.6)
+        put(rect_d(bx - 6 * k, by - 7 * k, 12 * k, 7 * k), P.TERRACOTTA, INK, 0.6)
+        put(rect_d(bx - 0.8 * k, by - 18 * k, 1.6 * k, 11 * k), P.TRUNK, INK, 0.3)
+        put(circle_d(bx, by - 22 * k, 8 * k), P.LEAF_LIGHT if x > VP_X else P.LEAF, INK, 0.6)
     flush()
     # the street: a warm circuit road with its lit traces and pads, a pavement each side
     s0 = sq0
-    road = _poly([at(lo - 4, WALL_FOOT, 1), at(hi + 4, WALL_FOOT, 1), at(hi + 4, WALL_FOOT, s0),
+    road = poly_d([at(lo - 4, WALL_FOOT, 1), at(hi + 4, WALL_FOOT, 1), at(hi + 4, WALL_FOOT, s0),
                   at(lo - 4, WALL_FOOT, s0)])
     c.add(f'<path d="{road}" fill="{mix(P.CRUST, P.CHARCOAL, 0.35)}"/>')
     for a, b in ((lo, lo + 16), (hi - 16, hi)):
-        put(_poly([at(a, WALL_FOOT, 1), at(b, WALL_FOOT, 1), at(b, WALL_FOOT, s0), at(a, WALL_FOOT, s0)]),
+        put(poly_d([at(a, WALL_FOOT, 1), at(b, WALL_FOOT, 1), at(b, WALL_FOOT, s0), at(a, WALL_FOOT, s0)]),
             mix(P.SAND, P.CRUST, 0.3), INK, 0.5)
     traces = " ".join(f"M{n(at(x, WALL_FOOT, 1)[0])},{n(WALL_FOOT)} L{n(at(x, WALL_FOOT, s0)[0])},"
                       f"{n(at(x, WALL_FOOT, s0)[1])}" for x in _steps(lo + 24, hi - 24, (hi - lo - 48) / 5))
     c.add(f'<path d="{traces}" fill="none" stroke="{P.GOLD_LIGHT}" stroke-width="3.4" stroke-opacity=".5"/>'
           f'<path d="{traces}" fill="none" stroke="{P.SUN}" stroke-width="1.3"/>')
-    put(" ".join(_rect(at(x, WALL_FOOT, t)[0] - 2.4 * t, at(x, WALL_FOOT, t)[1] - 1.2 * t, 4.8 * t, 2.4 * t)
+    put(" ".join(rect_d(at(x, WALL_FOOT, t)[0] - 2.4 * t, at(x, WALL_FOOT, t)[1] - 1.2 * t, 4.8 * t, 2.4 * t)
                  for t in (0.92, 0.78, 0.68) for x in _steps(lo + 24, hi - 24, (hi - lo - 48) / 5)), P.GOLD, INK, 0.4)
     # the street's facades, block by block: cool shade on the left, sunlit on the right; shops under awnings at the
     # foot, windows lit in many colours, balconies, cornices, a light trim along each top
@@ -537,12 +523,12 @@ def _street(lo: float, hi: float, top: float) -> str:
                     put(side(xf, y, y + 12, ta - span * f, ta - span * (f + 0.26)),
                         rnd.choice((P.YELLOW_PALE, mix(P.YELLOW_PALE, P.PINK_PALE, 0.6), lighten(P.GLOW, 0.45),
                                     mix(P.SUN, P.YELLOW_PALE, 0.4))), INK, 0.5 * ta)
-                put(_poly([at(xf, y + 13, ta - span * 0.1), at(xf, y + 13, ta - span * 0.9),
+                put(poly_d([at(xf, y + 13, ta - span * 0.1), at(xf, y + 13, ta - span * 0.9),
                            at(xf - way * 6, y + 15, ta - span * 0.9), at(xf - way * 6, y + 15, ta - span * 0.1)]),
                     P.METAL_LIGHT, INK, 0.5 * ta)                                  # a balcony
             put(side(xf, WALL_FOOT - 40, WALL_FOOT - 6, ta - span * 0.12, tb + span * 0.12),
                 mix(P.SUN, P.YELLOW_PALE, 0.5), INK, 0.7 * ta)                     # the shop window
-            awning = _poly([at(xf, WALL_FOOT - 48, ta - span * 0.06), at(xf, WALL_FOOT - 48, tb + span * 0.06),
+            awning = poly_d([at(xf, WALL_FOOT - 48, ta - span * 0.06), at(xf, WALL_FOOT - 48, tb + span * 0.06),
                             at(xf - way * 14, WALL_FOOT - 38, tb + span * 0.06),
                             at(xf - way * 14, WALL_FOOT - 38, ta - span * 0.06)])
             put(awning, (P.RED, P.TEAL, P.YELLOW, P.PLUM)[(i + (way > 0)) % 4], INK, 0.8 * ta)
@@ -558,23 +544,23 @@ def _street(lo: float, hi: float, top: float) -> str:
                 put(f"M{n(x - 3 * t)},{n(y)} H{n(x + 3 * t)} L{n(x)},{n(y + 7 * t)} Z",
                     (P.RED, P.SUN, P.TEAL, P.PINK, P.GREEN)[j % 5], INK, 0.5)
             else:
-                put(_circle(x, y + 2 * t, 3.4 * t), P.YELLOW_PALE, P.YELLOW_PALE, 0.1)
-                put(_circle(x, y + 2 * t, 1.6 * t), P.SUN, INK, 0.4)
+                put(circle_d(x, y + 2 * t, 3.4 * t), P.YELLOW_PALE, P.YELLOW_PALE, 0.1)
+                put(circle_d(x, y + 2 * t, 1.6 * t), P.SUN, INK, 0.4)
     for xp, t in ((lo + 14, 0.7), (hi - 14, 0.7), (lo + 14, 0.85), (hi - 14, 0.85)):     # street lamps
         (bx, by), (tx_, ty) = at(xp, WALL_FOOT, t), at(xp, WALL_FOOT - 80, t)
         c.line(f"M{n(bx)},{n(by)} V{n(ty)}", 1.4 * t, INK)
-        put(_circle(tx_, ty, 4.4 * t), P.YELLOW_PALE, P.YELLOW_PALE, 0.1)
-        put(_circle(tx_, ty, 2.2 * t), P.SUN, INK, 0.5)
+        put(circle_d(tx_, ty, 4.4 * t), P.YELLOW_PALE, P.YELLOW_PALE, 0.1)
+        put(circle_d(tx_, ty, 2.2 * t), P.SUN, INK, 0.5)
     beam = [at(hi - 22, WALL_FOOT - 140, 1.0), at(hi - 22, WALL_FOOT - 140, mid)]     # the monorail's beam
     c.line(f"M{n(beam[0][0])},{n(beam[0][1])} L{n(beam[1][0])},{n(beam[1][1])}", 4.2, INK)
     c.line(f"M{n(beam[0][0])},{n(beam[0][1])} L{n(beam[1][0])},{n(beam[1][1])}", 2.4, P.METAL_LIGHT)
     for t in (0.8, 0.55):
         (px, py), (qx, qy) = at(hi - 22, WALL_FOOT - 140, t), at(hi - 22, WALL_FOOT - 16, t)
         c.line(f"M{n(px)},{n(py)} L{n(qx)},{n(qy)}", 1.8 * t, P.METAL_DARK)
-    train = _poly([at(hi - 22, WALL_FOOT - 168, 0.93), at(hi - 22, WALL_FOOT - 168, 0.76),
+    train = poly_d([at(hi - 22, WALL_FOOT - 168, 0.93), at(hi - 22, WALL_FOOT - 168, 0.76),
                    at(hi - 22, WALL_FOOT - 142, 0.76), at(hi - 22, WALL_FOOT - 142, 0.93)])
     put(train, P.TEAL, INK, 1.0)
-    put(" ".join(_poly([at(hi - 22, WALL_FOOT - 162, t0), at(hi - 22, WALL_FOOT - 162, t0 - 0.03),
+    put(" ".join(poly_d([at(hi - 22, WALL_FOOT - 162, t0), at(hi - 22, WALL_FOOT - 162, t0 - 0.03),
                         at(hi - 22, WALL_FOOT - 152, t0 - 0.03), at(hi - 22, WALL_FOOT - 152, t0)])
                  for t0 in (0.91, 0.86, 0.81)), P.YELLOW_PALE, INK, 0.5)
     flush()
@@ -582,12 +568,12 @@ def _street(lo: float, hi: float, top: float) -> str:
     for x, t in ((398, 0.82), (446, 0.7), (384, 0.54), (458, 0.5), (414, 0.45)):
         bx, by = at(x, WALL_FOOT, t)
         k = t * 0.55
-        put(_rect(bx - 3.5 * k, by - 12 * k, 2.6 * k, 12 * k) + _rect(bx + 0.9 * k, by - 12 * k, 2.6 * k, 12 * k),
+        put(rect_d(bx - 3.5 * k, by - 12 * k, 2.6 * k, 12 * k) + rect_d(bx + 0.9 * k, by - 12 * k, 2.6 * k, 12 * k),
             P.METAL, INK, 0.5)                                                    # legs
         put(rounded_rect_d(bx - 8 * k, by - 30 * k, 16 * k, 19 * k, 4 * k), P.ORANGE, INK, 0.7)
         put(rounded_rect_d(bx - 9 * k, by - 46 * k, 18 * k, 15 * k, 3.5 * k), P.ORANGE, INK, 0.7)
         put(rounded_rect_d(bx - 6.5 * k, by - 43.5 * k, 13 * k, 10 * k, 2.5 * k), P.SCREEN, INK, 0.4)
-        put(_circle(bx - 2.5 * k, by - 39 * k, 1.2 * k) + _circle(bx + 2.5 * k, by - 39 * k, 1.2 * k), P.GLOW,
+        put(circle_d(bx - 2.5 * k, by - 39 * k, 1.2 * k) + circle_d(bx + 2.5 * k, by - 39 * k, 1.2 * k), P.GLOW,
             P.GLOW, 0.1)
     flush()
     # the door's two leaves, swung open into the city against the sides: plates, rivets, hinge straps
@@ -595,20 +581,20 @@ def _street(lo: float, hi: float, top: float) -> str:
         t_far = 0.9
         near_top, foot = top + 26, WALL_FOOT
         leaf = [(x0, near_top), at(x0, near_top, t_far), at(x0, foot, t_far), (x0, foot)]
-        c.add(f'<path d="{_poly(leaf)}" fill="{mix(P.METAL_DARK, P.SUN, 0.18)}" stroke="{INK}" stroke-width="2"/>')
+        c.add(f'<path d="{poly_d(leaf)}" fill="{mix(P.METAL_DARK, P.SUN, 0.18)}" stroke="{INK}" stroke-width="2"/>')
         panels = []
         for f0, f1 in ((0.08, 0.31), (0.36, 0.64), (0.69, 0.92)):
             ya, yb = near_top + (foot - near_top) * f0, near_top + (foot - near_top) * f1
             ta, tb = 1 - (1 - t_far) * 0.2, 1 - (1 - t_far) * 0.8
-            panels.append(_poly([at(x0, ya, ta), at(x0, ya, tb), at(x0, yb, tb), at(x0, yb, ta)]))
+            panels.append(poly_d([at(x0, ya, ta), at(x0, ya, tb), at(x0, yb, tb), at(x0, yb, ta)]))
         c.add(f'<path d="{" ".join(panels)}" fill="{mix(P.METAL, P.SUN, 0.22)}" stroke="{INK}" stroke-width="1.2"/>')
-        rivets = "".join(_circle(*at(x0, near_top + (foot - near_top) * f, ta), 1.2)
+        rivets = "".join(circle_d(*at(x0, near_top + (foot - near_top) * f, ta), 1.2)
                          for f in (0.04, 0.335, 0.665, 0.96) for ta in (0.99, 0.95, 0.91))
         c.add(f'<path d="{rivets}" fill="{P.METAL_LIGHT}" stroke="{INK}" stroke-width=".6"/>')
         for f in (0.18, 0.82):                                       # the hinge straps
             y = near_top + (foot - near_top) * f
             strap = [(x0, y - 3), at(x0, y - 3, 0.94), at(x0, y + 3, 0.94), (x0, y + 3)]
-            c.add(f'<path d="{_poly(strap)}" fill="{P.CHARCOAL}" stroke="{INK}" stroke-width=".8"/>')
+            c.add(f'<path d="{poly_d(strap)}" fill="{P.CHARCOAL}" stroke="{INK}" stroke-width=".8"/>')
     return c.render()
 
 
@@ -643,7 +629,6 @@ def _city(s: Stage) -> None:
 # the crosswise stretch fills the band of the page from about 960 down to 1150.
 ROAD = Road(vx=VP_X, hz=HORIZON, f=1184.0, half=0.476, gate_z=1184.0 / (WALL_FOOT - HORIZON), near_z=2.63,
             end_x=-0.977, radius=0.977, left_x=-1.5)        # straight at the gate; the bend wholly on the page
-CROSS_Y = HORIZON + ROAD.f / ROAD.near_z            # the middle of the crosswise stretch on the page
 
 
 def _spill(s: Stage) -> None:
@@ -715,14 +700,14 @@ def lamp(x: float, foot: float, k: float, facing: int) -> tuple[str, tuple]:
     c = Canvas()
     h = 200 * k
     sw = 1.6 * min(1, k + 0.3)
-    c.shape(_rect(x - 2.6 * k, foot - h, 5.2 * k, h - 20 * k), P.CHARCOAL, sw=sw, light=None)
+    c.shape(rect_d(x - 2.6 * k, foot - h, 5.2 * k, h - 20 * k), P.CHARCOAL, sw=sw, light=None)
     # the cast-iron base: a square plinth on the kerb, a flared foot, a collar where the post goes in
-    c.shape(_rect(x - 8 * k, foot - 4 * k, 16 * k, 4 * k), P.CHARCOAL, sw=sw, light=None)
+    c.shape(rect_d(x - 8 * k, foot - 4 * k, 16 * k, 4 * k), P.CHARCOAL, sw=sw, light=None)
     c.shape(f"M{n(x - 6.5 * k)},{n(foot - 4 * k)} Q{n(x - 5 * k)},{n(foot - 14 * k)} {n(x - 3.2 * k)},"
             f"{n(foot - 20 * k)} H{n(x + 3.2 * k)} Q{n(x + 5 * k)},{n(foot - 14 * k)} {n(x + 6.5 * k)},"
             f"{n(foot - 4 * k)} Z", P.CHARCOAL, sw=sw, light=None)
-    c.shape(_rect(x - 4.2 * k, foot - 23 * k, 8.4 * k, 3 * k), P.CHARCOAL, sw=sw, light=None)
-    c.shape(_rect(x - 3.8 * k, foot - h * 0.62, 7.6 * k, 2.6 * k), P.CHARCOAL, sw=sw, light=None)
+    c.shape(rect_d(x - 4.2 * k, foot - 23 * k, 8.4 * k, 3 * k), P.CHARCOAL, sw=sw, light=None)
+    c.shape(rect_d(x - 3.8 * k, foot - h * 0.62, 7.6 * k, 2.6 * k), P.CHARCOAL, sw=sw, light=None)
     c.line(f"M{n(x - 1.2 * k)},{n(foot - 18 * k)} L{n(x - 2.8 * k)},{n(foot - 6 * k)} "
            f"M{n(x - 1)},{n(foot - h + 10 * k)} V{n(foot - 26 * k)}", max(0.6, 1.2 * k), P.METAL_DARK)
     ax = x + facing * 34 * k
@@ -771,7 +756,7 @@ def _sides(f0: float, f1: float) -> tuple[tuple[float, float], tuple[float, floa
 def _fields(c: Canvas, s: Stage) -> None:
     """The fields on both sides, in rows running to the city: orchards and wheat far off, a farm track, vineyards,
     then cabbages near; a grass verge along each kerb."""
-    c.add(f'<path d="{_rect(-6, PLAZA, W + 12, H - PLAZA + 6)}" fill="{P.GRASS}"/>')
+    c.add(f'<path d="{rect_d(-6, PLAZA, W + 12, H - PLAZA + 6)}" fill="{P.GRASS}"/>')
     orchard, near_f = (-1800.0, -600.0), -1300.0
     whole = ((-5200.0, 2 * VP_X + 5200),)                        # the road is laid over them afterwards
     for lo, hi in whole:                                         # wheat by the city
@@ -789,7 +774,7 @@ def _fields(c: Canvas, s: Stage) -> None:
         c.line(" ".join(ears), 0.9, darken(P.SUN, 0.7), 0.8)
     for lo, hi in whole:                                         # the orchards' grass, a meadow beside them
         c.add(f'<path d="{_quad(TRACK[0], ORCHARD, lo, hi)}" fill="{P.GRASS_DARK}"/>')
-    c.add(f'<path d="{_rect(-6, TRACK[0], W + 12, TRACK[1] - TRACK[0])}" fill="{mix(P.SAND, P.CRUST, 0.3)}"/>')
+    c.add(f'<path d="{rect_d(-6, TRACK[0], W + 12, TRACK[1] - TRACK[0])}" fill="{mix(P.SAND, P.CRUST, 0.3)}"/>')
     c.line(f"M-6,{TRACK[0]} H{W + 6} M-6,{TRACK[1]} H{W + 6}", 1.4, darken(P.SAND, 0.75))
     for lo, hi in ((near_f, 2 * VP_X - near_f),):                # the vineyards
         c.add(f'<path d="{_quad(NEAR, TRACK[1], lo, hi)}" fill="{mix(P.SAND, P.CRUST, 0.45)}"/>')
@@ -801,7 +786,7 @@ def _fields(c: Canvas, s: Stage) -> None:
             c.line(" ".join(posts), 2.2, P.WOOD_DARK)
             top = [(edge_x(y, f), y - 30 * scale_at(y) / 100) for y in (NEAR - 2, TRACK[1] + 4)]
             bot = [(edge_x(y, f), y - 12 * scale_at(y) / 100) for y in (TRACK[1] + 4, NEAR - 2)]
-            c.add(f'<path d="{_poly(top + bot)}" fill="{P.LEAF}" stroke="{P.LEAF_DARK}" stroke-width="1.4" '
+            c.add(f'<path d="{poly_d(top + bot)}" fill="{P.LEAF}" stroke="{P.LEAF_DARK}" stroke-width="1.4" '
                   f'stroke-linejoin="round"/>')
             bunches: dict[float, list[tuple[float, float]]] = {}
             veins = []
@@ -857,12 +842,12 @@ def _tree(x: float, y: float, k: float) -> str:
     """An apple tree of the orchard, `k` its size over 100."""
     c = Canvas()
     sw = max(0.9, 2.0 * k)
-    c.shape(_rect(x - 3 * k, y - 22 * k, 6 * k, 22 * k), P.TRUNK, sw=sw, light=None)
+    c.shape(rect_d(x - 3 * k, y - 22 * k, 6 * k, 22 * k), P.TRUNK, sw=sw, light=None)
     c.shape(f"M{n(x - 20 * k)},{n(y - 30 * k)} Q{n(x - 26 * k)},{n(y - 52 * k)} {n(x - 6 * k)},{n(y - 58 * k)} "
             f"Q{n(x + 10 * k)},{n(y - 66 * k)} {n(x + 20 * k)},{n(y - 48 * k)} Q{n(x + 26 * k)},{n(y - 28 * k)} "
             f"{n(x + 4 * k)},{n(y - 22 * k)} Q{n(x - 16 * k)},{n(y - 18 * k)} {n(x - 20 * k)},{n(y - 30 * k)} Z",
             P.LEAF, sw=sw, light=None)
-    apples = "".join(_circle(x + dx * k, y + dy * k, 3 * k) for dx, dy in ((-10, -38), (6, -46), (10, -32), (-2, -28)))
+    apples = "".join(circle_d(x + dx * k, y + dy * k, 3 * k) for dx, dy in ((-10, -38), (6, -46), (10, -32), (-2, -28)))
     c.add(f'<path d="{apples}" fill="{P.RED}"/>')
     return c.render()
 
@@ -872,10 +857,10 @@ def _crate(x: float, y: float, k: float) -> str:
     """A wooden crate of apples standing at (x, y)."""
     c = Canvas()
     sw = max(0.8, 1.8 * k)
-    c.shape(_rect(x - 14 * k, y - 16 * k, 28 * k, 16 * k), P.WOOD, sw=sw, light=None)
+    c.shape(rect_d(x - 14 * k, y - 16 * k, 28 * k, 16 * k), P.WOOD, sw=sw, light=None)
     c.line(f"M{n(x - 14 * k)},{n(y - 8 * k)} H{n(x + 14 * k)}", sw * 0.7, P.WOOD_DARK)
     for i, dx in enumerate((-8, 0, 8)):
-        c.shape(_circle(x + dx * k, y - 18 * k, 4.6 * k), P.RED if i != 1 else P.GREEN, sw=sw * 0.8, light=None)
+        c.shape(circle_d(x + dx * k, y - 18 * k, 4.6 * k), P.RED if i != 1 else P.GREEN, sw=sw * 0.8, light=None)
     return c.render()
 
 
@@ -885,9 +870,9 @@ def _tyre(c: Canvas, x: float, y: float, r: float, sw: float) -> None:
                     f"L{n(x + r * 1.1 * math.cos(a))},{n(y + r * 1.1 * math.sin(a))}"
                     for a in (i * math.pi / 8 for i in range(16)))
     c.line(lugs, max(1.2, r * 0.22), INK)
-    c.shape(_circle(x, y, r), P.CHARCOAL, sw=sw, light=None)
-    c.shape(_circle(x, y, r * 0.5), P.SUN, sw=sw * 0.7, light=None)
-    c.add(f'<path d="{_circle(x, y, r * 0.18)}" fill="{P.METAL}" stroke="{INK}" stroke-width="{n(sw * 0.5)}"/>')
+    c.shape(circle_d(x, y, r), P.CHARCOAL, sw=sw, light=None)
+    c.shape(circle_d(x, y, r * 0.5), P.SUN, sw=sw * 0.7, light=None)
+    c.add(f'<path d="{circle_d(x, y, r * 0.18)}" fill="{P.METAL}" stroke="{INK}" stroke-width="{n(sw * 0.5)}"/>')
 
 
 def tractor(s: Stage, x: float, y: float, k: float) -> None:
@@ -905,7 +890,7 @@ def tractor(s: Stage, x: float, y: float, k: float) -> None:
     back.shape(rounded_rect_d(x - 11 * k, feet - 120 * ka, 22 * k, guard_top - feet + 120 * ka + 2, 4 * k),
                P.DARK_BROWN, sw=sw, light=None)                                         # the seat's back
     for dx, dy, r in ((0, 0, 3.4), (5, -6, 4.4), (12, -10, 5.2)):                      # smoke from the pipe
-        back.shape(_circle(x - 40 * k + dx * k, y - 64 * k + dy * k, r * k), mix(P.METAL_PALE, P.WHITE, 0.4),
+        back.shape(circle_d(x - 40 * k + dx * k, y - 64 * k + dy * k, r * k), mix(P.METAL_PALE, P.WHITE, 0.4),
                    sw=sw * 0.6, light=None)
     back.line(f"M{n(x - 40 * k)},{n(y - 36 * k)} V{n(y - 58 * k)}", 3.4 * k, INK)       # the exhaust pipe
     back.line(f"M{n(x - 40 * k)},{n(y - 36 * k)} V{n(y - 58 * k)}", 2 * k, P.METAL_DARK)
@@ -940,10 +925,10 @@ def handcart(x: float, y: float, k: float) -> tuple[str, tuple]:
     c = Canvas()
     sw = max(0.9, 2.0 * k)
     c.line(f"M{n(x - 30 * k)},{n(y - 26 * k)} L{n(x - 52 * k)},{n(y - 34 * k)}", 2.6 * k, P.WOOD_DARK)
-    c.shape(_rect(x - 32 * k, y - 32 * k, 64 * k, 12 * k), P.WOOD, sw=sw, light=None)
+    c.shape(rect_d(x - 32 * k, y - 32 * k, 64 * k, 12 * k), P.WOOD, sw=sw, light=None)
     for dx, dy in ((-18, 0), (0, 0), (18, 0), (-9, -18), (9, -18)):
         c.add(_crate(x + dx * k, y - 32 * k + dy * k, 0.6 * k))
-    c.shape(_circle(x, y - 12 * k, 12 * k), P.WOOD_DARK, sw=sw, light=None)
+    c.shape(circle_d(x, y - 12 * k, 12 * k), P.WOOD_DARK, sw=sw, light=None)
     c.line(" ".join(f"M{n(x)},{n(y - 12 * k)} l{n(10 * k * math.cos(a))},{n(10 * k * math.sin(a))}"
                     for a in (0, 1.05, 2.1, 3.14, 4.19, 5.24)), 1.2 * k, P.WOOD)
     return c.render(), (x - 54 * k, y - 63 * k, x + 33 * k, y)
@@ -967,7 +952,7 @@ def basket(x: float, y: float, k: float) -> tuple[str, tuple]:
     c.shape(f"M{n(x - 13 * k)},{n(y - 16 * k)} H{n(x + 13 * k)} L{n(x + 10 * k)},{n(y)} H{n(x - 10 * k)} Z",
             P.KITCHEN_KRAFT, sw=sw, light=None)
     for i, dx in enumerate((-7, 0, 7)):
-        c.shape(_circle(x + dx * k, y - 18 * k, 4.4 * k), P.RED if i != 1 else P.GREEN, sw=sw * 0.8, light=None)
+        c.shape(circle_d(x + dx * k, y - 18 * k, 4.4 * k), P.RED if i != 1 else P.GREEN, sw=sw * 0.8, light=None)
     c.line(f"M{n(x - 11 * k)},{n(y - 8 * k)} H{n(x + 11 * k)}", sw * 0.6, P.WOOD_DARK)
     return c.render(), (x - 14 * k, y - 23 * k, x + 14 * k, y)
 
@@ -1036,15 +1021,15 @@ def _workers(s: Stage) -> None:
                 art, box = basket(worker.right + 6, y, scale_at(y) / 100)
                 s.put(y, art, box, "basket", group="orchard")
     # where the road's bend took a field, its worker goes to work further off: ten at work in all
-    extra = (("present", (TRACK[0] + 6, TRACK[0] + 10), 0.1), ("carry", (ORCHARD - 2, ORCHARD - 12), 0.0),
+    fallback = (("present", (TRACK[0] + 6, TRACK[0] + 10), 0.1), ("carry", (ORCHARD - 2, ORCHARD - 12), 0.0),
              ("cheer", (TRACK[0] + 2, TRACK[0] + 8), 0.6), ("present", (ORCHARD - 6, ORCHARD - 14), 0.1),
              ("carry", (PLAZA + 14, PLAZA + 24), 0.0), ("cheer", (ORCHARD + 4, ORCHARD + 12), 0.6))
     spans = ((2 * VP_X + 300, 2 * VP_X + 1600), (-200, -1600), (2 * VP_X + 900, 2 * VP_X + 2400), (-800, -2400),
              (2 * VP_X + 100, 2 * VP_X + 3400), (300, -3400))
     n_ = 0
-    while sum(1 for b in s.boxes if b.kind == "actor" and b.name == "agent") < 11 and n_ < len(extra) * len(spans):
-        pose, ys, wide = extra[n_ % len(extra)]
-        feet = spans[n_ // len(extra) % len(spans)]
+    while sum(1 for b in s.boxes if b.kind == "actor" and b.name == "agent") < 11 and n_ < len(fallback) * len(spans):
+        pose, ys, wide = fallback[n_ % len(fallback)]
+        feet = spans[n_ // len(fallback) % len(spans)]
         n_ += 1
         try:
             x, y = _spot(s, ys, feet, wide)
@@ -1075,27 +1060,29 @@ def _cast(s: Stage) -> None:
             return
 
 
+def _walled_city(s: Stage) -> None:
+    """The city's towers, the wall of circuit board with its apron, and the gate."""
+    ledger(s)
+    _city(s)
+    s.put(WALL_FOOT - 1, _wall_art(), [(-6, WALL_TOP - 4, W + 6, WALL_FOOT)], "wall", group="city", backdrop=True)
+    gate(s)
+
+
 def city_view() -> str:
     """The walled city alone - its towers, the wall of circuit board with its apron and the glowing gate - as a
     drawing in the page's units, its gate at (VP_X, WALL_FOOT) and the vanishing point at (VP_X, HORIZON): to be set
     small on the horizon of another picture (the conclusion's road leads to it)."""
     s = Stage(seed=31, reserved=[])
-    ledger(s)
-    _city(s)
-    s.put(WALL_FOOT - 1, _wall_art(), [(-6, WALL_TOP - 4, W + 6, WALL_FOOT)], "wall", group="city", backdrop=True)
-    gate(s)
+    _walled_city(s)
     return "".join(f for _, _, f in sorted(s.items, key=lambda item: item[:2]))
 
 
 def draw() -> Opener:
     """The farewell picture."""
     s = Stage(seed=31, reserved=[])
-    ledger(s)
     c = s.back
     _sky(c)
-    _city(s)
-    s.put(WALL_FOOT - 1, _wall_art(), [(-6, WALL_TOP - 4, W + 6, WALL_FOOT)], "wall", group="city", backdrop=True)
-    gate(s)
+    _walled_city(s)
     _fields(c, s)
     ROAD.draw(c)
     _spill(s)

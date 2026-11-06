@@ -29,7 +29,7 @@ from dataclasses import dataclass, field
 from .. import design as P
 from ..design import darken, lighten, mix
 from .curves import eased_points
-from .ink import Canvas, ellipse_d, lettering, lettering_width, n, rounded_rect_d
+from .ink import Canvas, circle_d, ellipse_d, lettering, lettering_width, n, poly_d, rect_d, rounded_rect_d
 from .openers import H, W, Box, Stage
 
 SW = 2.4                     # outline in a vignette's local units
@@ -86,7 +86,7 @@ PUDDLES = ((0, 610), (1, 300), (2, 600), (3, 300))   # (row, x) of a puddle on t
 RIVER_X = 546                # the river comes down from the hills between chapters 10 and 9 ...
 POND = (544, 244, 32, 14)    # ... under the bridge of the top row, into a pond: centre x, y, radii
 PLAQUE_W = 150               # a plaque's width; it never shrinks with distance, so its words always read
-TITLE_SIZE = 12.4            # its title's size, set smaller as a whole only if the title needs four lines
+TITLE_SIZE = 12.4            # its title's size, set smaller as a whole when the title would not fit in three lines
 TITLE_LH = 14.2
 
 
@@ -123,18 +123,6 @@ def scale_at(y: float) -> float:
 
 
 # ============================================================================ small shapes
-def _poly(points) -> str:
-    return "M" + " L".join(f"{n(x)},{n(y)}" for x, y in points) + " Z"
-
-
-def _rect(x: float, y: float, w: float, h: float) -> str:
-    return f"M{n(x)},{n(y)} H{n(x + w)} V{n(y + h)} H{n(x)} Z"
-
-
-def _circle(x: float, y: float, r: float) -> str:
-    return ellipse_d(x, y, r, r)
-
-
 def _frange(a: float, b: float, step: float):
     x = a
     while x < b:
@@ -148,7 +136,7 @@ def _shadow(c: Canvas, w: float, depth: float = 8, x: float = 0) -> None:
 
 def _window(c: Canvas, x: float, y: float, w: float, h: float, lit: bool = False, cross: bool = True) -> None:
     """A window: glass with a glint, or lit warm from inside."""
-    c.shape(_rect(x, y, w, h), P.YELLOW_PALE if lit else P.SKY_LOW, sw=SW * 0.8, light=None)
+    c.shape(rect_d(x, y, w, h), P.YELLOW_PALE if lit else P.SKY_LOW, sw=SW * 0.8, light=None)
     if cross:
         c.line(f"M{n(x + w / 2)},{n(y)} V{n(y + h)} M{n(x)},{n(y + h / 2)} H{n(x + w)}", sw=1.3)
     if not lit:
@@ -158,7 +146,7 @@ def _window(c: Canvas, x: float, y: float, w: float, h: float, lit: bool = False
 def _striped(c: Canvas, d: str, a: str, b: str, x0: float, x1: float, step: float, top: float, bottom: float) -> None:
     """A shape in vertical stripes of two colours (a tent), shaded on its right, outlined once."""
     clip = c.shape(d, b, sw=0, clip=True)
-    stripes = "".join(_rect(x, top, step / 2, bottom - top) for x in _frange(x0, x1, step))
+    stripes = "".join(rect_d(x, top, step / 2, bottom - top) for x in _frange(x0, x1, step))
     c.add(f'<g clip-path="url(#{clip})"><path d="{stripes}" fill="{a}"/>'
           f'<path d="{d}" fill="{P.INK}" fill-opacity=".12" transform="translate(5,0)"/></g>')
     c.path(d, sw=SW)
@@ -168,9 +156,9 @@ def _banded(c: Canvas, d: str, a: str, b: str, top: float, bottom: float, step: 
             right: float) -> None:
     """A shape in horizontal bands of two colours (a lighthouse), shaded on its right, outlined once."""
     clip = c.shape(d, b, sw=0, clip=True)
-    bands = "".join(_rect(left, y, right - left, step / 2) for y in _frange(top, bottom, step))
+    bands = "".join(rect_d(left, y, right - left, step / 2) for y in _frange(top, bottom, step))
     c.add(f'<g clip-path="url(#{clip})"><path d="{bands}" fill="{a}"/>'
-          f'<path d="{_rect((left + right) / 2 + 4, top, right, bottom - top)}" fill="{P.INK}" '
+          f'<path d="{rect_d((left + right) / 2 + 4, top, right, bottom - top)}" fill="{P.INK}" '
           f'fill-opacity=".14"/></g>')
     c.path(d, sw=SW)
 
@@ -181,7 +169,7 @@ def _star(cx: float, cy: float, r: float) -> str:
         a = math.radians(-90 + i * 36)
         rr = r if i % 2 == 0 else r * 0.45
         pts.append((cx + math.cos(a) * rr, cy + math.sin(a) * rr))
-    return _poly(pts)
+    return poly_d(pts)
 
 
 def _sparkle(cx: float, cy: float, r: float) -> str:
@@ -219,16 +207,16 @@ def _smoke(c: Canvas, x: float, y: float, k: float = 1.0) -> None:
 
 def _bubbles(c: Canvas, points) -> None:
     for x, y, r in points:
-        c.add(f'<path d="{_circle(x, y, r)}" fill="{P.WHITE}" fill-opacity=".8" stroke="{P.INK}" '
+        c.add(f'<path d="{circle_d(x, y, r)}" fill="{P.WHITE}" fill-opacity=".8" stroke="{P.INK}" '
               f'stroke-width="1.2"/>')
 
 
 def _fir(c: Canvas, x: float, h: float, ground: float = 0, color: str = P.FIR) -> None:
     """A fir tree of height h standing at x."""
-    c.shape(_rect(x - 2.5, ground - h * 0.16, 5, h * 0.16), P.TRUNK, sw=1.5, light=None)
+    c.shape(rect_d(x - 2.5, ground - h * 0.16, 5, h * 0.16), P.TRUNK, sw=1.5, light=None)
     for i, k in enumerate((1.0, 0.8, 0.6)):
         base = ground - h * 0.12 - h * i * 0.25
-        c.shape(_poly([(x - h * 0.24 * k, base), (x, base - h * 0.45), (x + h * 0.24 * k, base)]), color, sw=1.7)
+        c.shape(poly_d([(x - h * 0.24 * k, base), (x, base - h * 0.45), (x + h * 0.24 * k, base)]), color, sw=1.7)
 
 
 # ============================================================================ the vignettes
@@ -251,33 +239,33 @@ def kitchen(c: Canvas, accent: str) -> None:
     """Chapter 1: the kitchen - a cottage baking a pie (on the sill, steam rising), smoke from the chimney, a
     vegetable garden with cabbages behind a little fence, a basket of apples by the door."""
     _shadow(c, 200, x=6)
-    c.shape(_rect(2, -116, 14, 36), P.TERRACOTTA, sw=SW)                  # the chimney, behind the roof
-    c.shape(_rect(-1, -120, 20, 7), darken(P.TERRACOTTA, 0.9), sw=SW)
+    c.shape(rect_d(2, -116, 14, 36), P.TERRACOTTA, sw=SW)                  # the chimney, behind the roof
+    c.shape(rect_d(-1, -120, 20, 7), darken(P.TERRACOTTA, 0.9), sw=SW)
     _smoke(c, 12, -128)
-    c.shape(_rect(-80, -74, 104, 74), P.KITCHEN_WALL, sw=SW)                # the walls
+    c.shape(rect_d(-80, -74, 104, 74), P.KITCHEN_WALL, sw=SW)                # the walls
     c.line("M-80,-50 H24 M-80,-26 H24", sw=1, stroke=darken(P.KITCHEN_WALL, 0.85))
-    c.shape(_poly([(-94, -70), (-28, -126), (38, -70)]), accent, sw=SW)     # the roof in the chapter's colour
+    c.shape(poly_d([(-94, -70), (-28, -126), (38, -70)]), accent, sw=SW)     # the roof in the chapter's colour
     c.line("M-80,-82 L24,-82 M-64,-96 L8,-96 M-48,-110 L-8,-110", sw=1.3, stroke=darken(accent, 0.7))
     c.shape(ellipse_d(-28, -92, 8, 8), P.YELLOW_PALE, sw=1.8, light=None)   # a lit round window under the ridge
     c.line("M-36,-92 H-20 M-28,-100 V-84", sw=1.1)
-    c.shape(_rect(-70, -48, 22, 48), P.WOOD, sw=SW)                         # the door
+    c.shape(rect_d(-70, -48, 22, 48), P.WOOD, sw=SW)                         # the door
     c.dot(-52, -24, 2)
     c.shape("M-44,-10 L-42,0 H-26 L-24,-10 Z", P.KITCHEN_KRAFT, sw=1.6)     # a basket of apples by the door
     for x in (-40, -34, -28):
-        c.shape(_circle(x, -12, 3.4), P.RED, sw=1.2, light=None)
-    c.shape(_rect(-36, -60, 50, 34), P.KITCHEN_CABINET, sw=SW * 0.8, light=None)   # the window, shutters open
+        c.shape(circle_d(x, -12, 3.4), P.RED, sw=1.2, light=None)
+    c.shape(rect_d(-36, -60, 50, 34), P.KITCHEN_CABINET, sw=SW * 0.8, light=None)   # the window, shutters open
     _window(c, -30, -57, 38, 28, lit=True)
-    c.shape(_rect(-40, -27, 58, 6), P.WOOD_LIGHT, sw=SW * 0.9)              # the sill ...
+    c.shape(rect_d(-40, -27, 58, 6), P.WOOD_LIGHT, sw=SW * 0.9)              # the sill ...
     c.shape("M-25,-27 Q-12,-44 1,-27 Z", P.CRUST, sw=2)                     # ... and the pie on it
     c.line("M-20,-31 L-6,-38 M-16,-36 L-3,-31 M-12,-41 L-12,-28", sw=1.1, stroke=darken(P.CRUST, 0.72))
     c.line("M-17,-48 q-3,-4 0,-8 M-8,-49 q-3,-4 0,-8", sw=1.4, stroke=P.INK, opacity=0.55)   # steam
-    c.shape(_rect(-38, -21, 54, 6), darken(accent, 0.9), sw=1.6, light=None)   # the flower box under it
+    c.shape(rect_d(-38, -21, 54, 6), darken(accent, 0.9), sw=1.6, light=None)   # the flower box under it
     for i, x in enumerate((-32, -22, -12, -2, 8)):
-        c.shape(_circle(x, -24, 3.2), (P.SUN, P.WHITE, P.PINK_PALE)[i % 3], sw=1.1, light=None)
-    c.shape(_rect(34, -14, 68, 14), P.FLOOR_DARK, sw=1.8, light=None)       # the vegetable bed ...
+        c.shape(circle_d(x, -24, 3.2), (P.SUN, P.WHITE, P.PINK_PALE)[i % 3], sw=1.1, light=None)
+    c.shape(rect_d(34, -14, 68, 14), P.FLOOR_DARK, sw=1.8, light=None)       # the vegetable bed ...
     for row, y in enumerate((-10, -4)):
         for x in range(40 + row * 6, 100, 12):
-            c.shape(_circle(x, y - 2, 4.6), P.LEAF_LIGHT, sw=1.2)          # ... of cabbages
+            c.shape(circle_d(x, y - 2, 4.6), P.LEAF_LIGHT, sw=1.2)          # ... of cabbages
     for x in range(30, 108, 9):                                            # behind its little fence
         c.shape(f"M{x},0 V-24 L{x + 3},-28 L{x + 6},-24 V0 Z", P.CARD, sw=1.3, light=None)
     c.line("M28,-8 H106 M28,-18 H106", sw=1.6)
@@ -292,9 +280,9 @@ def fair(c: Canvas, accent: str) -> None:
     for i in range(10):                                                    # the spokes
         a = math.radians(i * 36 + 8)
         c.line(f"M{cx},{cy} L{n(cx + math.cos(a) * r)},{n(cy + math.sin(a) * r)}", sw=1.2)
-    c.add(f'<path d="{_circle(cx, cy, r)}" fill="none" stroke="{P.INK}" stroke-width="9"/>')
-    c.add(f'<path d="{_circle(cx, cy, r)}" fill="none" stroke="{accent}" stroke-width="4.6"/>')
-    c.shape(_circle(cx, cy, 7), P.CREAM, sw=2)
+    c.add(f'<path d="{circle_d(cx, cy, r)}" fill="none" stroke="{P.INK}" stroke-width="9"/>')
+    c.add(f'<path d="{circle_d(cx, cy, r)}" fill="none" stroke="{accent}" stroke-width="4.6"/>')
+    c.shape(circle_d(cx, cy, 7), P.CREAM, sw=2)
     for i in range(10):                                                    # the cabins, hanging level
         a = math.radians(i * 36 + 8)
         x, y = cx + math.cos(a) * r, cy + math.sin(a) * r
@@ -305,10 +293,10 @@ def fair(c: Canvas, accent: str) -> None:
     c.shape("M-80,0 Q-72,-28 -64,0 Z", darken(accent, 0.55), sw=SW * 0.8, light=None)   # its open flap
     c.line("M-72,-92 V-108", sw=1.8)                                       # the pennant on top
     c.shape("M-72,-108 L-56,-103 L-72,-98 Z", P.RED, sw=1.5, light=None)
-    c.shape(_rect(-22, -24, 30, 18), P.CREAM, sw=1.8)                       # the balloon cart ...
-    c.shape(_rect(-24, -28, 34, 6), accent, sw=1.6, light=None)
+    c.shape(rect_d(-22, -24, 30, 18), P.CREAM, sw=1.8)                       # the balloon cart ...
+    c.shape(rect_d(-24, -28, 34, 6), accent, sw=1.6, light=None)
     for x in (-16, 2):
-        c.shape(_circle(x, -5, 5), P.CHARCOAL, sw=1.4, light=None)
+        c.shape(circle_d(x, -5, 5), P.CHARCOAL, sw=1.4, light=None)
     for i, (x, y) in enumerate(((-18, -62), (-6, -70), (6, -60), (-28, -54))):   # ... its balloons on strings
         c.line(f"M-7,-28 Q{n((x - 7) / 2)},{n(y + 18)} {x},{y + 8}", sw=1)
         c.shape(ellipse_d(x, y, 7, 8.5), (P.RED, P.SUN, P.TEAL, P.PINK)[i], sw=1.5)
@@ -320,30 +308,30 @@ def station(c: Canvas, accent: str) -> None:
     radar dish and a fuel tank."""
     _shadow(c, 220)
     bx, by, r = -46, -86, 52
-    c.shape(_poly([(bx - 34, 0), (bx - 26, -40), (bx + 26, -40), (bx + 34, 0)]), P.METAL, sw=SW)   # the plinth
+    c.shape(poly_d([(bx - 34, 0), (bx - 26, -40), (bx + 26, -40), (bx + 34, 0)]), P.METAL, sw=SW)   # the plinth
     c.line(f"M{bx - 30},-20 H{bx + 30}", sw=1.3, stroke=P.METAL_DARK)
-    clip = c.shape(_circle(bx, by, r), P.SPACE_DEEP, sw=0, light=None, clip=True)
+    clip = c.shape(circle_d(bx, by, r), P.SPACE_DEEP, sw=0, light=None, clip=True)
     body = Canvas()
-    body.add(f'<path d="{_circle(bx + 34, by + 44, 40)}" fill="{P.SPACE_LOW}"/>')   # a planet low inside
+    body.add(f'<path d="{circle_d(bx + 34, by + 44, 40)}" fill="{P.SPACE_LOW}"/>')   # a planet low inside
     rnd = random.Random(3)
     for _ in range(14):
         body.dot(bx + rnd.uniform(-46, 46), by + rnd.uniform(-46, 26), rnd.uniform(0.9, 1.6), P.WHITE)
     for side in (-1, 1):                                                   # the solar wings ...
         x0 = bx + (24 if side > 0 else -46)
-        body.shape(_rect(x0, by - 7, 22, 14), accent, sw=1.7, light=None)
+        body.shape(rect_d(x0, by - 7, 22, 14), accent, sw=1.7, light=None)
         body.line(f"M{x0 + 7},{by - 7} V{by + 7} M{x0 + 14},{by - 7} V{by + 7} M{x0},{by} H{x0 + 22}", sw=0.9,
                   stroke=darken(accent, 0.6))
     body.line(f"M{bx - 24},{by} H{bx + 24}", sw=2)
     body.shape(rounded_rect_d(bx - 19, by - 8, 38, 16, 7), P.HULL, sw=1.7)  # ... on the long module
-    body.shape(_circle(bx, by - 16, 8.5), P.HULL, sw=1.7)                   # the docking node
+    body.shape(circle_d(bx, by - 16, 8.5), P.HULL, sw=1.7)                   # the docking node
     body.dot(bx - 8, by, 2, P.SCREEN_LIGHT)
     body.dot(bx + 4, by, 2, P.SCREEN_LIGHT)
     c.add(f'<g clip-path="url(#{clip})">{body.render()}</g>')
     c.add(f'<path d="M{bx - 34},{by - 26} A42,42 0 0 1 {bx - 6},{by - 44}" fill="none" stroke="{P.WHITE}" '
           f'stroke-width="3.2" stroke-linecap="round" stroke-opacity=".6"/>')   # the glass's glint
-    c.path(_circle(bx, by, r), sw=SW + 0.6)
+    c.path(circle_d(bx, by, r), sw=SW + 0.6)
     px = 40                                                                # the launch pad, the gantry, the rocket
-    c.shape(_rect(px - 22, -9, 46, 9), P.METAL_DARK, sw=SW)
+    c.shape(rect_d(px - 22, -9, 46, 9), P.METAL_DARK, sw=SW)
     c.line(f"M{px + 18},-9 V-104 M{px + 18},-34 H{px + 8} M{px + 18},-66 H{px + 8} M{px + 18},-98 H{px + 26}",
            sw=2.2, stroke=P.METAL_DARK)
     c.line(f"M{px + 24},-9 V-104", sw=2.2, stroke=P.METAL_DARK)
@@ -354,12 +342,12 @@ def station(c: Canvas, accent: str) -> None:
     c.shape(f"M{px - 9},-72 Q{px - 9},-94 {px},-108 Q{px + 9},-94 {px + 9},-72 Z", accent, sw=SW)
     c.shape(f"M{px - 9},-38 L{px - 19},-12 L{px - 9},-14 Z", accent, sw=1.7, light=None)
     c.shape(f"M{px + 9},-38 L{px + 19},-12 L{px + 9},-14 Z", accent, sw=1.7, light=None)
-    c.shape(_circle(px, -56, 4.2), P.SCREEN_LIGHT, sw=1.5, light=None)
-    c.shape(_rect(80, -26, 26, 26), P.METAL_PALE, sw=1.8)                   # the radar hut and its dish
+    c.shape(circle_d(px, -56, 4.2), P.SCREEN_LIGHT, sw=1.5, light=None)
+    c.shape(rect_d(80, -26, 26, 26), P.METAL_PALE, sw=1.8)                   # the radar hut and its dish
     c.line("M93,-26 V-40", sw=2.2)
     c.shape("M78,-56 Q88,-36 110,-42 Q98,-52 78,-56 Z", P.WHITE, sw=1.7)
     c.line("M93,-40 L90,-48", sw=1.4)
-    c.shape(_rect(83, -20, 8, 7), P.YELLOW_PALE, sw=1.2, light=None)
+    c.shape(rect_d(83, -20, 8, 7), P.YELLOW_PALE, sw=1.2, light=None)
 
 
 @vignette("library", -112, -142, 112)
@@ -368,28 +356,28 @@ def library(c: Canvas, accent: str) -> None:
     books by the steps."""
     _shadow(c, 220)
     for x0 in (-98, 62):                                                   # the two wings, lit
-        c.shape(_rect(x0, -74, 36, 66), P.BIRCH, sw=SW)
+        c.shape(rect_d(x0, -74, 36, 66), P.BIRCH, sw=SW)
         _window(c, x0 + 8, -64, 20, 22, lit=True)
-        c.shape(_rect(x0 - 3, -80, 42, 8), accent, sw=1.8, light=None)
+        c.shape(rect_d(x0 - 3, -80, 42, 8), accent, sw=1.8, light=None)
     for i, w in enumerate((156, 144, 132)):                                # the steps
-        c.shape(_rect(-w / 2, -7 * (i + 1), w, 7), P.STONE, sw=SW * 0.8, shade_k=0.88)
-    c.shape(_rect(-62, -96, 124, 75), P.BIRCH, sw=SW)                       # the hall
+        c.shape(rect_d(-w / 2, -7 * (i + 1), w, 7), P.STONE, sw=SW * 0.8, shade_k=0.88)
+    c.shape(rect_d(-62, -96, 124, 75), P.BIRCH, sw=SW)                       # the hall
     c.shape("M-13,-21 V-56 Q0,-70 13,-56 V-21 Z", P.WOOD_DARK, sw=SW)      # the arched door
     for x in (-50, -30, 30, 50):                                           # the columns
-        c.shape(_rect(x - 5.5, -92, 11, 71), P.CARD, sw=1.7)
+        c.shape(rect_d(x - 5.5, -92, 11, 71), P.CARD, sw=1.7)
         c.line(f"M{x - 2},-88 V-26 M{x + 2},-88 V-26", sw=0.8, stroke=P.GUIDE)
-        c.shape(_rect(x - 7.5, -96, 15, 5), P.STONE, sw=1.5, light=None)
-    c.shape(_rect(-72, -108, 144, 12), accent, sw=SW)                      # the frieze in the chapter's colour
-    c.shape(_poly([(-78, -108), (0, -142), (78, -108)]), accent, sw=SW)    # the pediment ...
+        c.shape(rect_d(x - 7.5, -96, 15, 5), P.STONE, sw=1.5, light=None)
+    c.shape(rect_d(-72, -108, 144, 12), accent, sw=SW)                      # the frieze in the chapter's colour
+    c.shape(poly_d([(-78, -108), (0, -142), (78, -108)]), accent, sw=SW)    # the pediment ...
     c.shape("M-20,-118 Q-10,-124 0,-119 Q10,-124 20,-118 L20,-112 Q10,-117 0,-112 Q-10,-117 -20,-112 Z",
             P.CARD, sw=1.5, light=None)                                    # ... with an open book on it
     c.line("M0,-119 V-112", sw=1.1)
-    c.shape(_rect(80, -26, 30, 16), P.WOOD, sw=1.7)                         # the book trolley
+    c.shape(rect_d(80, -26, 30, 16), P.WOOD, sw=1.7)                         # the book trolley
     for i, x in enumerate(range(83, 108, 5)):
-        c.shape(_rect(x, -38 + (i % 2) * 3, 4.4, 12 - (i % 2) * 3), P.BRIGHTS[(i + 2) % len(P.BRIGHTS)], sw=1,
+        c.shape(rect_d(x, -38 + (i % 2) * 3, 4.4, 12 - (i % 2) * 3), P.BRIGHTS[(i + 2) % len(P.BRIGHTS)], sw=1,
                 light=None)
     for x in (85, 105):
-        c.shape(_circle(x, -6, 4.5), P.CHARCOAL, sw=1.3, light=None)
+        c.shape(circle_d(x, -6, 4.5), P.CHARCOAL, sw=1.3, light=None)
 
 
 @vignette("attic", -108, -150, 112)
@@ -397,29 +385,29 @@ def attic(c: Canvas, accent: str) -> None:
     """Chapter 5: the attic workshop - a tall house with a lit round attic window (a gear on the bench inside), a
     ladder up to it, a sawhorse with a plank and a woodpile."""
     _shadow(c, 220)
-    c.shape(_rect(-62, -82, 92, 82), P.WOOD_PALE, sw=SW)                    # the walls
+    c.shape(rect_d(-62, -82, 92, 82), P.WOOD_PALE, sw=SW)                    # the walls
     c.line("M-62,-56 H30 M-62,-28 H30", sw=1, stroke=darken(P.WOOD_PALE, 0.8))
-    c.shape(_poly([(-76, -78), (-16, -140), (44, -78)]), accent, sw=SW)    # the steep roof
+    c.shape(poly_d([(-76, -78), (-16, -140), (44, -78)]), accent, sw=SW)    # the steep roof
     c.line("M-16,-140 V-150 M-24,-147 L-8,-147", sw=1.7)                   # the weathervane
     c.shape("M-8,-150 L0,-147 L-8,-144 Z", P.INK, sw=0, light=None)
-    c.shape(_circle(-16, -104, 14), P.WOOD, sw=SW)                          # the round attic window, lit
-    c.shape(_circle(-16, -104, 10), P.YELLOW_PALE, sw=1.5, light=None)
+    c.shape(circle_d(-16, -104, 14), P.WOOD, sw=SW)                          # the round attic window, lit
+    c.shape(circle_d(-16, -104, 10), P.YELLOW_PALE, sw=1.5, light=None)
     teeth = "".join(f"M{n(-16 + math.cos(math.radians(a)) * 4.6)},{n(-104 + math.sin(math.radians(a)) * 4.6)} "
                     f"L{n(-16 + math.cos(math.radians(a)) * 7.8)},{n(-104 + math.sin(math.radians(a)) * 7.8)} "
                     for a in range(0, 360, 45))                            # the gear on the bench inside
     c.line(teeth, sw=2.4, stroke=P.LEAF_DARK)
-    c.add(f'<path d="{_circle(-16, -104, 4.8)}" fill="{P.LEAF_DARK}"/>')
+    c.add(f'<path d="{circle_d(-16, -104, 4.8)}" fill="{P.LEAF_DARK}"/>')
     c.dot(-16, -104, 1.7, P.YELLOW_PALE)
     c.line("M-98,0 L-74,-80 M-88,0 L-64,-80", sw=2.4, stroke=P.WOOD_DARK)   # the ladder up to the eaves
     c.line(" ".join(f"M{n(-98 + t * 24 + 0)},{n(-t * 80)} L{n(-88 + t * 24)},{n(-t * 80)}"
                     for t in (0.15, 0.32, 0.49, 0.66, 0.83)), sw=1.8, stroke=P.WOOD_DARK)
-    c.shape(_rect(-50, -46, 22, 46), P.WOOD, sw=SW)                         # the door
+    c.shape(rect_d(-50, -46, 22, 46), P.WOOD, sw=SW)                         # the door
     c.dot(-33, -22, 1.9)
     _window(c, -14, -66, 28, 24, lit=True)
-    c.shape(_rect(46, -32, 52, 7), P.WOOD_LIGHT, sw=1.7)                   # the sawhorse with a plank
+    c.shape(rect_d(46, -32, 52, 7), P.WOOD_LIGHT, sw=1.7)                   # the sawhorse with a plank
     c.line("M52,-25 L46,0 M60,-25 L66,0 M84,-25 L78,0 M92,-25 L98,0", sw=2.8, stroke=P.WOOD_DARK)
     for x, y in ((88, -5), (100, -5), (112, -5), (94, -15), (106, -15)):   # the woodpile: its logs' ends
-        c.shape(_circle(x, y, 5.4), P.WOOD_LIGHT, sw=1.4, light=None)
+        c.shape(circle_d(x, y, 5.4), P.WOOD_LIGHT, sw=1.4, light=None)
         c.dot(x, y, 1.2, P.WOOD_DARK)
 
 
@@ -435,21 +423,21 @@ def sea(c: Canvas, accent: str) -> None:
                stroke=darken(accent, 0.7))
     under.dot(-14, -22, 2.6, P.YELLOW_PALE)
     under.dot(10, -22, 2.6, P.YELLOW_PALE)
-    under.shape(_rect(-56, -12, 108, 6), darken(accent, 0.8), sw=1.9, light=None)
-    under.add(f'<path d="{_rect(-120, -90, 240, 100)}" fill="{P.WATER}" fill-opacity=".42"/>')   # the water over it
+    under.shape(rect_d(-56, -12, 108, 6), darken(accent, 0.8), sw=1.9, light=None)
+    under.add(f'<path d="{rect_d(-120, -90, 240, 100)}" fill="{P.WATER}" fill-opacity=".42"/>')   # the water over it
     c.add(f'<g clip-path="url(#{clip})">{under.render()}</g>')
     c.path(bay, sw=SW * 0.8)
     _bubbles(c, ((-8, -72, 3), (0, -82, 2.4), (-6, -92, 3.2)))             # bubbles up from the dome
     c.shape("M36,-44 Q38,-54 58,-54 L98,-52 Q104,-48 100,-44 Z", accent, sw=SW)   # the submarine's back ...
     c.shape("M56,-52 L58,-74 Q58,-78 63,-78 L78,-78 Q81,-78 80,-74 L76,-52 Z", accent, sw=SW)   # ... its tower ...
     c.line("M64,-78 V-94 H71", sw=2.4)                                     # ... and its periscope
-    c.shape(_rect(70, -98, 7, 7), P.METAL, sw=1.5, light=None)
+    c.shape(rect_d(70, -98, 7, 7), P.METAL, sw=1.5, light=None)
     c.dot(62, -66, 2.2, P.YELLOW_PALE)
     c.dot(70, -66, 2.2, P.YELLOW_PALE)
     c.line("M30,-43 q8,-4 14,0 M94,-43 q6,-4 10,0", sw=1.7, stroke=P.WHITE)
     c.line("M-70,-42 V-58", sw=1.6)                                        # a buoy
     c.shape("M-78,-38 Q-70,-50 -62,-38 Z", P.RED, sw=1.6, light=None)
-    c.shape(_rect(-77, -42, 14, 4), P.WHITE, sw=1.2, light=None)
+    c.shape(rect_d(-77, -42, 14, 4), P.WHITE, sw=1.2, light=None)
     for x, h in ((-104, 30), (-99, 38), (-94, 26), (100, 34), (105, 26)):   # reeds on the shore
         c.line(f"M{x},-10 Q{x - 2},{-10 - h / 2} {x + 1},{-10 - h}", sw=2, stroke=P.LEAF_DARK)
         c.shape(rounded_rect_d(x - 1.6, -10 - h - 9, 5, 10, 2.5), P.WOOD_DARK, sw=1, light=None)
@@ -460,19 +448,19 @@ def lab(c: Canvas, accent: str) -> None:
     """Chapter 7: the laboratory - a building with flasks on its lit window sills and steam from its vent, a big flask
     bubbling on a stand, gas cylinders."""
     _shadow(c, 220)
-    c.shape(_rect(-60, -106, 12, 26), P.METAL, sw=SW)                      # the vent on the roof ...
+    c.shape(rect_d(-60, -106, 12, 26), P.METAL, sw=SW)                      # the vent on the roof ...
     _smoke(c, -54, -114, 0.9)                                              # ... steaming
-    c.shape(_rect(-106, -84, 118, 84), P.HULL, sw=SW)                       # the building
-    c.shape(_rect(-112, -92, 130, 12), accent, sw=SW)                      # its roof edge in the chapter's colour
+    c.shape(rect_d(-106, -84, 118, 84), P.HULL, sw=SW)                       # the building
+    c.shape(rect_d(-112, -92, 130, 12), accent, sw=SW)                      # its roof edge in the chapter's colour
     for x in (-96, -56):                                                   # two lit windows with flasks on the sill
         _window(c, x, -72, 32, 28, lit=True, cross=False)
         c.shape(f"M{x + 8},-45 L{x + 8},-53 L{x + 5},-59 H{x + 14} L{x + 11},-53 L{x + 11},-45 Z",
                 P.LENS, sw=1.1, light=None)
         c.shape(f"M{x + 17},-45 Q{x + 17},-55 {x + 21},-56 V-63 H{x + 24} V-56 Q{x + 28},-55 {x + 28},-45 Z",
                 accent, sw=1.1, light=None)
-    c.shape(_rect(-20, -40, 24, 40), P.METAL_DARK, sw=SW)                   # the door
+    c.shape(rect_d(-20, -40, 24, 40), P.METAL_DARK, sw=SW)                   # the door
     c.line("M-8,-40 V0", sw=1.3)
-    c.shape(_rect(22, -8, 52, 8), P.WOOD_DARK, sw=SW)                       # the stand ...
+    c.shape(rect_d(22, -8, 52, 8), P.WOOD_DARK, sw=SW)                       # the stand ...
     flask = "M40,-112 L40,-82 L24,-20 Q22,-10 32,-10 L64,-10 Q74,-10 72,-20 L56,-82 L56,-112 Z"
     clip = c.shape(flask, P.LENS, sw=0, light=None, clip=True)               # ... and the big flask
     c.add(f'<g clip-path="url(#{clip})"><path d="M10,-44 Q30,-50 48,-44 T86,-44 V0 H10 Z" fill="{accent}"/>'
@@ -481,11 +469,11 @@ def lab(c: Canvas, accent: str) -> None:
     c.add(f'<path d="M30,-38 L44,-96" fill="none" stroke="{P.WHITE}" stroke-width="3" stroke-linecap="round" '
           f'stroke-opacity=".7"/>')
     c.path(flask, sw=SW)
-    c.shape(_rect(36, -118, 24, 8), P.METAL, sw=1.7, light=None)              # its rim
+    c.shape(rect_d(36, -118, 24, 8), P.METAL, sw=1.7, light=None)              # its rim
     _bubbles(c, ((46, -128, 3.8), (54, -138, 3), (44, -136, 2.2), (40, -30, 2.2), (52, -24, 1.8)))
     for x, color in ((88, P.TEAL), (104, P.RED)):                          # the gas cylinders
         c.shape(rounded_rect_d(x - 6, -50, 12, 50, 5), color, sw=1.8)
-        c.shape(_rect(x - 2.5, -56, 5, 6), P.METAL_DARK, sw=1.2, light=None)
+        c.shape(rect_d(x - 2.5, -56, 5, 6), P.METAL_DARK, sw=1.2, light=None)
 
 
 @vignette("harbour", -112, -146, 112)
@@ -494,10 +482,10 @@ def harbour(c: Canvas, accent: str) -> None:
     sailing boat, gulls."""
     bay = "M-108,-12 Q-112,-52 -62,-60 Q0,-68 62,-60 Q112,-52 108,-12 Q100,2 0,0 Q-100,2 -108,-12 Z"
     _water(c, bay, -112, 112, -68, 2)
-    c.shape(_rect(-110, -44, 76, 9), P.WOOD, sw=SW * 0.9)                   # the pier on its posts ...
+    c.shape(rect_d(-110, -44, 76, 9), P.WOOD, sw=SW * 0.9)                   # the pier on its posts ...
     c.line("M-100,-35 V-22 M-74,-35 V-22 M-48,-35 V-22", sw=2.4, stroke=P.WOOD_DARK)
-    c.shape(_rect(-104, -58, 14, 14), P.KITCHEN_KRAFT, sw=1.5)               # ... crates and a bollard on it
-    c.shape(_rect(-89, -54, 11, 10), P.WOOD_LIGHT, sw=1.5)
+    c.shape(rect_d(-104, -58, 14, 14), P.KITCHEN_KRAFT, sw=1.5)               # ... crates and a bollard on it
+    c.shape(rect_d(-89, -54, 11, 10), P.WOOD_LIGHT, sw=1.5)
     c.line("M-104,-51 H-90 M-97,-58 V-44", sw=1)
     c.shape(rounded_rect_d(-58, -52, 8, 8, 3), P.CHARCOAL, sw=1.3, light=None)
     c.shape("M-36,-12 L10,-12 Q6,-2 -6,-2 L-24,-2 Q-32,-2 -36,-12 Z", P.WOOD, sw=SW * 0.9)   # the boat ...
@@ -507,8 +495,8 @@ def harbour(c: Canvas, accent: str) -> None:
     c.shape("M36,-8 Q34,-30 52,-34 L80,-34 Q96,-28 94,-8 Z", P.STONE, sw=SW)  # the rock ...
     tower = "M52,-32 L58,-118 L76,-118 L82,-32 Z"                            # ... the tower in bands
     _banded(c, tower, accent, P.WHITE, -118, -32, 20, 50, 84)
-    c.shape(_rect(52, -126, 30, 8), P.CHARCOAL, sw=1.7, light=None)          # the gallery
-    c.shape(_rect(57, -140, 20, 14), P.SUN, sw=1.7, light=None)              # the lantern, lit
+    c.shape(rect_d(52, -126, 30, 8), P.CHARCOAL, sw=1.7, light=None)          # the gallery
+    c.shape(rect_d(57, -140, 20, 14), P.SUN, sw=1.7, light=None)              # the lantern, lit
     c.line("M62,-140 V-126 M67,-140 V-126 M72,-140 V-126", sw=1)
     c.shape("M54,-140 Q67,-156 80,-140 Z", accent, sw=1.7)                   # the cap
     c.add(f'<path d="M78,-134 L108,-142 L108,-122 Z M56,-134 L28,-142 L28,-122 Z" fill="{P.SUN}" '
@@ -541,23 +529,23 @@ def moon(c: Canvas, accent: str) -> None:
     c.line("M64,-110 L60,-116", sw=1.5)
     c.shape(rounded_rect_d(70, -36, 26, 10, 3), P.METAL_PALE, sw=1.6)       # the rover on the slope
     for x in (74, 84, 94):
-        c.shape(_circle(x, -24, 3.6), P.CHARCOAL, sw=1.1, light=None)
+        c.shape(circle_d(x, -24, 3.6), P.CHARCOAL, sw=1.1, light=None)
     c.line("M90,-36 V-48", sw=1.3)
     c.dot(90, -49, 1.8, P.RED)
 
 
-# ---------------------------------------------------------------------------- chapters not written yet
+# ---------------------------------------------------------------------------- the courtyard and the camp
 @vignette("courtyard", -74, -118, 76)
 def courtyard(c: Canvas, accent: str) -> None:
     """The introduction: the professor's courtyard - a tree, a bench, flower beds, a mailbox, a fence with a gate."""
     _shadow(c, 150)
-    c.shape(_rect(-46, -64, 9, 64), P.TRUNK, sw=SW)                          # the tree
+    c.shape(rect_d(-46, -64, 9, 64), P.TRUNK, sw=SW)                          # the tree
     c.shape("M-70,-68 Q-78,-98 -54,-110 Q-38,-122 -22,-106 Q-2,-98 -14,-74 Q-20,-58 -44,-60 Q-64,-56 -70,-68 Z",
             P.LEAF, sw=SW)
     for x, y in ((-60, -90), (-40, -100), (-28, -80)):
-        c.shape(_circle(x, y, 3), P.RED, sw=1, light=None)                  # apples on it
-    c.shape(_rect(6, -26, 44, 6), P.WOOD, sw=1.7)                            # the bench
-    c.shape(_rect(6, -40, 44, 6), P.WOOD, sw=1.7)
+        c.shape(circle_d(x, y, 3), P.RED, sw=1, light=None)                  # apples on it
+    c.shape(rect_d(6, -26, 44, 6), P.WOOD, sw=1.7)                            # the bench
+    c.shape(rect_d(6, -40, 44, 6), P.WOOD, sw=1.7)
     c.line("M12,-20 V-4 M44,-20 V-4", sw=2.4, stroke=P.WOOD_DARK)
     c.line("M62,-2 V-30", sw=2.4, stroke=P.WOOD_DARK)                        # the mailbox
     c.shape("M54,-30 V-42 Q62,-50 70,-42 V-30 Z", P.BLUE, sw=1.6)
@@ -570,7 +558,7 @@ def courtyard(c: Canvas, accent: str) -> None:
 
 @vignette("camp", -112, -128, 112)
 def camp(c: Canvas, accent: str) -> None:
-    """Chapter 10, security, not written yet: a camp at the forest's edge - firs, a tent, a campfire with log seats."""
+    """Chapter 10, security: a camp at the forest's edge - firs, a tent, a campfire with log seats."""
     _shadow(c, 220)
     for x, h in ((-96, 110), (-70, 128), (-46, 100), (78, 118), (100, 96)):   # the firs
         _fir(c, x, h)
@@ -590,10 +578,10 @@ def city(c: Canvas, accent: str) -> None:
     the cable between them, a server rack with its blinking units, a capacitor tower."""
     pcb = mix(P.PINE, P.LEAF_DARK, 0.35)
     _shadow(c, 200)
-    c.shape(_rect(-98, -10, 196, 10), darken(pcb, 0.8), sw=SW, light=None)           # the board's edge ...
-    c.add(f'<path d="{"".join(_rect(x, -8, 3.6, 6) for x in _frange(-94, 94, 7))}" fill="{P.GOLD}"/>')   # fingers
-    c.shape(_rect(-94, -82, 22, 72), P.METAL_DARK, sw=SW)                          # the server rack ...
-    c.add(f'<path d="{"".join(_rect(-91, y, 16, 5) for y in _frange(-78, -18, 7.5))}" fill="{P.CHARCOAL}"/>')
+    c.shape(rect_d(-98, -10, 196, 10), darken(pcb, 0.8), sw=SW, light=None)           # the board's edge ...
+    c.add(f'<path d="{"".join(rect_d(x, -8, 3.6, 6) for x in _frange(-94, 94, 7))}" fill="{P.GOLD}"/>')   # fingers
+    c.shape(rect_d(-94, -82, 22, 72), P.METAL_DARK, sw=SW)                          # the server rack ...
+    c.add(f'<path d="{"".join(rect_d(-91, y, 16, 5) for y in _frange(-78, -18, 7.5))}" fill="{P.CHARCOAL}"/>')
     c.add("".join(f'<circle cx="-88" cy="{n(y + 2.5)}" r="1.4" fill="{P.GLOW if i % 2 else P.SUN}"/>'
                   for i, y in enumerate(_frange(-78, -18, 7.5))))
     for x0, top in ((-64, -126), (44, -138)):                                      # the two chips on end
@@ -604,13 +592,13 @@ def city(c: Canvas, accent: str) -> None:
         c.shape(rounded_rect_d(x0, top, 20, -10 - top, 2), P.CHARCOAL, sw=SW)
         c.add(f'<path d="M{n(x0 + 6)},{n(top)} A4,4 0 0 0 {n(x0 + 14)},{n(top)}" fill="{P.TERMINAL}" '
               f'stroke="{P.INK}" stroke-width="1.2"/>')
-        lit = "".join(_rect(x0 + 4 + i * 7, y, 4, 4) for y in _frange(top + 10, -18, 8) for i in range(2)
+        lit = "".join(rect_d(x0 + 4 + i * 7, y, 4, 4) for y in _frange(top + 10, -18, 8) for i in range(2)
                       if (i + int(y)) % 5)
         c.add(f'<path d="{lit}" fill="{P.YELLOW_PALE}"/>')
     c.line("M-44,-112 Q0,-96 44,-124", sw=2.4)                                     # the cable ...
     c.line("M-20,-106 V-100", sw=1.6)                                             # ... and its cable car
     c.shape(rounded_rect_d(-28, -100, 16, 11, 2.5), accent, sw=1.6, light=None)
-    c.add(f'<path d="{_rect(-25, -97, 4, 4)}{_rect(-19, -97, 4, 4)}" fill="{P.YELLOW_PALE}"/>')
+    c.add(f'<path d="{rect_d(-25, -97, 4, 4)}{rect_d(-19, -97, 4, 4)}" fill="{P.YELLOW_PALE}"/>')
     dome = "M-36,-40 A36,36 0 0 1 36,-40 Z"                                       # the hall under its fan dome
     clip = c.shape(dome, P.CHARCOAL, sw=SW, light=None, clip=True)
     def at(r: float, deg: float) -> str:
@@ -618,18 +606,18 @@ def city(c: Canvas, accent: str) -> None:
     blades = " ".join(f"M0,-40 Q{at(26, a - 14)} {at(34, a)}" for a in range(-165, -10, 26))
     c.add(f'<g clip-path="url(#{clip})"><path d="{blades}" fill="none" stroke="{P.TEAL}" stroke-width="4"/></g>')
     c.shape("M-8,-40 A8,8 0 0 1 8,-40 Z", P.METAL, sw=1.4, light=None)
-    c.shape(_rect(-98, -26, 196, 17), mix(P.PINE, P.LEAF_DARK, 0.35), sw=SW, light=None)   # the city wall ...
+    c.shape(rect_d(-98, -26, 196, 17), mix(P.PINE, P.LEAF_DARK, 0.35), sw=SW, light=None)   # the city wall ...
     c.add("".join(f'<circle cx="{n(x)}" cy="-26" r="1.6" fill="{P.GLOW}"/>' for x in _frange(-94, 96, 8)))
     for x0 in (-34, 22):                                                          # ... the gate's fin pillars
-        c.shape(_rect(x0, -50, 12, 41), P.METAL_DARK, sw=1.6, light=None)
-        c.add(f'<path d="{"".join(_rect(x0 - 2, y, 16, 2) for y in _frange(-46, -12, 5))}" fill="{P.METAL_LIGHT}"/>')
+        c.shape(rect_d(x0, -50, 12, 41), P.METAL_DARK, sw=1.6, light=None)
+        c.add(f'<path d="{"".join(rect_d(x0 - 2, y, 16, 2) for y in _frange(-46, -12, 5))}" fill="{P.METAL_LIGHT}"/>')
     c.shape("M-20,-9 V-38 Q-20,-44 -14,-44 H14 Q20,-44 20,-38 V-9 Z", P.METAL_PALE, sw=SW)   # ... and the gate
     c.shape("M-12,-9 V-32 Q-12,-36 -8,-36 H8 Q12,-36 12,-32 V-9 Z", P.SUN, sw=1.4, light=None)
-    c.add(f'<path d="{"".join(_rect(x, -34, 2, 4) for x in _frange(-8, 7, 4))}" fill="{P.GOLD}"/>')
+    c.add(f'<path d="{"".join(rect_d(x, -34, 2, 4) for x in _frange(-8, 7, 4))}" fill="{P.GOLD}"/>')
     cap = "M70,-76 V-14 A11,3.4 0 0 0 92,-14 V-76 A11,3.4 0 0 0 70,-76 Z"            # the capacitor tower
     clip = c.shape(cap, P.BLUE, sw=SW, light=(-3, 0), clip=True)
     marks = "".join(f"M85.2,{n(y)} h2.6" for y in _frange(-68, -18, 7))           # its stripe of minus signs
-    c.add(f'<g clip-path="url(#{clip})"><path d="{_rect(84, -80, 5, 70)}" fill="{lighten(P.BLUE, 0.55)}"/>'
+    c.add(f'<g clip-path="url(#{clip})"><path d="{rect_d(84, -80, 5, 70)}" fill="{lighten(P.BLUE, 0.55)}"/>'
           f'<path d="{marks}" fill="none" stroke="{darken(P.BLUE, 0.6)}" stroke-width="1.6"/></g>')
     c.shape(ellipse_d(81, -76, 11, 3.4), P.METAL_LIGHT, sw=1.6, light=None)
 
@@ -639,14 +627,15 @@ def _nothing(c: Canvas, accent: str) -> None:
     """A planned chapter with no drawing of its own: only its plaque stands by the road."""
 
 
-# The planned chapters' places, by slot; the written ones are drawn from their worlds.
+# What stands at a planned chapter's place, by slot, until it is written; a written one is drawn from its world.
 PLANNED = {"intro": "courtyard", "10": "camp", "end": "city"}
 
 
 # ============================================================================ the plaques
 def wrap(title: str, room: float) -> tuple[list[str], float]:
-    """The title broken into lines of at most `room` units: at its size in up to three lines, or set smaller as a
-    whole for a fourth - never squeezed."""
+    """The title broken into lines of at most `room` units: in up to three lines, at its size or, failing that, a
+    little smaller (down to 0.86 of it); a title that still needs more lines keeps them at the smallest size, set
+    smaller still if a word is wider than `room` - never squeezed."""
     words = title.split()
     for size in (TITLE_SIZE, TITLE_SIZE * 0.92, TITLE_SIZE * 0.86):
         lines: list[str] = []
@@ -668,7 +657,7 @@ def plaque_height(lines: int) -> float:
 
 def _clock(c: Canvas, x: float, y: float, r: float, ink: str) -> None:
     """A little clock face: the reading time."""
-    c.add(f'<path d="{_circle(x, y, r)}" fill="{P.WHITE}" stroke="{ink}" stroke-width="1.5"/>')
+    c.add(f'<path d="{circle_d(x, y, r)}" fill="{P.WHITE}" stroke="{ink}" stroke-width="1.5"/>')
     c.line(f"M{n(x)},{n(y)} V{n(y - r * 0.62)} M{n(x)},{n(y)} L{n(x + r * 0.5)},{n(y + r * 0.2)}", sw=1.4,
            stroke=ink)
 
@@ -685,7 +674,7 @@ def _plaque(stop: Stop, x: float, top: float, soon: str) -> tuple[str, tuple, li
     ground = board_top + h + 6
     ink = P.INK if stop.written else mix(P.INK, P.PAPER_SHADE, 0.45)
     for px in (x - w / 2 + 22, x + w / 2 - 22):                              # the posts
-        c.add(f'<path d="{_rect(px - 2.6, board_top + h - 4, 5.2, ground - board_top - h + 4)}" '
+        c.add(f'<path d="{rect_d(px - 2.6, board_top + h - 4, 5.2, ground - board_top - h + 4)}" '
               f'fill="{P.WOOD_DARK}" stroke="{P.INK}" stroke-width="1.4"/>')
     board = rounded_rect_d(x - w / 2, board_top, w, h, 6)
     wood = P.WOOD_PALE if stop.written else P.PAPER_SHADE
@@ -698,9 +687,9 @@ def _plaque(stop: Stop, x: float, top: float, soon: str) -> tuple[str, tuple, li
         c.dot(nx, board_top + 7, 1.6, darken(wood, 0.55))
     cy = top + r                                                            # the medallion with the number
     if stop.written:
-        c.shape(_circle(x, cy, r), stop.color, sw=2.2, light=None)
+        c.shape(circle_d(x, cy, r), stop.color, sw=2.2, light=None)
     else:
-        c.add(f'<path d="{_circle(x, cy, r)}" fill="{P.PAPER_SHADE}" stroke="{P.INK}" stroke-width="1.8" '
+        c.add(f'<path d="{circle_d(x, cy, r)}" fill="{P.PAPER_SHADE}" stroke="{P.INK}" stroke-width="1.8" '
               f'stroke-dasharray="3.4 2.6"/>')
     if stop.label:
         num = 14 if len(stop.label) < 2 else 11.5
@@ -761,7 +750,7 @@ def _field(c: Canvas, quad, crop: str, rnd: random.Random, row: int) -> None:
     """One field: its ground and the marks of its crop."""
     base = {"meadow": P.GRASS, "wheat": lighten(P.SUN, 0.35), "cabbage": P.HILL_NEAR, "ploughed": P.FLOOR_DARK,
             "rye": lighten(P.SAND, 0.15)}[crop]
-    d = _poly(quad)
+    d = poly_d(quad)
     clip = c.shape(d, base, sw=0, light=None, clip=True)
     (x0, y0), (x1, _), (x2, y2), (x3, _) = quad
     depth = scale_at(y2)
@@ -814,7 +803,7 @@ def _hills(c: Canvas) -> None:
     for x in _frange(6, W, 15):
         y = HORIZON + 8 + 4 * math.sin(x / 70)
         h = rnd.uniform(12, 22)
-        trees.append(_poly([(x - h * 0.3, y + 4), (x, y - h), (x + h * 0.3, y + 4)]))
+        trees.append(poly_d([(x - h * 0.3, y + 4), (x, y - h), (x + h * 0.3, y + 4)]))
     c.add(f'<path d="{" ".join(trees)}" fill="{mix(P.FIR, P.SPACE_LOW, 0.3)}" stroke="{P.INK}" '
           f'stroke-width="1.2" stroke-linejoin="round"/>')
 
@@ -829,7 +818,7 @@ def _river(c: Canvas, line) -> list[tuple[float, float, float]]:
         length = math.hypot(dx, dy) or 1
         left.append((x - dy / length * hw, y + dx / length * hw))
         right.append((x + dy / length * hw, y - dx / length * hw))
-    c.path(_poly(left + right[::-1]), fill=P.WATER, sw=1.8)
+    c.path(poly_d(left + right[::-1]), fill=P.WATER, sw=1.8)
     cx, cy, rx, ry = POND
     c.path(ellipse_d(cx, cy, rx, ry), fill=P.WATER, sw=SW)                  # the pond
     c.line(f"M{cx - 18},{cy - 2} q6,-3 12,0 M{cx + 4},{cy + 5} q6,-3 12,0", sw=1.6, stroke=P.WATER_LIGHT)
@@ -861,7 +850,7 @@ def _road(c: Canvas, line) -> list[tuple[float, float, float]]:
     (xa, ya), (xb, yb) = line[-2], line[-1]
     end = cap(xb, yb, half_width(yb), xb - xa, yb - ya)
     start = cap(x0, y0, half_width(y0), x0 - x1, y0 - y1)
-    outline = _poly(edge_l + end[::-1] + edge_r[::-1] + start[::-1])
+    outline = poly_d(edge_l + end[::-1] + edge_r[::-1] + start[::-1])
     c.path(outline, fill=P.INK, sw=SW * 2, stroke=P.INK)
     clip = c.shape(outline, P.SAND, sw=0, light=None, clip=True)
     ruts = []
@@ -889,13 +878,11 @@ def _road(c: Canvas, line) -> list[tuple[float, float, float]]:
     return samples
 
 
-def _bridge(c: Canvas, road, river) -> None:
+def _bridge(c: Canvas, road) -> None:
     """A stone bridge where the road crosses the river: its parapets along both sides of the road."""
-    rx = river[len(river) // 2]
     best = min(road, key=lambda s: math.hypot(s[0] - RIVER_X, s[1] - ROWS[-1][0]) if abs(s[1] - ROWS[-1][0]) < 2
                else 1e9)
     x, y, hw = best
-    del rx
     for side in (-1, 1):
         py = y + side * (hw + 2)
         c.shape(rounded_rect_d(x - 22, py - 3.5, 44, 7, 3), P.STONE, sw=1.6, shade_k=0.85)
@@ -906,7 +893,7 @@ def _bridge(c: Canvas, road, river) -> None:
 def _railway(c: Canvas, y: float) -> None:
     """The railway of the last chapter: a track with sleepers along the bottom edge."""
     sleepers = " ".join(f"M{n(x)},{n(y - 8)} V{n(y + 8)}" for x in _frange(4, W, 12))
-    c.add(f'<path d="{_rect(0, y - 10, W, 20)}" fill="{P.PEBBLE}"/>')
+    c.add(f'<path d="{rect_d(0, y - 10, W, 20)}" fill="{P.PEBBLE}"/>')
     c.add(f'<path d="{sleepers}" stroke="{P.WOOD_DARK}" stroke-width="5" fill="none"/>')
     c.add(f'<path d="M0,{n(y - 4.5)} H{W} M0,{n(y + 4.5)} H{W}" stroke="{P.INK}" stroke-width="3.6" fill="none"/>'
           f'<path d="M0,{n(y - 4.5)} H{W} M0,{n(y + 4.5)} H{W}" stroke="{P.METAL}" stroke-width="1.6" fill="none"/>')
@@ -921,16 +908,16 @@ def _train(x: float, y: float, cab: str = P.RED) -> str:
             _window(c, wx + 5 + k * 15, y - 30, 10, 10, lit=True, cross=False)
         c.line(f"M{wx - 6},{y - 14} H{wx}", sw=2.4)
         for ww in (wx + 10, wx + 40):
-            c.shape(_circle(ww, y - 5, 5), P.METAL_DARK, sw=1.6, light=None)
+            c.shape(circle_d(ww, y - 5, 5), P.METAL_DARK, sw=1.6, light=None)
     c.shape(rounded_rect_d(x - 26, y - 30, 42, 20, 8), P.CHARCOAL, sw=SW)      # the boiler
-    c.shape(_rect(x + 12, y - 44, 26, 34), cab, sw=SW)                        # the cab
+    c.shape(rect_d(x + 12, y - 44, 26, 34), cab, sw=SW)                        # the cab
     _window(c, x + 17, y - 40, 15, 12, lit=True, cross=False)
-    c.shape(_rect(x - 20, y - 46, 9, 16), P.CHARCOAL, sw=1.7, light=None)      # the funnel
-    c.shape("M-34,0 L-26,-10 L-26,0 Z".replace("-34", n(x - 34)).replace("-26", n(x - 26)).replace(",0", f",{n(y)}")
-            .replace(",-10", f",{n(y - 10)}"), P.METAL_DARK, sw=1.4, light=None)   # the cowcatcher
-    c.shape(_rect(x - 28, y - 12, 68, 5), P.DARK_BROWN, sw=1.7, light=None)
+    c.shape(rect_d(x - 20, y - 46, 9, 16), P.CHARCOAL, sw=1.7, light=None)      # the funnel
+    c.shape(f"M{n(x - 34)},{n(y)} L{n(x - 26)},{n(y - 10)} L{n(x - 26)},{n(y)} Z", P.METAL_DARK, sw=1.4,
+            light=None)                                                       # the cowcatcher
+    c.shape(rect_d(x - 28, y - 12, 68, 5), P.DARK_BROWN, sw=1.7, light=None)
     for wx in (x - 16, x, x + 26):
-        c.shape(_circle(wx, y - 5, 6), P.METAL_DARK, sw=1.7, light=None)
+        c.shape(circle_d(wx, y - 5, 6), P.METAL_DARK, sw=1.7, light=None)
     _smoke(c, x - 16, y - 56, 1.1)
     return c.render()
 
@@ -939,10 +926,10 @@ def _train(x: float, y: float, cab: str = P.RED) -> str:
 def _windmill(x: float, y: float, s: float) -> str:
     c = Canvas()
     c.add(f'<path d="{ellipse_d(x, y, 26 * s, 4 * s)}" fill="{P.INK}" fill-opacity=".13"/>')
-    c.shape(_poly([(x - 16 * s, y), (x - 10 * s, y - 62 * s), (x + 10 * s, y - 62 * s), (x + 16 * s, y)]),
+    c.shape(poly_d([(x - 16 * s, y), (x - 10 * s, y - 62 * s), (x + 10 * s, y - 62 * s), (x + 16 * s, y)]),
             P.CARD, sw=2 * s)
-    c.shape(_poly([(x - 13 * s, y - 60 * s), (x, y - 76 * s), (x + 13 * s, y - 60 * s)]), P.TERRACOTTA, sw=2 * s)
-    c.shape(_rect(x - 5 * s, y - 16 * s, 10 * s, 16 * s), P.WOOD, sw=1.6 * s, light=None)
+    c.shape(poly_d([(x - 13 * s, y - 60 * s), (x, y - 76 * s), (x + 13 * s, y - 60 * s)]), P.TERRACOTTA, sw=2 * s)
+    c.shape(rect_d(x - 5 * s, y - 16 * s, 10 * s, 16 * s), P.WOOD, sw=1.6 * s, light=None)
     hub = (x, y - 62 * s)
     for a in (40, 130, 220, 310):                                          # the sails
         t = math.radians(a)
@@ -951,9 +938,9 @@ def _windmill(x: float, y: float, s: float) -> str:
                (hub[0] + ux * 40 * s + vx * 1 * s, hub[1] + uy * 40 * s + vy * 1 * s),
                (hub[0] + ux * 40 * s + vx * 9 * s, hub[1] + uy * 40 * s + vy * 9 * s),
                (hub[0] + ux * 10 * s + vx * 9 * s, hub[1] + uy * 10 * s + vy * 9 * s)]
-        c.shape(_poly(pts), P.WOOD_PALE, sw=1.5 * s, light=None)
+        c.shape(poly_d(pts), P.WOOD_PALE, sw=1.5 * s, light=None)
         c.line(f"M{n(hub[0])},{n(hub[1])} L{n(hub[0] + ux * 40 * s)},{n(hub[1] + uy * 40 * s)}", sw=1.8 * s)
-    c.shape(_circle(*hub, 3.4 * s), P.WOOD_DARK, sw=1.4 * s, light=None)
+    c.shape(circle_d(*hub, 3.4 * s), P.WOOD_DARK, sw=1.4 * s, light=None)
     return c.render()
 
 
@@ -985,7 +972,7 @@ def _tree(x: float, y: float, s: float, kind: int = 0) -> str:
     if kind:
         _fir(c, x, 46 * s, y)
     else:
-        c.shape(_rect(x - 2.6 * s, y - 14 * s, 5.2 * s, 14 * s), P.TRUNK, sw=1.5 * s, light=None)
+        c.shape(rect_d(x - 2.6 * s, y - 14 * s, 5.2 * s, 14 * s), P.TRUNK, sw=1.5 * s, light=None)
         c.shape(ellipse_d(x, y - 27 * s, 15 * s, 14 * s), P.LEAF_LIGHT, sw=1.7 * s)
         c.dot(x - 5 * s, y - 30 * s, 1.8 * s, P.RED)
         c.dot(x + 6 * s, y - 24 * s, 1.8 * s, P.RED)
@@ -1022,7 +1009,7 @@ def draw(stops: list[Stop], soon: str = "soon") -> BookMap:
     _hills(back)
     river = _river(back, river_line())
     road = _road(back, road_line())
-    _bridge(back, road, river)
+    _bridge(back, road)
     # Dusk falls over the far land: the way runs from morning at the bottom to night at the top.
     back.fade(0, HORIZON, W, 440, [(0, P.SPACE_LOW, 0.42), (0.6, P.SPACE_LOW, 0.1), (1, P.SPACE_LOW, 0.0)])
     result = BookMap("", road=road, river=river)

@@ -58,6 +58,21 @@ def ellipse_d(cx: float, cy: float, rx: float, ry: float) -> str:
             f"A{n(rx)},{n(ry)} 0 1 0 {n(cx - rx)},{n(cy)} Z")
 
 
+def circle_d(cx: float, cy: float, r: float) -> str:
+    """Path data for a circle."""
+    return ellipse_d(cx, cy, r, r)
+
+
+def rect_d(x: float, y: float, w: float, h: float) -> str:
+    """Path data for a plain rectangle."""
+    return f"M{n(x)},{n(y)} H{n(x + w)} V{n(y + h)} H{n(x)} Z"
+
+
+def poly_d(points) -> str:
+    """Path data for a closed polygon through `points`."""
+    return "M" + " L".join(f"{n(x)},{n(y)}" for x, y in points) + " Z"
+
+
 def rounded_rect_d(x: float, y: float, w: float, h: float, r: float) -> str:
     """Path data for a rectangle with rounded corners."""
     return (f"M{n(x + r)},{n(y)} H{n(x + w - r)} Q{n(x + w)},{n(y)} {n(x + w)},{n(y + r)} "
@@ -361,7 +376,7 @@ def settle_lettering(svg: str) -> str:
         if t:
             scale *= _scale_of(t.group(1))
         if attrs.startswith(' class="balloon"'):
-            scales[m.start()] = stack[-1] * (_scale_of(t.group(1)) if t else 1.0)
+            scales[m.start()] = scale
         if not selfclose:
             stack.append(scale)
 
