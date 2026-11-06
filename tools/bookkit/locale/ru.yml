@@ -1,0 +1,444 @@
+# Russian text used by the layout engine. Override any key under `strings:` in the book's book.yml.
+language: ru
+
+characters:
+  professor:
+    name: Профессор Фортран
+    role: Самый известный профессор в Компьютерном Городе Симплексе.
+    aliases: [профессор, фортран, prof, fortran]
+  cat:
+    name: Кот Икс
+    role: Лучший ученик профессора Фортрана.
+    aliases: [кот, икс, x]
+  caterpillar:
+    name: Гусеница
+    role: Самая прилежная ученица профессора Фортрана.
+    aliases: [гусеница]
+  sparrow:
+    name: Воробей
+    role: Очень способный ученик — всё схватывает на лету.
+    aliases: [воробей]
+  agent:
+    name: Агент
+    role: Новый ученик-робот — быстро печатает и пока не знает ваших порядков.
+    aliases: [агент, робот, ai, robot]
+
+labels:
+  chapter: Глава
+  intro: Вступление
+  contents: Что внутри
+  prompt: ПРОМПТ
+  prompt_hint: Скопируй этот промпт и вставь агенту как есть.
+  terminal: терминал
+  computer_brand: ФОРТРАН-86
+  do: Так хорошо
+  dont: Так не надо
+  recap: Главное
+  file: файл
+  continued: продолжение →   # under the first part of a block split between pages
+  continuation: продолжение   # in the title of a prompt's second monitor
+  version: Ты читаешь версию
+  download: Скачать свежую версию
+  version_short: версия
+  soon: скоро
+  minutes: мин
+
+callouts:
+  tip: Совет
+  warn: Осторожно!
+  idea: Идея
+  try: Попробуй сам
+
+typography:
+  quotes: "«»„“"
+  # Short words that must not be left hanging at the end of a line.
+  short_words: [в, во, и, к, ко, с, со, у, о, об, а, я, на, не, ни, по, за, из, от, до, но, же, ли, бы, для, что, как, это, при, над, под, без]
+
+# Lettering inside the pictures of the chapter openers (art/stories.py), story by story.
+openers:
+  city_road:                     # the conclusion's opener: the signpost by the professor's gate
+    city: В город
+    home: Домой
+  morning: {month: ПН, again: опять, review: Ревью}
+  fair: {models: Модели, harnesses: Обвязки}
+  valley: {base: База, metrics: Метрики, logs: Логи, tickets: Тикеты}
+  house: {commands: команды}
+  library: {playbooks: Плейбуки, catalog: Описания, parcel: скиллы}
+  station: {station: Станция, logs: Логи, tickets: Тикеты, base: База, metrics: Метрики}
+  kitchen: {prompts: промпты, skills: скиллы, hooks: хуки, mcp: MCP, subagents: субагенты, checks: проверки,
+            copypaste: копипаста, legacy: легаси, crutches: костыли}
+  proving: {repo: Монорепо, apps: apps/, services: scripts/, infra: infra/, preview: превью}
+  lab: {tests: Тесты}
+  crossing: {main: main, pr: PR}
+
+# Easter eggs (art/world_kit.py): the letters on the golden floppies hidden in the chapter worlds, in chapter order.
+easter:
+  floppies: [A, G, E, N, T, S, ".", m, d]
+
+# Lettering of the chapter worlds (art/worlds.py): the labels of the machine's stations and the signs in them.
+worlds:
+  front:                         # the front pages and the contents, in the professor's courtyard
+    gate: У калитки
+    print: Свежая книга
+    fence: Чиним забор
+    tea: Чай на скамейке
+    hand: Раздаём книгу
+    pack: В дорогу
+    pages:                       # which moment a front page shows: a phrase of its text -> the moment
+      Где меня найти: gate
+      Кто автор: gate
+      Всегда свежая версия: print
+      последней версии: print
+      Давай сделаем её лучше: fence
+      Благодарности: tea
+      Моей жене: tea
+      Делай с этой книгой: hand
+      А что нельзя: hand
+      Формальности: hand
+      раздаю совершенно свободно: hand
+      миллионером: hand
+      Что внутри: pack
+  city:                          # the conclusion: the road to the computer city
+    orchard: Сад
+    cart: Урожай
+  courtyard:                     # the introduction, in the same yard
+    engine: Паровая машина
+    editor: От блокнота к IDE
+    grill: Обожглись
+  railway:
+    small: Маленькая задача
+    roles: Роли
+    plan: План
+    parallel: Параллельно
+    to-pr: До пул-реквеста
+    to-prod: До прода
+    metrics: Метрики
+    no-human: Без человека
+    check: Проверка
+  camp:
+    keys: От твоего имени
+    knock: Мало запросов
+    sandbox: Песочница
+    parcel: Чужой код
+    note: Чужой текст
+    practice: Dev и staging
+    store: Прод
+    plan: План и бэкапы
+    test: Проверка защиты
+    note1: Открой
+    note2: склад
+  moon:
+    pile: Завал на ревью
+    learn: Учиться у агента
+    decide: Решает человек
+    rover: Субагент-ревьюер
+    tunnel: Ревьюеры в CI
+    shared: Один на все репозитории
+    sign: Владелец и аппрув
+    keepers: Владельцы кода
+    test: Проверка ревью
+    accept: Принять
+    reject: Отклонить
+    plate_green: Гусеница
+    plate_dock: Кот
+    reject_bin: Брак
+  harbour:
+    boat_opus: Опус
+    boat_sonnet: Сонет
+    boat_haiku: Хайку
+    entrance: Вход в main
+    inspection: Проверки
+    lock: Очередь
+    clock: Полный прогон
+    fix: Агент сам
+    flaky: Нестабильные
+    owners: Кто отвечает
+    bypass: Обхода нет
+  lab:
+    cover: Покрытие
+    testfirst: Сначала тест
+    migrations: Миграции
+    production: Продакшен
+    linters: Линтеры
+    hooks: Хуки
+    check: Проверка
+  sea:
+    build: Сборка
+    preview: Превью
+    services: Сотни сервисов
+    monorepo: Монорепо
+    testing: Тесты руками
+    video: Видео
+    check: Проверка
+    mobile: Мобильные
+  attic:
+    fortran: Методичка профессора Фортрана
+    card: Как устроен скилл
+    playbooks: Плейбуки
+    index: Описание решает
+    when: Когда писать
+    command: Команды
+    where: Где лежат
+    write: Скилл пишет агент
+    check: Проверка
+    foreign: Чужие скиллы
+    skill: ревью
+    tab1: ревью
+    tab2: миграция
+    tab3: отчёт
+    tab4: разное
+    adr: /adr
+    label: скилл
+  library:
+    fortran: Методичка профессора Фортрана
+    sheet: Листок у двери
+    near: Ближе — чаще
+    aisles: Листки в папках
+    catalogue: Каталог
+    archive: Архив решений
+    notes: Закладки
+    sort: Сортировка
+    docs: docs/
+    check: Проверка
+    rules: AGENTS.md
+    context: контекст
+    decision: решение
+    rejected: отвергли
+    consequences: последствия
+    arch: архитектура
+    design: дизайн
+    product: продукт
+    security: безопасность
+  fair:
+    engines: Модели
+    carts: Обвязки
+    drive: Тест-драйв
+    board: Результаты
+    home: Своё железо
+    choice: Выбор
+    tokens: токены
+    solved: решено задач
+    dont: НЕ НАЖИМАТЬ
+  kitchen:
+    recipe: Задача
+    pantry: Кладовка
+    oven: Духовка
+    slop: Слоп
+    fridge: Правила
+    good: Как надо
+    card: рецепт
+    prompts: промпты
+    skills: скиллы
+    hooks: хуки
+    mcp: MCP
+    subagents: субагенты
+    checks: проверки
+    copypaste: копипаста
+    legacy: легаси
+    crutches: костыли
+    rules: AGENTS.md
+    ring: ДЗЫНЬ
+    dont: НЕ НАЖИМАТЬ
+  station:
+    task: Задача
+    tools: Тулы
+    mcp: MCP
+    services: Сервисы
+    check: Досмотр
+    panel: Пульт
+    logs: Логи
+    tickets: Тикеты
+    base: База
+    metrics: Метрики
+    airlock: Шлюз
+    capsule: задача
+    inlet: вход
+    outlet: выход
+    mail: почта
+    clean: угроз нет
+    xray: рентген почты
+    'on': ВКЛ
+    'off': ВЫКЛ
+    suspicious: подозрительно
+    dont_press: НЕ НАЖИМАТЬ
+    pssh: ПШ-Ш
+    dzyn: ДЗЫНЬ
+
+# Footer episodes (art/episodes*.py): `topics` are the words that make a page choose the episode (lowercase stems,
+# matched anywhere in the page's text, headings counting triple, words common across a chapter weighing less);
+# `words` are the lettering in its picture.
+footers:
+  algorithm_board:
+    topics: [алгоритм, plan mode, режим план, планирова, по шагам, шаг за шагом, цикл, повтор]
+    words: {step1: 1. Взять картофелину, step2: 2. Срезать кожуру, step3: 3. Бросить в кастрюлю, step4: '4. Не все?
+        Иди к шагу 1', title: Алгоритм}
+  barter:
+    topics: [подписк, тариф, лимит, обмен, сколько стоит, бесплатн]
+    words: {ten: '10'}
+  beach_find:
+    topics: [не нужен, не нужно, обойдусь, сам справлюсь, скепти, зачем мне, сомнева, без агента]
+    words: {display: '3,1415', hihi: Хи-хи!, why1: И зачем только нужны, why2: 'ваши компьютеры? Хи-хи!'}
+  beads:
+    topics: [токен, символ, нарез, кусочк, байт]
+    words: {block: А, poem: РАЗ ТРИ ПЯТЬ}
+  binary_frame:
+    topics: [комментари, объясня, зачем, читаемост, docstring, пояснени, двоичн]
+    words: {label: «ПРИВЕТ!», label_title: 'ПЕРЕВОД:', rope: НЕ ТРОГАТЬ}
+  board_game:
+    topics: [ci/cd, ' ci ', пайплайн, pipeline, сборк, maven, gradle, заново, с начала, перезапуск]
+    words: {finish: ФИНИШ, start: СТАРТ}
+  bookmarks:
+    topics: [сесси, возобнов, продолж, заметк, закладк, следующий раз, следующей сесси, прерв, --resume, --continue]
+    words: {}
+  briefcase_legs:
+    topics: [коротк, кратк, лаконичн, десять строк, раздут, длинн инструкц, сократ]
+    words: {school: В школу}
+  chatting_computers:
+    topics: [протокол, стандарт, json, обмен, общаются, договорил, клиент и сервер]
+    words: {}
+  checkout:
+    topics: [стоимост, цен, $, доллар, оплат, деньг, токенов стоит]
+    words: {total: 'Итого: 100'}
+  commander:
+    topics: [делегир, поручи, поручен, руковод, командир, капитан, ты решаешь, решение за тобой, кто решает]
+    words: {ahead: Полный вперёд!, block: А, game: ИГРА, new_game: Новая игра}
+  computing_centre:
+    topics: [облак, облачн, дата-центр, датацентр, хостинг, вычислительн]
+    words: {title: ВЫЧИСЛИТЕЛЬНЫЙ ЦЕНТР}
+  conductor:
+    topics: [оркестр, главный агент, координ, распредел, параллел, делегир, управля]
+    words: {}
+  contraption:
+    topics: [скрипт, костыл, самодел, автоматиз, хрупк, на коленке, обходн, workaround]
+    words: {banner: АВТОМАТИЧЕСКАЯ ПЛИТА}
+  crossword:
+    topics: [юнит-тест, unit, модульн, проверя, сверя, ожидаем, assert, эталон]
+    words: {grid: ТЕСТ|О...|КОТ., wrong_col: '2', wrong_row: '2'}
+  diploma:
+    topics: [готово, итог, результат, начни сегодня, с чего начать, первый шаг, поздрав, получилось]
+    words: {title: ДИПЛОМ}
+  dream_clouds:
+    topics: [естественн, обычным язык, человеческ, понимает, простыми слов, своими слов, мечта]
+    words: {chirp: Чик-чирик!, recipes: 100 рецептов}
+  fireside:
+    topics: [документац, readme, прочита, читает, описани, docs/, справк, инструкци]
+    words: {}
+  floppy_tug:
+    topics: [выбор модел, выбрать модел, какую модель, opus, sonnet, gpt, gemini]
+    words: {fortran: Фортран}
+  gnome_shelves:
+    topics: [контекстное окно, окно контекст, миллион, токен, сколько влез, вмещ, размер контекст, лимит]
+    words: {book: книга, label: 'Сколько влезет?', library: библиотека, page: страница}
+  guard_dog:
+    topics: [секрет, парол, .env, утечк, api-ключ, ключ api, ключи доступа]
+    words: {env: .env, grr: Р-Р-Р!, name: ТЯПА}
+  journal:
+    topics: [adr, решени, обосновани, последстви, почему выбрал, архитектурн, альтернатив]
+    words: {cons: Последствия, ctx: Контекст, dec: Решение, journal: НАУЧНЫЙ ЖУРНАЛ, reads: Отсюда следует вывод…,
+      stamp: ПРИНЯТО}
+  joystick:
+    topics: [подтвержд, подтверди, одобр, approve, accept, каждое действие, каждый шаг, ручное управлен]
+    words: {let_me: Дай порулить!}
+  kettle_cards:
+    topics: [порядок, порядк, последовательн, сначала, затем, перепута, очерёдн, очередн]
+    words: {fill: НАЛИТЬ, put: ПОСТАВИТЬ, switch_on: ВКЛЮЧИТЬ, wait: ЖДАТЬ}
+  keyboard_fight:
+    topics: [конфликт, одновременно, параллельн, merge, мерж, слияни, worktree, ворктри]
+    words: {bang: БАХ!, boom: БУХ!, line1: ДРАТЬСЯ, line2: НЕХОРОШО!}
+  kittens:
+    topics: [идентификатор, номер, именова, назван, ' id', метк, ярлык, уникальн]
+    words: {}
+  lecture:
+    topics: [обучени, научи, онбординг, новичк, новому сотрудник, лекци, урок]
+  library_pass:
+    topics: [аккаунт, логин, авториз, oauth, учётн, учетн, учётк, учетк]
+    words: {quiet: ТИШИНА}
+  machine_museum:
+    topics: [истори, поколени, раньше, когда-то, эволюц, лет назад]
+    words: {abacus: Абак, agent: Агент, chip: Чип, hall: История вычислений}
+  many_trades:
+    topics: [субагент, сабагент, роль, роли, специализ, эксперт, ревьюер]
+    words: {}
+  map_counter:
+    topics: [карт, оглавлен, индекс, где лежит, структур, папк, каталог, навигац, дерево]
+    words: {}
+  modem:
+    topics: [удалённ, удаленн, по сети, сетев, api, http]
+    words: {km: 100 км}
+  moon_calculator:
+    topics: [вручную, руками, копир, вставля, copy, paste, браузер, чат-бот, окно чата, ctrl]
+    words: {bang: БА-БАХ!, sum1: 2+2=5, sum2: '7×8=?', sum3: 99+1=}
+  moon_twice:
+    topics: [тест, регресс, сломал, проверк, вчера работал, прогон]
+    words: {bad: '70', fail: 'посадка 70 > 10', good: '10', now: сегодня, speed: 'Посадка, км/ч', test: 'Тест упал',
+            today: СЕГОДНЯ, was: вчера, yesterday: ВЧЕРА}
+  mystery_book:
+    topics: [agents.md, claude.md, файл инструкц, инструкции для агента, корне репозитори, импорт]
+    words: {title: AGENTS.md}
+  notebook_memory:
+    topics: [запиш, запомн, памят, memory, записыва, файл инструкц, заметк, правила]
+    words: {}
+  playing_computer:
+    topics: [как работает агент, цикл, вызов, инструмент вызыва, модель получает, ответ модели, шаг за шагом, loop]
+    words: {board: '2 + 3 = ?', cpu: Процессор, display: Дисплей, five: '5', input: Ввод, printer: Принтер, program: Программа,
+      sum: 2+3=5, three: '3', two: '2'}
+  plug_tv:
+    topics: [подключ, mcp, коннектор, кабел, разъём, разъем, интеграц]
+    words: {}
+  postman:
+    topics: [теряет, забыва, забудет, сброс, сжати, compact, потерял]
+    words: {}
+  potato:
+    topics: [промпт, сформулир, буквально, конкретн, расплывчат, попроси, задачу ставишь, поставлена]
+  read_all_day:
+    topics: [весь репозитори, всё сразу, перегру, уплотн, компакт, /compact, сжати, переполн, забыва]
+    words: {plan: 'План: прочитать всё'}
+  recipe_cupboard:
+    topics: [скилл, skill, навык, по требовани, подгруж, по запросу, рецепт, skill.md]
+    words: {knock: ТУК-ТУК, recipes: Рецепты}
+  robot_anatomy:
+    topics: [харнесс, harness, claude code, codex, cursor, обвязк, модель и обвязк, поверх модел]
+    words: {agent: АГЕНТ, ears: слышит промпт, eyes: читает файлы, hands: инструменты, model: МОДЕЛЬ, wheels: терминал}
+  ship_hold:
+    topics: [legacy, легаси, старый код, истори, незнаком, чужой репозитори, исследова, разобраться, git log]
+    words: {old: старый код}
+  shopping_list:
+    topics: [слоп, не так понял, угадыва, додумыва, догадаться, неправильн, недопон]
+  supercomputer:
+    topics: [локальн, у себя на, свой компьютер, ollama, скорост, суперкомпьютер, запустить модель]
+    words: {super: Суперкомпьютер}
+  ten_differences:
+    topics: [ревью, review, pull request, пулл-реквест, код-ревью, замечани, пул-реквест]
+    words: {title: НАЙДИ 10 ОТЛИЧИЙ}
+  three_rules:
+    topics: [осторожн, безопасн, риск, опасн, аккуратн]
+    words: {fly: летят!, rules: ПРАВИЛА, sharp: острые!, sticky: липкий!}
+  time_machine:
+    topics: [запрет, нельзя, deny, разрешени, permission, опасн, хук, удалить, rm -rf]
+    words: {abacus: Абак, arithmometer: Арифмометр, bang: БАХ!, no_touch: Руками не трогать}
+  tin_can:
+    topics: [баг, ошибк, упал, сломал, не работает, падает, исключени]
+    words: {ha: ХА-ХА!}
+  tube_cucumber:
+    topics: [видеокарт, gpu, vram, видеопамят, железо, оперативн, гигабайт]
+    words: {gpu: GPU}
+  tyapa:
+    topics: [шаг, пошагов, по порядку, план, чек-лист, последовательност, todo]
+    words: {program: Программа}
+  uncle_masha:
+    topics: [diff, дифф, одна буква, опечат]
+    words: {masha: МАША, misha: МИША}
+  virus:
+    topics: [инъекц, подлож, вредонос, довер, сторонн, чужи, подозрит, злоумышл, атак]
+  walk_home:
+    topics: [ответствен, решаешь, ты главный, программист, отвечаешь, решение за тобой]
+    words: {}
+  water_robot:
+    topics: [лишн, перестар, сверх, не просил, самодеятельн, инициатив]
+    words: {}
+  wizard:
+    topics: [язык программ, языки программ, изобрел, изобрет, истори, придума, машинн код, ассемблер, компилятор]
+    words: {bits: '0110100', eureka: Эврика!, text: ПРИВЕТ}
+  workshop:
+    topics: [слишком много, тулз, tools, много инструмент, тулов, тулы]
+    words: {sign: МАСТЕРСКАЯ}

@@ -1,0 +1,104 @@
+/* components/speech.py: bubbles and their tails, margin notes, quote cards.
+   Colors, fonts and sizes come from bookkit/design.py as custom properties; none are literal here. */
+
+/* ---- speech ---- */
+/* The gap is a little wider than the tail is long, so its tip points at the speaker without touching. */
+.say { display: flex; align-items: flex-end; gap: 8.4mm; }
+.say-right { flex-direction: row-reverse; }
+.say-who { flex: none; width: 27mm; text-align: center; }
+.say-who.full { width: 31mm; }
+.say-who svg { width: 100%; }
+/* Head-and-shoulders portraits sit in a round frame, like the bookmark medallions of the original. Its lit backdrop
+   is drawn inside the SVG (`figure(medal=True)`): a gradient background of a rounded box prints as a raster. */
+.say-who:not(.full) svg, .margin-talk .who svg {
+  aspect-ratio: 1; border-radius: 50%; border: var(--line) solid var(--ink); }
+/* A bubble is outlined together with its tail as one shape (see components/graphics.py). Its
+   border is transparent and only reserves the room; the ink is the ::before layer behind it. */
+.bubble { position: relative; flex: 1; background: var(--white) padding-box; border: var(--line) solid transparent;
+          border-radius: 9mm 10mm 9mm 11mm / 8mm 9mm 10mm 8mm; padding: 3.6mm 5.2mm;
+          font: 400 11.9pt/1.5 var(--f-talk); margin-bottom: 9mm; box-shadow: 1.2mm 1.2mm 0 var(--shadow); }
+.bubble::before { content: ""; position: absolute; inset: calc(-1 * var(--line)); border-radius: inherit;
+                  background: var(--ink); z-index: -2; }
+.bubble .tail-line path { fill: none; stroke: var(--ink); stroke-width: calc(2 * var(--line)); stroke-linejoin: round;
+                          vector-effect: non-scaling-stroke; }
+.bubble .tail-fill path { fill: var(--white); }
+.bubble p + p { margin-top: 1.6mm; }
+/* Bubbles are speech and stay ragged-right: justified, a bubble's short lines opened holes between the words.
+   Running text is justified (typography.css). */
+.bubble p { hyphens: auto; text-align: left; }
+/* The tail's two layers share this box. --ax is the x of the point of the drawing that sits on the
+   bubble's edge. Whatever holds a bubble is its own stacking context, so the ink layers (z-index
+   below zero) stay above the page. */
+:has(> .bubble) { isolation: isolate; }
+.bubble .tail { --w: 11mm; --h: 7mm; --ax: calc(var(--w) * 28 / 44);
+                position: absolute; width: var(--w); height: var(--h); overflow: visible;
+                bottom: 3mm; left: calc(-1 * var(--ax) - var(--line) / 2); }
+.bubble .tail-line { z-index: -1; }
+.say-right .bubble .tail { left: auto; right: calc(-1 * var(--ax) - var(--line) / 2); transform: scaleX(-1); }
+/* In a short bubble the ends are round: the tail leaves from the middle of the side. */
+.say.compact .bubble .tail { bottom: calc(50% - var(--h) / 2 - .6mm); }
+.bubble.cloud { border-radius: 12mm; }
+.say.big .bubble { font-size: 14.6pt; }
+.say.compact .say-who { width: 20mm; }
+.say.compact .bubble { flex: 0 1 auto; max-width: 80mm; margin-bottom: 5mm; padding: 2.8mm 4.4mm; font-size: 11.2pt; }
+
+/* ---- margin ---- */
+.note { font: 500 14.1pt/1.14 var(--f-hand); color: var(--pen); position: relative; padding-top: 1mm; }
+.note p { hyphens: manual; }
+.note p + p { margin-top: 1.2mm; }
+.note .squiggle { width: 11mm; height: 6mm; margin-bottom: .6mm; }
+.note-left .note { text-align: right; }
+.note-left .note .squiggle { margin-left: auto; transform: scaleX(-1); }
+.note code { font-size: .68em; color: var(--ink); }
+/* Two remarks stacked in one margin keep the same air as a note and whatever comes under it: they never touch. */
+.note + .note, .note + .margin-talk, .margin-talk + .note, .margin-talk + .margin-talk { margin-top: var(--note-gap); }
+.margin-talk { display: flex; flex-direction: column; align-items: flex-start; }
+.note-left .margin-talk { align-items: flex-end; }
+.margin-talk .bubble { flex: none; text-align: left; width: 100%; font-size: 9.2pt; line-height: 1.32; padding: 2.4mm 3.2mm; margin: 0 0 4.4mm;
+                       border-radius: 6mm 7mm 6mm 7mm / 6mm 6mm 7mm 6mm; }
+/* Under a bubble the tail hangs down: it is turned about its anchor point, which sits on the bottom border. */
+.margin-talk .bubble .tail { --w: 7.6mm; --h: 5.6mm; --at: 13mm; left: calc(var(--at) - var(--ax)); bottom: auto;
+                             top: calc(100% + var(--line) / 2 - var(--h) / 2);
+                             transform-origin: var(--ax) 50%; transform: rotate(-78deg); }
+.note-left .margin-talk .bubble .tail { left: calc(100% - var(--at) - var(--ax)); transform: scaleX(-1) rotate(-78deg); }
+.margin-talk .who { width: 21mm; margin-left: 2mm; }
+.note-left .margin-talk .who { margin-right: 2mm; }
+.margin-talk .who svg { width: 100%; }
+.note-right .margin-talk .who svg { transform: scaleX(-1); }   /* face the text, whichever side the margin is on */
+/* Full layout: a note is one small line under its block - a little head, then the words. */
+.side-full .margin-talk { flex-direction: row; align-items: center; gap: 1.6mm; }
+.side-full .margin-talk .who { width: 11mm; margin: 0; flex: none; }
+.side-full .margin-talk .bubble { width: auto; flex: 0 1 auto; margin: 0; padding: 1.2mm 2.8mm; font-size: 9.2pt; }
+.side-full .margin-talk .bubble .tail { display: none; }
+.side-full .note { font-size: 12.6pt; text-align: right; padding-top: 0; }
+.side-full .note .squiggle { display: none; }
+
+/* ---- quote card with a character ---- */
+/* The character stands inside the card at one end, feet on its bottom edge, as tall as the card allows. */
+.quote-card { position: relative; background: var(--accent-soft); border: var(--line) solid var(--ink);
+              border-radius: 3mm 6mm 3mm 6mm; padding: 5mm 6mm 5mm var(--q-pad); min-height: var(--q-min);
+              box-shadow: 1.4mm 1.4mm 0 var(--shadow); display: flex; align-items: center; }
+.quote-card.q-right { padding: 5mm var(--q-pad) 5mm 6mm; }
+.quote-card blockquote { font-size: 13.4pt; flex: 1; }
+.quote-card .q-who { position: absolute; left: 2mm; bottom: 0; top: 2.5mm; width: var(--q-who-w);
+                     display: flex; align-items: flex-end; justify-content: center; }
+.quote-card.q-right .q-who { left: auto; right: 3mm; }
+.quote-card .q-who svg { width: 100%; height: auto; max-height: 100%; display: block; }
+
+/* A link to a source in a bubble or a note shows only the site's name and never breaks: a link broken across lines
+   gave PDF viewers link areas that underlined the running text beside it. */
+.bubble a, .note a { white-space: nowrap; }
+.margin-talk .bubble a { font-size: .92em; }
+
+/* A margin note moved under the text (paginate.js, widenHangingNotes): the portrait on the left, the bubble
+   across the page with its tail pointing back at the speaker; a handwritten note simply runs full width. */
+.wide-note .margin-talk { flex-direction: row-reverse; align-items: center; justify-content: flex-end; gap: 8mm; }
+.wide-note .margin-talk .who { flex: none; width: 24mm; margin: 0; }
+.wide-note .margin-talk .bubble { flex: 1; width: auto; margin: 0; font-size: 11pt; padding: 3mm 5mm; }
+.wide-note .margin-talk .bubble .tail { --w: 11mm; --h: 7mm; top: auto; bottom: 3mm; transform: none;
+                                        left: calc(-1 * var(--ax) - var(--line) / 2); }
+.wide-note .note { text-align: left; }
+
+/* Nothing sticks out of a bubble: a long link or a command breaks onto the next line. */
+.bubble a, .margin-talk a { overflow-wrap: anywhere; }
+.bubble code.words, .margin-talk code.words { display: inline; white-space: normal; }

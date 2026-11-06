@@ -1,0 +1,117 @@
+/* pages.py: the cover, the table of contents, chapter openers.
+   Colors, fonts and sizes come from bookkit/design.py as custom properties; none are literal here. */
+
+/* ---- table of contents ---- */
+.toc-title { font-size: 34pt; font-weight: 900; margin-bottom: 3mm; }
+.toc-title span { background: var(--yellow); border: var(--line) solid var(--ink); padding: 1mm 5mm; border-radius: 3mm;
+                  transform: rotate(-1.5deg); display: inline-block; box-shadow: 1.6mm 1.6mm 0 var(--ink); }
+.toc-block { margin-top: 2mm; }
+.toc-block a { text-decoration: none; }
+.toc-1 { display: flex; align-items: center; gap: 3mm; font: 800 14.6pt var(--f-head); }
+.toc-1 .n { flex: none; width: 8.4mm; height: 8.4mm; border-radius: 50%; background: var(--accent); border: var(--line) solid var(--ink);
+            font-size: 12.3pt; line-height: 1; display: flex; align-items: center; justify-content: center; padding-top: .2mm; }
+.toc-2 { display: flex; align-items: baseline; gap: 2mm; margin: 1.5mm 0 0 11.4mm; font: 400 11.2pt var(--f-body); }
+/* A chapter not written yet: greyed, a plain badge, "soon" instead of a page number, and closer to its
+   neighbours, so the whole plan of the handbook fits on one page. */
+.contents .row:has(.planned) { margin-top: var(--toc-planned-gap); }
+.toc-block.planned .n { width: 7mm; height: 7mm; font-size: 10pt; background: var(--paper-shade); border-style: dashed; color: var(--ink); }
+.toc-block.planned .toc-1 { font-weight: 700; font-size: 12.6pt; color: color-mix(in srgb, var(--ink) 50%, transparent); }
+.toc-1 .n .mark { width: 3.6mm; height: 3.6mm; }
+.toc-block.planned .soon { font: 700 8.6pt var(--f-head); letter-spacing: .1em; text-transform: uppercase; }
+/* The leader runs at mid-height of the line, between the title and the page number. */
+.toc-1 .dots, .toc-2 .dots { flex: 1; align-self: center; height: 0; border-bottom: 1.6px dotted var(--ink); opacity: .5;
+                             transform: translateY(.35em); }
+.toc-1 .pg, .toc-2 .pg { font: 800 11.2pt var(--f-head); min-width: 5mm; text-align: right; }
+
+/* ---- full pages ---- */
+.page.full .fullpage { position: absolute; inset: 0; }
+
+.cover { background: linear-gradient(180deg, color-mix(in srgb, var(--yellow) 85%, var(--white)) 0%, var(--yellow) 60%, color-mix(in srgb, var(--yellow) 82%, var(--orange)) 100%); }
+.cover-band { position: absolute; left: 0; right: 0; }
+.cover-version { opacity: .85; }   /* between the author and the year */
+.cover-top { top: 0; height: 20mm; background: var(--pink); border-bottom: var(--line) solid var(--ink);
+             display: flex; align-items: center; justify-content: center; font: 700 9.6pt var(--f-head); letter-spacing: .3em; text-transform: uppercase; }
+/* The head block fills the space between the top band and the illustration and centres itself in it. */
+.cover-head { position: absolute; top: 20mm; bottom: calc(20mm + var(--cover-scene) - 16mm); left: 14mm; right: 14mm;
+              display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+.cover-plate { background: var(--paper); border: 3px solid var(--ink); border-radius: 4mm; padding: 8mm 10mm;
+               transform: rotate(-1.2deg); box-shadow: 2.4mm 2.4mm 0 var(--ink); }
+.cover-title { margin: 0; font: 900 43pt/.98 var(--f-head); letter-spacing: -.02em; }
+.cover-title em { font-style: normal; color: var(--pink); -webkit-text-stroke: 2px var(--ink); }
+/* With a headline below it, the series plate keeps its three stacked lines but steps back a size. */
+.cover-plate.small { padding: 4mm 7mm 4.4mm; max-width: 86mm; border-radius: 3.4mm; }
+.cover-plate.small .cover-title { font-size: 22pt; text-wrap: balance; }
+.cover-plate.small .cover-title em { -webkit-text-stroke: 1.5px var(--ink); }
+/* The name of the book: chunky display letters in white with an ink outline and a hard shadow. */
+.cover-headline { margin: 9mm 0 0; font: 400 34pt/1.16 var(--f-display); letter-spacing: -.01em; word-spacing: .14em;
+                  text-wrap: balance;
+                  color: var(--white); -webkit-text-stroke: 2.2px var(--ink); paint-order: stroke fill;
+                  text-shadow: 1.1mm 1.1mm 0 var(--ink); transform: rotate(-1deg); }
+/* The highlighted phrase is the largest thing on the cover and gets air above and below: the lines around it
+   must never touch its plate. */
+.cover-headline mark { background: var(--pink); color: var(--white); white-space: nowrap; font-size: 1.2em;
+                       padding: 1mm 5mm 2.2mm; margin: 4.2mm 0 5mm;
+                       border: 3px solid var(--ink); border-radius: 3.4mm; box-shadow: 1.6mm 1.6mm 0 var(--ink);
+                       display: inline-block; transform: rotate(2deg); line-height: 1.1; }
+.cover-sub { margin-top: 7mm; font: 700 21pt/1.05 var(--f-hand); transform: rotate(-1.5deg); max-width: 150mm; }
+/* Topic stickers along the top band. */
+.cover-topics { display: flex; gap: 4mm; align-items: center; }
+.cover-topics b { font: 800 10.5pt/1 var(--f-head); letter-spacing: .04em; text-transform: none; background: var(--paper);
+                  border: 2px solid var(--ink); border-radius: 5mm; padding: 1.7mm 4.4mm 1.9mm; box-shadow: .9mm .9mm 0 var(--ink); }
+/* Five looks in turn, so a row of five stickers never repeats one (a four-look cycle would make the fifth a twin of
+   the first). */
+.cover-topics b:nth-child(5n+1) { background: var(--yellow); transform: rotate(-3deg); }
+.cover-topics b:nth-child(5n+2) { background: var(--paper); transform: rotate(2deg); }
+.cover-topics b:nth-child(5n+3) { background: var(--teal); transform: rotate(-1.5deg); }
+.cover-topics b:nth-child(5n+4) { background: var(--orange); transform: rotate(3deg); }
+.cover-topics b:nth-child(5n+5) { background: var(--green); transform: rotate(-2deg); }
+.cover-scene { position: absolute; left: 0; right: 0; bottom: 20mm; height: var(--cover-scene); }
+.cover-scene svg { width: 100%; height: 100%; }
+.cover-bottom { bottom: 0; height: 20mm; background: var(--teal); border-top: var(--line) solid var(--ink);
+                display: flex; align-items: center; justify-content: space-between; padding: 0 20mm; font: 700 9pt var(--f-head); letter-spacing: .14em; text-transform: uppercase; }
+
+.opener { background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 88%, var(--white)) 0%, var(--accent) 55%); }
+.opener-num { position: absolute; top: 26mm; left: 22mm; font: 800 12pt var(--f-head); letter-spacing: .26em; text-transform: uppercase;
+              background: var(--paper); padding: 2mm 9mm 2mm 5mm;
+              clip-path: polygon(0 0, calc(100% - 5mm) 0, 100% 50%, calc(100% - 5mm) 100%, 0 100%); }
+.opener-big { position: absolute; top: 8mm; right: 14mm; font: 900 150pt/1 var(--f-head); color: transparent;
+              -webkit-text-stroke: 3px var(--ink); opacity: .22; }
+.opener h1 { position: absolute; top: 46mm; left: 22mm; right: 30mm; font: 900 40pt/1.02 var(--f-head); letter-spacing: -.02em; }
+/* The title never runs into the big outlined numeral: a float as wide as the numeral
+   and as deep as its lower part pushes the first line of the title aside; the build checks the result. */
+.opener h1::before { content: ""; float: right; width: calc(var(--digits, 0) * var(--numeral-w) + var(--numeral-gap));
+                     height: var(--numeral-clear); }
+.opener h1 span { background: var(--paper); box-decoration-break: clone; -webkit-box-decoration-break: clone; padding: .4mm 3.4mm; line-height: 1.26; }
+.opener-lead { position: absolute; left: 22mm; top: 118mm; width: 106mm; }
+.opener-lead .bubble { font-size: 12.4pt; margin: 0; padding: 5mm 6.4mm; }
+.opener-lead .bubble .tail { --at: 62mm; left: calc(var(--at) - var(--ax)); bottom: auto;
+                             top: calc(100% + var(--line) / 2 - var(--h) / 2);
+                             transform-origin: var(--ax) 50%; transform: rotate(-80deg); }
+.opener-scene { position: absolute; left: 0; right: 0; bottom: 0; height: var(--opener-scene); }
+.opener-scene svg { width: 100%; height: 100%; }
+
+/* ---- story openers: the whole page is the picture; the title at the top left, ink letters
+   on paper plates line by line. */
+.opener.story { background: var(--paper); }
+.opener-art-box { position: absolute; inset: 0; }
+.opener-art-box svg { width: 100%; height: 100%; display: block; }
+/* The title is one drawing (bookkit/title.py), laid out on the real glyph outlines. Its text is kept for search and
+   copy, but not shown. */
+.opener.story h1.opener-title::before { content: none; }
+.opener.story h1.opener-title { position: absolute; top: 11mm; left: 11mm; margin: 0; padding: 0; font-size: 1pt; line-height: 0; }
+.opener-lettering { display: block; overflow: visible; }
+.opener.story .opener-title-text { position: absolute; left: 0; top: 0; color: transparent; font-size: 1pt; white-space: nowrap; background: none; padding: 0; }
+.opener-lead.story { top: auto; position: absolute; }
+.opener-lead.story .bubble .tail { --at: inherit; }
+.opener-tag { position: absolute; left: 0; bottom: 7mm; height: 11.5mm; }
+.opener-tag path { fill: var(--card); stroke: var(--ink); stroke-width: 3; stroke-linejoin: round; }
+.opener-tag text { font: 800 15px var(--f-head); letter-spacing: .2em; fill: var(--ink); }
+
+/* ---- the map of the book: a full page after the contents (art/bookmap.py) ---- */
+.bookmap { background: var(--paper); }
+.bookmap svg { width: 100%; height: 100%; display: block; }
+/* ---- the farewell: the last page of the book, after the last chapter (art/farewell.py) ---- */
+.farewell { background: var(--paper); }
+.farewell svg { width: 100%; height: 100%; display: block; }
+/* A written chapter's reading time, after its title in the contents (reading.py). */
+.toc-1 .time { flex: none; font: 600 9pt var(--f-head); opacity: .6; white-space: nowrap; }

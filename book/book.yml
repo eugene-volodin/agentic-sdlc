@@ -1,0 +1,28 @@
+title: Методичка профессора Фортрана      # series name: the plate on the cover
+title_highlight: Фортрана
+headline: Как построить Agentic SDLC в своём репозитории   # the name of the book
+headline_highlight: Agentic SDLC                 # this phrase of the name sits on a colored plate
+topics: [Скиллы, Хуки, MCP, Промпты, Субагенты]   # stickers along the top of the cover
+subtitle: для тех, кто начинает — с нуля и в картинках
+author: Тёма Пулявин
+year: 2026
+version: "0.118-11.2026"
+repo: https://github.com/pulyavin/agentic-sdlc
+toc: true
+plan:                # every chapter of the handbook in order; unwritten ones show as "soon"
+  - Введение
+  - 1. Почему агент пишет слоп
+  - 2. Выбираем модель и инструмент
+  - "3. MCP: подключаем агента к твоим сервисам"
+  - 4. Что агенту нужно знать о проекте
+  - 5. Скиллы — инструкции на каждый день
+  - 6. Агент должен видеть результат своей работы
+  - 7. Агент сам находит свои ошибки
+  - 8. CI — последний рубеж перед main
+  - 9. Код-ревью, когда код пишут агенты
+  - 10. Как не дать агенту всё сломать
+  - 11. Как теперь выглядит разработка
+  - Заключение
+# kicker: a plain line of text for the top band, used when there are no topics
+# chapters:            # optional explicit order; without it every *.md is taken alphabetically
+#   - 01-znakomstvo.md

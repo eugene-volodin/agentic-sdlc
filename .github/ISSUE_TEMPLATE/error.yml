@@ -1,0 +1,22 @@
+name: Error in the book
+description: A typo, a wrong statement or a broken example
+labels: [bug]
+body:
+  - type: input
+    id: where
+    attributes:
+      label: Where
+      description: Chapter, section and page, e.g. «4.2, page 64»
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What is wrong and how it should be
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version of the book
+      description: Printed on the cover, e.g. 0.117-11.2026

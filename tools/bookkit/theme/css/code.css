@@ -1,0 +1,93 @@
+/* components/code.py: the prompt on the old computer, code, terminal, tree, file sheet.
+   Colors, fonts and sizes come from bookkit/design.py as custom properties; none are literal here. */
+
+/* ---- prompt on the old computer ---- */
+.prompt { position: relative; width: var(--monitor-min); max-width: 100%; margin: 0 auto; }   /* sized by paginate.js */
+.prompt-label { display: flex; align-items: center; gap: 2.4mm; margin-bottom: 3.2mm; font: 700 10.8pt var(--f-head); }
+.prompt-label b { font-weight: 800; font-size: 8.8pt; letter-spacing: .1em; background: var(--accent); border: 1.5px solid var(--ink);
+                  border-radius: 1.4mm; padding: .7mm 2mm; transform: rotate(-2deg); }
+/* A gradient never fills a box with rounded corners directly: Chrome prints that as a 72 dpi raster, which Apple's
+   PDF viewers (iOS, Telegram, Preview) draw torn. The box keeps its border and shadow; the gradient lies in a layer
+   under its content, rounded by a clip path, which prints as vectors. */
+.crt { position: relative; isolation: isolate; border: var(--line) solid var(--ink);
+       border-radius: 5mm 5mm 3.4mm 3.4mm; padding: 3.6mm 3.6mm 0; box-shadow: 1.6mm 1.6mm 0 var(--shadow); }
+.crt::before { content: ""; position: absolute; inset: 0; z-index: -1;
+               background: linear-gradient(100deg, var(--beige-light) 0%, var(--beige) 62%, var(--beige-dark) 100%);
+               clip-path: inset(0 round calc(5mm - var(--line)) calc(5mm - var(--line)) calc(3.4mm - var(--line)) calc(3.4mm - var(--line))); }
+.screen { position: relative; isolation: isolate;
+          color: var(--screen-text); border: var(--line) solid var(--ink); border-radius: 4.5mm / 5mm; padding: 6mm 7mm;
+          aspect-ratio: 4 / 3; min-height: 0; overflow: hidden;    /* always 4:3: the text sizes the monitor, never stretches it */
+          display: flex; flex-direction: column; justify-content: center; }   /* a short text sits in the middle */
+.screen::before { content: ""; position: absolute; inset: 0; z-index: -1;
+                  background: radial-gradient(120% 90% at 30% 20%, var(--screen-light) 0%, var(--screen) 45%, var(--screen-dark) 100%);
+                  clip-path: inset(0 round calc(4.5mm - var(--line)) / calc(5mm - var(--line))); }
+.screen::after { content: ""; position: absolute; inset: 0; z-index: -1; border: 1.1mm solid var(--beige-shade);
+                 border-radius: calc(4.5mm - var(--line)) / calc(5mm - var(--line)); }   /* the bezel's inner ring */
+.screen .ln, .code pre .ln, .terminal pre .ln, .tree pre .ln { display: block; min-height: 1.5em; }
+.screen .pr-head { color: var(--terminal-yellow); font-weight: 700; }
+.screen .pr-bullet { color: var(--glow); }
+.screen .pr-var { color: var(--screen-var); }
+.crt-chin { display: flex; align-items: center; gap: 2mm; height: 6.8mm; padding: 0 1.6mm; font: 800 6.5pt var(--f-head); letter-spacing: .16em; }
+.crt-chin i { width: 2.2mm; height: 2.2mm; border-radius: 50%; border: 1.3px solid var(--ink); background: var(--beige-shade); }
+.crt-chin i.led { background: var(--red); margin-left: auto; }
+.crt-base { width: 82%; margin: -1px auto 0; }
+/* Parts of a block that belong to its first piece only (a prompt's label, the monitor's base). A split sheet, code,
+   terminal or tree keeps its frame and repeats its title bar on the next page. */
+.split-tail .head-only { display: none !important; }
+.screen > .ln { flex-shrink: 0; }   /* a wrapped line keeps its height instead of overlapping the next one */
+
+/* ---- code, terminal, tree ---- */
+.code { border: var(--line) solid var(--ink); border-radius: 2.6mm; background: var(--card); overflow: hidden; }
+.code-title { font: 600 8.8pt var(--f-mono); padding: 1.2mm 3mm; background: var(--accent-soft);
+              border-bottom: 1.4px solid var(--ink); display: flex; justify-content: space-between; }
+.code-title span { font: 700 7.7pt var(--f-head); letter-spacing: .1em; text-transform: uppercase; opacity: .6; }
+.code pre, .terminal pre, .tree pre { padding: 2.6mm 3.4mm; }
+.split-head .code, .split-head .terminal, .split-head .tree { border-bottom-style: dashed; border-radius: 2.6mm 2.6mm 0 0; }
+/* The first part of a block split between pages says it goes on overleaf. */
+.cont-mark { text-align: right; font: 700 7.4pt var(--f-sign); opacity: .7; padding: 0 3.4mm 1.8mm; }
+.prompt-label .cont-mark { margin-left: auto; padding: 0; font-size: 8pt; letter-spacing: 0; }   /* a second monitor */
+table + .cont-mark { padding: 1.2mm 1mm 0; }
+/* Pygments token classes, scoped to code so short names cannot leak. */
+pre .k, pre .kn, pre .kd, pre .kc, pre .kr, pre .ow { color: var(--syn-keyword); font-weight: 600; }
+pre .s, pre .s1, pre .s2, pre .sb, pre .sd, pre .se, pre .sa { color: var(--syn-string); }
+pre .c, pre .c1, pre .cm, pre .ch { color: var(--syn-comment); font-style: italic; }
+pre .nf, pre .nc, pre .fm, pre .nt, pre .na, pre .nl { color: var(--syn-name); }
+pre .mi, pre .mf, pre .m, pre .nv { color: var(--syn-number); }
+pre .nb, pre .bp { color: var(--syn-builtin); }
+
+.terminal { border: var(--line) solid var(--ink); border-radius: 2.6mm; background: var(--terminal); color: var(--terminal-text); overflow: hidden; }
+.terminal-bar { display: flex; align-items: center; gap: 1.4mm; padding: 1.5mm 2.6mm; background: var(--charcoal); border-bottom: 1.4px solid var(--ink);
+                font: 600 8.1pt var(--f-mono); color: var(--terminal-dim); }
+.terminal-bar i { width: 2.4mm; height: 2.4mm; border-radius: 50%; background: var(--pink); border: 1px solid var(--ink); }
+.terminal-bar i:nth-child(2) { background: var(--yellow); } .terminal-bar i:nth-child(3) { background: var(--green); margin-right: 2mm; }
+.terminal .t-ps { color: var(--terminal-green); font-weight: 700; } .terminal .t-cmd { color: var(--white); font-weight: 600; }
+.terminal .t-rem { color: var(--terminal-dim); font-style: italic; } .terminal .t-slash { color: var(--terminal-yellow); font-weight: 700; }
+
+.tree { border: var(--line) solid var(--ink); border-radius: 2.6mm; background: var(--card); position: relative; }
+.tree-title { position: absolute; top: -3.2mm; left: 4mm; font: 800 8.1pt var(--f-head); letter-spacing: .1em; text-transform: uppercase;
+              background: var(--accent); border: 1.5px solid var(--ink); border-radius: 1.4mm 1.4mm 0 0; padding: .6mm 2.4mm; }
+.tree.titled { margin-top: 3.2mm; } .tree.titled pre { padding-top: 3.4mm; }
+.tree .t-guide { color: var(--guide); }
+.tree .t-icon { display: inline-block; width: 3.4mm; height: 2.7mm; vertical-align: -.3mm; margin-right: 1.2mm; }
+.tree .t-dir { font-weight: 700; }
+.tree .t-note { font: 600 12.8pt/1 var(--f-hand); color: var(--pen); margin-left: 2mm; white-space: normal; }
+.tree .t-arrow { font: 400 .8em var(--f-mono); }   /* the handwriting face has no arrow: a borrowed glyph would vary */
+
+/* ---- file as a sheet of paper ---- */
+/* The corner is really cut off: the paper and its shadow are clipped along the same diagonal,
+   and the fold drawing fills the cut. Nothing sticks out past the outline. */
+.sheet { --fold: 7mm; position: relative; isolation: isolate; margin-right: 2mm;
+         --cut: polygon(0 0, calc(100% - var(--fold)) 0, 100% var(--fold), 100% 100%, 0 100%); }
+.sheet::before { content: ""; position: absolute; inset: 0; z-index: -1; background: var(--shadow);
+                 transform: translate(1.6mm, 1.6mm); clip-path: var(--cut); border-radius: 1.4mm; }
+.sheet-paper { position: relative; background: var(--white); border: var(--line) solid var(--ink); border-radius: 1.4mm;
+               clip-path: var(--cut); }
+.sheet-fold { position: absolute; top: calc(-1 * var(--line)); right: calc(-1 * var(--line)); width: var(--fold); height: var(--fold); }
+.sheet-name { display: flex; align-items: center; gap: 1mm; padding: 1.6mm 11mm 1.4mm 3.4mm; font: 700 9pt var(--f-mono);
+              border-bottom: 1.4px dashed var(--hairline); margin-right: var(--fold); }
+.sheet-name .t-icon { width: 3.6mm; height: 2.9mm; }
+.sheet pre { padding: 2.8mm 3.6mm 3.2mm; }
+.sheet pre .ln { display: block; min-height: 1.5em; }
+.sheet .f-head { font-weight: 700; color: var(--syn-name); } .sheet .f-meta { color: var(--syn-comment); }
+.sheet .f-mark { font-weight: 800; color: var(--ink); }   /* the one line the text points at */
+.split-head .sheet-paper { border-bottom-style: dashed; }

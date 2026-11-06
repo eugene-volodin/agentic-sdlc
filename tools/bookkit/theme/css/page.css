@@ -1,0 +1,101 @@
+/* The page: running head, text block, footer scene, page number, and the row grid.
+   Colors, fonts and sizes come from bookkit/design.py as custom properties; none are literal here. */
+
+/* ---- page ---- */
+.page {
+  width: var(--page-w); height: var(--page-h); position: relative; overflow: hidden;
+  background: var(--paper); margin: 6mm auto; break-after: page; break-inside: avoid;
+}
+@media print { body { background: none; } .page { margin: 0; } }
+
+.p-head { position: absolute; inset: 0 0 auto 0; height: 17mm; }
+.p-head::before {             /* colored band along the top edge */
+  content: ""; position: absolute; inset: 0 0 auto 0; height: 7mm;
+  background: var(--accent); border-bottom: var(--line) solid var(--ink);
+}
+.p-head::after {              /* dashed "cut here" line, as on the bookmarks of the original */
+  content: ""; position: absolute; left: var(--m-outer); right: var(--m-outer); top: 16mm;
+  border-top: 1.4px dashed var(--ink); opacity: .55;
+}
+/* Capitals sit above the middle of their line box, so the box is nudged down by the difference:
+   the letters, not the box, end up centred between the band and the dashed line. */
+.rh { position: absolute; top: 7.3mm; height: 9mm; font: 600 8.4pt/1 var(--f-head); letter-spacing: .09em;
+      text-transform: uppercase; white-space: nowrap; display: flex; align-items: center; }
+.recto .rh { right: var(--m-outer); }
+.verso .rh { left: var(--m-outer); }
+/* The numeral sits a little low in its em box: uneven padding puts it on the optical centre of the badge
+   and level with the capitals beside it. */
+.rh b { background: var(--accent); border: 1.5px solid var(--ink); border-radius: 3mm;
+        padding: .4mm 2.1mm .8mm; margin-right: 1.6mm; font-weight: 800; line-height: 1; }
+/* The clip cuts off only a too long title: room above and below keeps the accents over the capitals. */
+.rh-text { max-width: 120mm; overflow: hidden; text-overflow: ellipsis; padding: 1mm 0; margin: -1mm 0; }
+/* The character stands on the dashed line, whole, and is tall enough for its head to cross the band's dark edge.
+   Drawn above the band. */
+/* The paginator lowers the box by each character's drop (pages.py), so the feet, not the box, meet the line. */
+.perch { position: absolute; bottom: 1mm; height: var(--perch-h); z-index: 1; }
+/* At the inner edge, away from the running head: a long chapter title reaches past the middle of the page. */
+.recto .perch { left: var(--m-inner); }
+.verso .perch { right: var(--m-inner); }
+.perch svg { height: 100%; width: auto; display: block; }
+
+/* `flow-root`: the block's height includes a note that hangs below its last row. */
+.p-body { position: absolute; top: var(--body-top); width: calc(var(--col-main) + var(--col-gap) + var(--col-side));
+          display: flow-root; }
+.recto .p-body { left: var(--m-inner); }
+.verso .p-body { left: var(--m-outer); }
+
+.p-foot { position: absolute; inset: auto 0 0 0; }   /* its height is chosen per page by the paginator */
+.p-foot .scene-svg { width: 100%; height: 100%; }
+.p-num { position: absolute; bottom: 6mm; width: 21mm; height: 11mm; }
+.recto .p-num { right: 0; } .verso .p-num { left: 0; }
+.p-num svg { width: 100%; height: 100%; }
+.p-num path { fill: var(--card); stroke: var(--ink); stroke-width: 3; stroke-linejoin: round; }
+.p-num text { font: 800 15px var(--f-head); fill: var(--ink); }
+
+/* ---- rows ---- */
+/* A row is its block plus, optionally, what stands beside it in the margin. The margin content floats at the
+   page edge (paginate.js picks the edge per row), so the text wraps around it and runs on at full width as soon
+   as a short note ends. Margin content that is taller than its block hangs on beside the next rows; floats on
+   one edge stack, and a block that must be wide waits below them. */
+.row { display: block; margin-top: var(--gap); }
+.row:first-child { margin-top: 0; }
+.row > .main { min-width: 0; }
+.row > .side { display: none; }
+.row.note-left > .side, .row.note-right > .side { display: block; width: var(--col-side); margin-bottom: var(--note-gap); }
+.row.note-left > .side { float: left; clear: left; margin-right: var(--col-gap); }
+.row.note-right > .side { float: right; clear: right; margin-left: var(--col-gap); }
+.row.wide { clear: both; }
+/* A note on the other side starts below the previous one: otherwise the previous note's bottom margin dents
+   the first line of this row's text. */
+.row.note-left + .row.note-right, .row.note-right + .row.note-left { clear: both; }
+/* A block with its own title (steps, a checklist) starts on a clear line: its title must not be squeezed beside a
+   note while its body runs at full width. */
+.row:has(> .main > .steps), .row:has(> .main > h4:first-child) { clear: both; }
+/* A box (code, a card, the monitor) does not let a note run under it: it narrows beside the float instead. */
+.row > .main > :not(p, h2, h3, h4) { contain: layout; }   /* a block formatting context, any display; lists too, so their markers move with them */
+/* An accent is narrower than a note. The text wraps round its box: a character's wings or tail stick out of the
+   circle, and round wrapping would let lines run into them. */
+.row.has-accent > .side { width: var(--accent-w); shape-outside: padding-box; shape-margin: var(--accent-gap);
+                          margin-bottom: 0; }
+.row.has-accent.note-left > .side { margin-right: var(--accent-gap); }
+.row.has-accent.note-right > .side { margin-left: var(--accent-gap); }
+/* The padding box, not the margin box: the top margin that centres an accent on its paragraph must not push the
+   text, while the bottom padding that keeps a stray last line beside it must. */
+.row.has-doodle > .side { width: var(--doodle-w); shape-outside: padding-box; }
+/* Centred layout: one wider column in the middle, margin notes drop under their block. */
+.side-center .row { display: grid; grid-template-columns: var(--col-center); justify-content: center; }
+.side-center .row > .side { display: block; grid-column: 1; grid-row: 2; margin-top: 2mm; height: auto; }
+.side-center .row > .side:empty { display: none; }
+.side-center .row.wide { grid-template-columns: 1fr; }
+/* Full layout: one column almost as wide as the page, for dense pages. There is no margin: a note becomes a
+   small line under its block, and nothing is placed to fill space at the sides. */
+.side-full .row { display: grid; grid-template-columns: var(--col-full); justify-content: center; }
+.side-full .row > .side { display: block; grid-column: 1; grid-row: 2; margin-top: 1.6mm; height: auto; justify-self: end; max-width: 110mm; }
+.side-full .row > .side:empty { display: none; }
+.side-full .row.wide { grid-template-columns: var(--col-full); }   /* nothing sticks out of the column */
+.row-heading { margin-top: 7mm; clear: both; }   /* a heading stands on its own line, never beside a note */
+.row-heading.h3 { margin-top: 5mm; }
+.row-heading + .row { margin-top: var(--after-heading); }
+/* A page that closes up its gaps so that a block which cannot be split stays on it (paginate.js). */
+.page.tight { --gap: var(--gap-tight); --gap-text: var(--gap-text-tight); --after-heading: var(--after-heading-tight); }
+.page.tight .main li + li { margin-top: var(--list-gap-tight); }

@@ -1,0 +1,548 @@
+{
+  "accepted": [
+    {
+      "check": "footer-repeat",
+      "chapter": "2",
+      "where": "fair / engines / look",
+      "page": 32,
+      "detail": "pages 30 and 32 show the same picture (fair / engines / look)",
+      "reason": "The same frame two pages apart, in a world whose station holds one beat for a stretch of pages: the neighbouring pages differ (camera and mirror alternate page by page, tests/test_world_frames.py), and the rule (no two neighbouring pages show one picture) is about neighbouring pages."
+    },
+    {
+      "check": "footer-repeat",
+      "chapter": "2",
+      "where": "fair / engines / fuel",
+      "page": 33,
+      "detail": "pages 31 and 33 show the same picture (fair / engines / fuel)",
+      "reason": "The same frame two pages apart, in a world whose station holds one beat for a stretch of pages: the neighbouring pages differ (camera and mirror alternate page by page, tests/test_world_frames.py), and the rule (no two neighbouring pages show one picture) is about neighbouring pages."
+    },
+    {
+      "check": "footer-repeat",
+      "chapter": "2",
+      "where": "fair / choice / roll",
+      "page": 48,
+      "detail": "pages 46 and 48 show the same picture (fair / choice / roll)",
+      "reason": "The same frame two pages apart, in a world whose station holds one beat for a stretch of pages: the neighbouring pages differ (camera and mirror alternate page by page, tests/test_world_frames.py), and the rule (no two neighbouring pages show one picture) is about neighbouring pages."
+    },
+    {
+      "check": "footer-repeat",
+      "chapter": "4",
+      "where": "library / sheet / pin",
+      "page": 65,
+      "detail": "pages 63 and 65 show the same picture (library / sheet / pin)",
+      "reason": "The same frame two pages apart, in a world whose station holds one beat for a stretch of pages: the neighbouring pages differ (camera and mirror alternate page by page, tests/test_world_frames.py), and the rule (no two neighbouring pages show one picture) is about neighbouring pages."
+    },
+    {
+      "check": "footer-repeat",
+      "chapter": "5",
+      "where": "attic / playbooks / read",
+      "page": 84,
+      "detail": "pages 82 and 84 show the same picture (attic / playbooks / read)",
+      "reason": "The same frame two pages apart, in a world whose station holds one beat for a stretch of pages: the neighbouring pages differ (camera and mirror alternate page by page, tests/test_world_frames.py), and the rule (no two neighbouring pages show one picture) is about neighbouring pages."
+    },
+    {
+      "check": "footer-repeat",
+      "chapter": "5",
+      "where": "attic / when / third",
+      "page": 90,
+      "detail": "pages 88 and 90 show the same picture (attic / when / third)",
+      "reason": "The same frame two pages apart, in a world whose station holds one beat for a stretch of pages: the neighbouring pages differ (camera and mirror alternate page by page, tests/test_world_frames.py), and the rule (no two neighbouring pages show one picture) is about neighbouring pages."
+    },
+    {
+      "check": "footer-repeat",
+      "chapter": "5",
+      "where": "attic / index / pick",
+      "page": 93,
+      "detail": "pages 91 and 93 show the same picture (attic / index / pick)",
+      "reason": "The same frame two pages apart, in a world whose station holds one beat for a stretch of pages: the neighbouring pages differ (camera and mirror alternate page by page, tests/test_world_frames.py), and the rule (no two neighbouring pages show one picture) is about neighbouring pages."
+    },
+    {
+      "check": "footer-repeat",
+      "chapter": "6",
+      "where": "sea / build / assemble",
+      "page": 108,
+      "detail": "pages 106 and 108 show the same picture (sea / build / assemble)",
+      "reason": "The same frame two pages apart, in a world whose station holds one beat for a stretch of pages: the neighbouring pages differ (camera and mirror alternate page by page, tests/test_world_frames.py), and the rule (no two neighbouring pages show one picture) is about neighbouring pages."
+    },
+    {
+      "check": "page-weight",
+      "chapter": "Заключение",
+      "where": "",
+      "page": 256,
+      "detail": "the page weighs 605 KB of markup (drawings, mostly)",
+      "reason": "The closing pages (the conclusion's finale and the farewell page with the walled city) are the most detailed drawings of the book; the whole book builds and prints with them."
+    },
+    {
+      "check": "page-weight",
+      "chapter": "",
+      "where": "",
+      "page": 257,
+      "detail": "the page weighs 727 KB of markup (drawings, mostly)",
+      "reason": "The closing pages (the conclusion's finale and the farewell page with the walled city) are the most detailed drawings of the book; the whole book builds and prints with them."
+    },
+    {
+      "check": "word-gap",
+      "chapter": "Благодарности",
+      "where": "нарушать эту прекрасную традицию? Поэтому и я начну свою кни",
+      "page": 5,
+      "detail": "a justified line with wide gaps between its words: mean 0.63 em, widest 0.63 em",
+      "reason": "A justified line that holds few words: a narrow column beside a note, or inline code, a no-break pair or a word the dictionary cannot hyphenate at its end. Hyphenation, the narrower word space and letter spacing at its invisible limit (paginate.js) leave it as wide as shown; only rewording the sentence closes it."
+    },
+    {
+      "check": "word-gap",
+      "chapter": "1",
+      "where": "т разговор, и подробные указания из начала могут",
+      "page": 23,
+      "detail": "a justified line with wide gaps between its words: mean 0.62 em, widest 0.62 em",
+      "reason": "A justified line that holds few words: a narrow column beside a note, or inline code, a no-break pair or a word the dictionary cannot hyphenate at its end. Hyphenation, the narrower word space and letter spacing at its invisible limit (paginate.js) leave it as wide as shown; only rewording the sentence closes it."
+    },
+    {
+      "check": "word-gap",
+      "chapter": "1",
+      "where": "Так что на незасетапленном репозитории агент —",
+      "page": 23,
+      "detail": "a justified line with wide gaps between its words: mean 0.75 em, widest 0.76 em",
+      "reason": "A justified line that holds few words: a narrow column beside a note, or inline code, a no-break pair or a word the dictionary cannot hyphenate at its end. Hyphenation, the narrower word space and letter spacing at its invisible limit (paginate.js) leave it as wide as shown; only rewording the sentence closes it."
+    },
+    {
+      "check": "word-gap",
+      "chapter": "1",
+      "where": "лядит правильным и проходит простые тесты, но построен он на",
+      "page": 24,
+      "detail": "a justified line with wide gaps between its words: mean 0.80 em, widest 0.80 em",
+      "reason": "A justified line that holds few words: a narrow column beside a note, or inline code, a no-break pair or a word the dictionary cannot hyphenate at its end. Hyphenation, the narrower word space and letter spacing at its invisible limit (paginate.js) leave it as wide as shown; only rewording the sentence closes it."
+    },
+    {
+      "check": "word-gap",
+      "chapter": "2",
+      "where": "ой видеокарте выдаёт до сотни токенов в секунду,",
+      "page": 33,
+      "detail": "a justified line with wide gaps between its words: mean 0.63 em, widest 0.64 em",
+      "reason": "A justified line that holds few words: a narrow column beside a note, or inline code, a no-break pair or a word the dictionary cannot hyphenate at its end. Hyphenation, the narrower word space and letter spacing at its invisible limit (paginate.js) leave it as wide as shown; only rewording the sentence closes it."
+    },
+    {
+      "check": "word-gap",
+      "chapter": "2",
+      "where": "SWE-Bench Pro от Scale AI даёт агенту реальные задачи из отк",
+      "page": 34,
+      "detail": "a justified line with wide gaps between its words: mean 0.91 em, widest 0.94 em",
+      "reason": "A justified line that holds few words: a narrow column beside a note, or inline code, a no-break pair or a word the dictionary cannot hyphenate at its end. Hyphenation, the narrower word space and letter spacing at its invisible limit (paginate.js) leave it as wide as shown; only rewording the sentence closes it."
+    },
+    {
+      "check": "word-gap",
+      "chapter": "2",
+      "where": "инировал их и так и эдак, но почему-то пришёл",
+      "page": 40,
+      "detail": "a justified line with wide gaps between its words: mean 0.81 em, widest 0.82 em",
+      "reason": "A justified line that holds few words: a narrow column beside a note, or inline code, a no-break pair or a word the dictionary cannot hyphenate at its end. Hyphenation, the narrower word space and letter spacing at its invisible limit (paginate.js) leave it as wide as shown; only rewording the sentence closes it."
+    },
+    {
+      "check": "word-gap",
+      "chapter": "2",
+      "where": "ия, и для написания кода, а иногда комбинирую его",
+      "page": 40,
+      "detail": "a justified line with wide gaps between its words: mean 0.55 em, widest 0.56 em",
+      "reason": "A justified line that holds few words: a narrow column beside a note, or inline code, a no-break pair or a word the dictionary cannot hyphenate at its end. Hyphenation, the narrower word space and letter spacing at its invisible limit (paginate.js) leave it as wide as shown; only rewording the sentence closes it."
+    },
+    {
+      "check": "word-gap",
+      "chapter": "2",
+      "where": "ивно использую Cursor, потому что мне нравится,",
+      "page": 41,
+      "detail": "a justified line with wide gaps between its words: mean 0.74 em, widest 0.75 em",
+      "reason": "A justified line that holds few words: a narrow column beside a note, or inline code, a no-break pair or a word the dictionary cannot hyphenate at its end. Hyphenation, the narrower word space and letter spacing at its invisible limit (paginate.js) leave it as wide as shown; only rewording the sentence closes it."
+    },
+    {
+      "check": "word-gap",
+      "chapter": "2",
+      "where": "Code, но я совсем не настаиваю, чтобы ты выбрал",
+      "page": 41,
+      "detail": "a justified line with wide gaps between its words: mean 0.70 em, widest 0.70 em",
+      "reason": "A justified line that holds few words: a narrow column beside a note, or inline code, a no-break pair or a word the dictionary cannot hyphenate at its end. Hyphenation, the narrower word space and letter spacing at its invisible limit (paginate.js) leave it as wide as shown; only rewording the sentence closes it."
+    },
+    {
+      "check": "word-gap",
+      "chapter": "3",
+      "where": "Если модели не хватает данных, но взять их можно",
+      "page": 52,
+      "detail": "a justified line with wide gaps between its words: mean 0.60 em, widest 0.60 em",
+      "reason": "A justified line that holds few words: a narrow column beside a note, or inline code, a no-break pair or a word the dictionary cannot hyphenate at its end. Hyphenation, the narrower word space and letter spacing at its invisible limit (paginate.js) leave it as wide as shown; only rewording the sentence closes it."
+    },
+    {
+      "check": "word-gap",
+      "chapter": "3",
+      "where": "тем легче агенту выбрать не тот, а каждый лишний",
+      "page": 61,
+      "detail": "a justified line with wide gaps between its words: mean 0.67 em, widest 0.67 em",
+      "reason": "A justified line that holds few words: a narrow column beside a note, or inline code, a no-break pair or a word the dictionary cannot hyphenate at its end. Hyphenation, the narrower word space and letter spacing at its invisible limit (paginate.js) leave it as wide as shown; only rewording the sentence closes it."
+    },
+    {
+      "check": "word-gap",
+      "chapter": "4",
+      "where": "CLAUDE.md у тебя уже есть, напиши в нём строчку",
+      "page": 67,
+      "detail": "a justified line with wide gaps between its words: mean 0.69 em, widest 0.70 em",
+      "reason": "A justified line that holds few words: a narrow column beside a note, or inline code, a no-break pair or a word the dictionary cannot hyphenate at its end. Hyphenation, the narrower word space and letter spacing at its invisible limit (paginate.js) leave it as wide as shown; only rewording the sentence closes it."
+    },
+    {
+      "check": "word-gap",
+      "chapter": "4",
+      "where": "@AGENTS.md, и Claude Code прочитает AGENTS.md",
+      "page": 67,
+      "detail": "a justified line with wide gaps between its words: mean 1.05 em, widest 1.06 em",
+      "reason": "A justified line that holds few words: a narrow column beside a note, or inline code, a no-break pair or a word the dictionary cannot hyphenate at its end. Hyphenation, the narrower word space and letter spacing at its invisible limit (paginate.js) leave it as wide as shown; only rewording the sentence closes it."
+    },
+    {
+      "check": "word-gap",
+      "chapter": "4",
+      "where": "ет очень много, агент будет всё это вычитывать, и контекстно",
+      "page": 73,
+      "detail": "a justified line with wide gaps between its words: mean 0.57 em, widest 0.58 em",
+      "reason": "A justified line that holds few words: a narrow column beside a note, or inline code, a no-break pair or a word the dictionary cannot hyphenate at its end. Hyphenation, the narrower word space and letter spacing at its invisible limit (paginate.js) leave it as wide as shown; only rewording the sentence closes it."
+    },
+    {
+      "check": "word-gap",
+      "chapter": "4",
+      "where": "на них учился? Твой агент допускает те же ошибки,",
+      "page": 74,
+      "detail": "a justified line with wide gaps between its words: mean 0.57 em, widest 0.58 em",
+      "reason": "A justified line that holds few words: a narrow column beside a note, or inline code, a no-break pair or a word the dictionary cannot hyphenate at its end. Hyphenation, the narrower word space and letter spacing at its invisible limit (paginate.js) leave it as wide as shown; only rewording the sentence closes it."
+    },
+    {
+      "check": "word-gap",
+      "chapter": "4",
+      "where": "заводи только тогда, когда тебе действительно есть",
+      "page": 77,
+      "detail": "a justified line with wide gaps between its words: mean 0.69 em, widest 0.70 em",
+      "reason": "A justified line that holds few words: a narrow column beside a note, or inline code, a no-break pair or a word the dictionary cannot hyphenate at its end. Hyphenation, the narrower word space and letter spacing at its invisible limit (paginate.js) leave it as wide as shown; only rewording the sentence closes it."
+    },
+    {
+      "check": "word-gap",
+      "chapter": "4",
+      "where": "Искать такие места руками долго, а Claude Code найдёт их сам",
+      "page": 78,
+      "detail": "a justified line with wide gaps between its words: mean 0.65 em, widest 0.66 em",
+      "reason": "A justified line that holds few words: a narrow column beside a note, or inline code, a no-break pair or a word the dictionary cannot hyphenate at its end. Hyphenation, the narrower word space and letter spacing at its invisible limit (paginate.js) leave it as wide as shown; only rewording the sentence closes it."
+    },
+    {
+      "check": "word-gap",
+      "chapter": "5",
+      "where": "ации. Или у фронтендной команды — как в типичной фиче вы исп",
+      "page": 82,
+      "detail": "a justified line with wide gaps between its words: mean 0.63 em, widest 0.64 em",
+      "reason": "A justified line that holds few words: a narrow column beside a note, or inline code, a no-break pair or a word the dictionary cannot hyphenate at its end. Hyphenation, the narrower word space and letter spacing at its invisible limit (paginate.js) leave it as wide as shown; only rewording the sentence closes it."
+    },
+    {
+      "check": "word-gap",
+      "chapter": "5",
+      "where": "что ни разу не вызывались, и подскажет, где их",
+      "page": 89,
+      "detail": "a justified line with wide gaps between its words: mean 0.90 em, widest 0.90 em",
+      "reason": "A justified line that holds few words: a narrow column beside a note, or inline code, a no-break pair or a word the dictionary cannot hyphenate at its end. Hyphenation, the narrower word space and letter spacing at its invisible limit (paginate.js) leave it as wide as shown; only rewording the sentence closes it."
+    },
+    {
+      "check": "word-gap",
+      "chapter": "5",
+      "where": "Вместо ${CLAUDE_SKILL_DIR} Claude Code подставит путь к папк",
+      "page": 90,
+      "detail": "a justified line with wide gaps between its words: mean 0.66 em, widest 0.67 em",
+      "reason": "A justified line that holds few words: a narrow column beside a note, or inline code, a no-break pair or a word the dictionary cannot hyphenate at its end. Hyphenation, the narrower word space and letter spacing at its invisible limit (paginate.js) leave it as wide as shown; only rewording the sentence closes it."
+    },
+    {
+      "check": "word-gap",
+      "chapter": "5",
+      "where": "commands/, и вызывал её обычно сам человек — набирал в чате ",
+      "page": 91,
+      "detail": "a justified line with wide gaps between its words: mean 0.58 em, widest 0.58 em",
+      "reason": "A justified line that holds few words: a narrow column beside a note, or inline code, a no-break pair or a word the dictionary cannot hyphenate at its end. Hyphenation, the narrower word space and letter spacing at its invisible limit (paginate.js) leave it as wide as shown; only rewording the sentence closes it."
+    },
+    {
+      "check": "word-gap",
+      "chapter": "5",
+      "where": "меня сам» недостаточно, ведь это всего лишь текст,",
+      "page": 92,
+      "detail": "a justified line with wide gaps between its words: mean 0.62 em, widest 0.63 em",
+      "reason": "A justified line that holds few words: a narrow column beside a note, or inline code, a no-break pair or a word the dictionary cannot hyphenate at its end. Hyphenation, the narrower word space and letter spacing at its invisible limit (paginate.js) leave it as wide as shown; only rewording the sentence closes it."
+    },
+    {
+      "check": "word-gap",
+      "chapter": "5",
+      "where": "(как они устроены, мы подробно разберём в девятой",
+      "page": 95,
+      "detail": "a justified line with wide gaps between its words: mean 0.61 em, widest 0.61 em",
+      "reason": "A justified line that holds few words: a narrow column beside a note, or inline code, a no-break pair or a word the dictionary cannot hyphenate at its end. Hyphenation, the narrower word space and letter spacing at its invisible limit (paginate.js) leave it as wide as shown; only rewording the sentence closes it."
+    },
+    {
+      "check": "word-gap",
+      "chapter": "5",
+      "where": "олнительным инструментом сверху, ведь в нём мой личный вкус ",
+      "page": 96,
+      "detail": "a justified line with wide gaps between its words: mean 0.57 em, widest 0.58 em",
+      "reason": "A justified line that holds few words: a narrow column beside a note, or inline code, a no-break pair or a word the dictionary cannot hyphenate at its end. Hyphenation, the narrower word space and letter spacing at its invisible limit (paginate.js) leave it as wide as shown; only rewording the sentence closes it."
+    },
+    {
+      "check": "word-gap",
+      "chapter": "5",
+      "where": "её правильно, и запишет в скилл именно твоё знание, а не то,",
+      "page": 98,
+      "detail": "a justified line with wide gaps between its words: mean 0.79 em, widest 0.80 em",
+      "reason": "A justified line that holds few words: a narrow column beside a note, or inline code, a no-break pair or a word the dictionary cannot hyphenate at its end. Hyphenation, the narrower word space and letter spacing at its invisible limit (paginate.js) leave it as wide as shown; only rewording the sentence closes it."
+    },
+    {
+      "check": "word-gap",
+      "chapter": "5",
+      "where": "С такой настройкой Claude Code не покажет скилл",
+      "page": 100,
+      "detail": "a justified line with wide gaps between its words: mean 0.72 em, widest 0.72 em",
+      "reason": "A justified line that holds few words: a narrow column beside a note, or inline code, a no-break pair or a word the dictionary cannot hyphenate at its end. Hyphenation, the narrower word space and letter spacing at its invisible limit (paginate.js) leave it as wide as shown; only rewording the sentence closes it."
+    },
+    {
+      "check": "word-gap",
+      "chapter": "5",
+      "where": "в .claude/settings.json, который ты закоммитишь.",
+      "page": 102,
+      "detail": "a justified line with wide gaps between its words: mean 0.74 em, widest 0.76 em",
+      "reason": "A justified line that holds few words: a narrow column beside a note, or inline code, a no-break pair or a word the dictionary cannot hyphenate at its end. Hyphenation, the narrower word space and letter spacing at its invisible limit (paginate.js) leave it as wide as shown; only rewording the sentence closes it."
+    },
+    {
+      "check": "word-gap",
+      "chapter": "6",
+      "where": "исать. Только учти, что в скрипте могут оказаться",
+      "page": 107,
+      "detail": "a justified line with wide gaps between its words: mean 0.67 em, widest 0.68 em",
+      "reason": "A justified line that holds few words: a narrow column beside a note, or inline code, a no-break pair or a word the dictionary cannot hyphenate at its end. Hyphenation, the narrower word space and letter spacing at its invisible limit (paginate.js) leave it as wide as shown; only rewording the sentence closes it."
+    },
+    {
+      "check": "word-gap",
+      "chapter": "6",
+      "where": "енные понадобились и как запустить приложение.",
+      "page": 108,
+      "detail": "a justified line with wide gaps between its words: mean 0.74 em, widest 0.74 em",
+      "reason": "A justified line that holds few words: a narrow column beside a note, or inline code, a no-break pair or a word the dictionary cannot hyphenate at its end. Hyphenation, the narrower word space and letter spacing at its invisible limit (paginate.js) leave it as wide as shown; only rewording the sentence closes it."
+    },
+    {
+      "check": "word-gap",
+      "chapter": "6",
+      "where": "ее, чем раньше. Причём новый превью-стенд — и агенту, и любо",
+      "page": 108,
+      "detail": "a justified line with wide gaps between its words: mean 0.67 em, widest 0.68 em",
+      "reason": "A justified line that holds few words: a narrow column beside a note, or inline code, a no-break pair or a word the dictionary cannot hyphenate at its end. Hyphenation, the narrower word space and letter spacing at its invisible limit (paginate.js) leave it as wide as shown; only rewording the sentence closes it."
+    },
+    {
+      "check": "word-gap",
+      "chapter": "6",
+      "where": "найдёт. А если всё-таки запускаешь агента из корня, то настр",
+      "page": 115,
+      "detail": "a justified line with wide gaps between its words: mean 0.61 em, widest 0.61 em",
+      "reason": "A justified line that holds few words: a narrow column beside a note, or inline code, a no-break pair or a word the dictionary cannot hyphenate at its end. Hyphenation, the narrower word space and letter spacing at its invisible limit (paginate.js) leave it as wide as shown; only rewording the sentence closes it."
+    },
+    {
+      "check": "word-gap",
+      "chapter": "6",
+      "where": "Если же каждый сервис живёт в своём репозитории",
+      "page": 115,
+      "detail": "a justified line with wide gaps between its words: mean 0.62 em, widest 0.62 em",
+      "reason": "A justified line that holds few words: a narrow column beside a note, or inline code, a no-break pair or a word the dictionary cannot hyphenate at its end. Hyphenation, the narrower word space and letter spacing at its invisible limit (paginate.js) leave it as wide as shown; only rewording the sentence closes it."
+    },
+    {
+      "check": "word-gap",
+      "chapter": "6",
+      "where": "изовать их, и сам убедиться, что всё работает, а тебе остане",
+      "page": 123,
+      "detail": "a justified line with wide gaps between its words: mean 0.64 em, widest 0.65 em",
+      "reason": "A justified line that holds few words: a narrow column beside a note, or inline code, a no-break pair or a word the dictionary cannot hyphenate at its end. Hyphenation, the narrower word space and letter spacing at its invisible limit (paginate.js) leave it as wide as shown; only rewording the sentence closes it."
+    },
+    {
+      "check": "word-gap",
+      "chapter": "6",
+      "where": "Для Android есть официальный Android CLI, который",
+      "page": 123,
+      "detail": "a justified line with wide gaps between its words: mean 0.56 em, widest 0.57 em",
+      "reason": "A justified line that holds few words: a narrow column beside a note, or inline code, a no-break pair or a word the dictionary cannot hyphenate at its end. Hyphenation, the narrower word space and letter spacing at its invisible limit (paginate.js) leave it as wide as shown; only rewording the sentence closes it."
+    },
+    {
+      "check": "word-gap",
+      "chapter": "7",
+      "where": "Turborepo для этого есть команды nx affected и",
+      "page": 127,
+      "detail": "a justified line with wide gaps between its words: mean 0.81 em, widest 0.85 em",
+      "reason": "A justified line that holds few words: a narrow column beside a note, or inline code, a no-break pair or a word the dictionary cannot hyphenate at its end. Hyphenation, the narrower word space and letter spacing at its invisible limit (paginate.js) leave it as wide as shown; only rewording the sentence closes it."
+    },
+    {
+      "check": "word-gap",
+      "chapter": "7",
+      "where": "лежат и как убедиться, что тест упал по правильной",
+      "page": 129,
+      "detail": "a justified line with wide gaps between its words: mean 0.56 em, widest 0.56 em",
+      "reason": "A justified line that holds few words: a narrow column beside a note, or inline code, a no-break pair or a word the dictionary cannot hyphenate at its end. Hyphenation, the narrower word space and letter spacing at its invisible limit (paginate.js) leave it as wide as shown; only rewording the sentence closes it."
+    },
+    {
+      "check": "word-gap",
+      "chapter": "7",
+      "where": "на продакшене что-то начнёт работать не так,",
+      "page": 132,
+      "detail": "a justified line with wide gaps between its words: mean 1.10 em, widest 1.12 em",
+      "reason": "A justified line that holds few words: a narrow column beside a note, or inline code, a no-break pair or a word the dictionary cannot hyphenate at its end. Hyphenation, the narrower word space and letter spacing at its invisible limit (paginate.js) leave it as wide as shown; only rewording the sentence closes it."
+    },
+    {
+      "check": "word-gap",
+      "chapter": "7",
+      "where": "ать. Туда команда складывает правила, до которых дошла на св",
+      "page": 133,
+      "detail": "a justified line with wide gaps between its words: mean 0.56 em, widest 0.57 em",
+      "reason": "A justified line that holds few words: a narrow column beside a note, or inline code, a no-break pair or a word the dictionary cannot hyphenate at its end. Hyphenation, the narrower word space and letter spacing at its invisible limit (paginate.js) leave it as wide as shown; only rewording the sentence closes it."
+    },
+    {
+      "check": "word-gap",
+      "chapter": "7",
+      "where": "отдельную задачу, и её сделают, когда новая версия",
+      "page": 134,
+      "detail": "a justified line with wide gaps between its words: mean 0.62 em, widest 0.62 em",
+      "reason": "A justified line that holds few words: a narrow column beside a note, or inline code, a no-break pair or a word the dictionary cannot hyphenate at its end. Hyphenation, the narrower word space and letter spacing at its invisible limit (paginate.js) leave it as wide as shown; only rewording the sentence closes it."
+    },
+    {
+      "check": "word-gap",
+      "chapter": "7",
+      "where": "Второй хук уже не Claude Code, а самого git. Git запускает е",
+      "page": 142,
+      "detail": "a justified line with wide gaps between its words: mean 0.56 em, widest 0.56 em",
+      "reason": "A justified line that holds few words: a narrow column beside a note, or inline code, a no-break pair or a word the dictionary cannot hyphenate at its end. Hyphenation, the narrower word space and letter spacing at its invisible limit (paginate.js) leave it as wide as shown; only rewording the sentence closes it."
+    },
+    {
+      "check": "word-gap",
+      "chapter": "8",
+      "where": "ельной. И я не рекомендую глушить находки комментариями в ко",
+      "page": 154,
+      "detail": "a justified line with wide gaps between its words: mean 0.69 em, widest 0.70 em",
+      "reason": "A justified line that holds few words: a narrow column beside a note, or inline code, a no-break pair or a word the dictionary cannot hyphenate at its end. Hyphenation, the narrower word space and letter spacing at its invisible limit (paginate.js) leave it as wide as shown; only rewording the sentence closes it."
+    },
+    {
+      "check": "word-gap",
+      "chapter": "9",
+      "where": "флагами --allowedTools и --disallowedTools или правилами per",
+      "page": 181,
+      "detail": "a justified line with wide gaps between its words: mean 0.56 em, widest 0.57 em",
+      "reason": "A justified line that holds few words: a narrow column beside a note, or inline code, a no-break pair or a word the dictionary cannot hyphenate at its end. Hyphenation, the narrower word space and letter spacing at its invisible limit (paginate.js) leave it as wide as shown; only rewording the sentence closes it."
+    },
+    {
+      "check": "word-gap",
+      "chapter": "10",
+      "where": "Может случиться так, что агент просто не выполнит правило",
+      "page": 193,
+      "detail": "a justified line with wide gaps between its words: mean 0.85 em, widest 0.86 em",
+      "reason": "A justified line that holds few words: a narrow column beside a note, or inline code, a no-break pair or a word the dictionary cannot hyphenate at its end. Hyphenation, the narrower word space and letter spacing at its invisible limit (paginate.js) leave it as wide as shown; only rewording the sentence closes it."
+    },
+    {
+      "check": "word-gap",
+      "chapter": "10",
+      "where": "троек репозитория (.claude/settings.json",
+      "page": 204,
+      "detail": "a justified line with wide gaps between its words: mean 3.43 em, widest 3.43 em",
+      "reason": "A justified line that holds few words: a narrow column beside a note, or inline code, a no-break pair or a word the dictionary cannot hyphenate at its end. Hyphenation, the narrower word space and letter spacing at its invisible limit (paginate.js) leave it as wide as shown; only rewording the sentence closes it."
+    },
+    {
+      "check": "word-gap",
+      "chapter": "10",
+      "where": "Пишется это обычным текстом в личных настройках ~/.claude/",
+      "page": 206,
+      "detail": "a justified line with wide gaps between its words: mean 0.58 em, widest 0.59 em",
+      "reason": "A justified line that holds few words: a narrow column beside a note, or inline code, a no-break pair or a word the dictionary cannot hyphenate at its end. Hyphenation, the narrower word space and letter spacing at its invisible limit (paginate.js) leave it as wide as shown; only rewording the sentence closes it."
+    },
+    {
+      "check": "word-gap",
+      "chapter": "10",
+      "where": "мотреть, какие правила у классификатора сейчас действуют, мо",
+      "page": 207,
+      "detail": "a justified line with wide gaps between its words: mean 0.61 em, widest 0.62 em",
+      "reason": "A justified line that holds few words: a narrow column beside a note, or inline code, a no-break pair or a word the dictionary cannot hyphenate at its end. Hyphenation, the narrower word space and letter spacing at its invisible limit (paginate.js) leave it as wide as shown; only rewording the sentence closes it."
+    },
+    {
+      "check": "word-gap",
+      "chapter": "10",
+      "where": "правку оценивает классификатор. Кроме того, папка",
+      "page": 211,
+      "detail": "a justified line with wide gaps between its words: mean 0.64 em, widest 0.65 em",
+      "reason": "A justified line that holds few words: a narrow column beside a note, or inline code, a no-break pair or a word the dictionary cannot hyphenate at its end. Hyphenation, the narrower word space and letter spacing at its invisible limit (paginate.js) leave it as wide as shown; only rewording the sentence closes it."
+    },
+    {
+      "check": "word-gap",
+      "chapter": "10",
+      "where": "орые зарегистрировались в новом монолите, не оказалось в ста",
+      "page": 214,
+      "detail": "a justified line with wide gaps between its words: mean 0.56 em, widest 0.56 em",
+      "reason": "A justified line that holds few words: a narrow column beside a note, or inline code, a no-break pair or a word the dictionary cannot hyphenate at its end. Hyphenation, the narrower word space and letter spacing at its invisible limit (paginate.js) leave it as wide as shown; only rewording the sentence closes it."
+    },
+    {
+      "check": "word-gap",
+      "chapter": "11",
+      "where": "недели у него на руках не просто PRD (Product",
+      "page": 224,
+      "detail": "a justified line with wide gaps between its words: mean 0.88 em, widest 0.89 em",
+      "reason": "A justified line that holds few words: a narrow column beside a note, or inline code, a no-break pair or a word the dictionary cannot hyphenate at its end. Hyphenation, the narrower word space and letter spacing at its invisible limit (paginate.js) leave it as wide as shown; only rewording the sentence closes it."
+    },
+    {
+      "check": "word-gap",
+      "chapter": "11",
+      "where": "положительный отклик от руководства и будущих",
+      "page": 224,
+      "detail": "a justified line with wide gaps between its words: mean 0.92 em, widest 0.92 em",
+      "reason": "A justified line that holds few words: a narrow column beside a note, or inline code, a no-break pair or a word the dictionary cannot hyphenate at its end. Hyphenation, the narrower word space and letter spacing at its invisible limit (paginate.js) leave it as wide as shown; only rewording the sentence closes it."
+    },
+    {
+      "check": "word-gap",
+      "chapter": "11",
+      "where": "И дальше прототип уходит дизайнеру, которому уже",
+      "page": 224,
+      "detail": "a justified line with wide gaps between its words: mean 0.60 em, widest 0.61 em",
+      "reason": "A justified line that holds few words: a narrow column beside a note, or inline code, a no-break pair or a word the dictionary cannot hyphenate at its end. Hyphenation, the narrower word space and letter spacing at its invisible limit (paginate.js) leave it as wide as shown; only rewording the sentence closes it."
+    },
+    {
+      "check": "word-gap",
+      "chapter": "11",
+      "where": "те с минимальным прототипом, и, получив от него «ок», идёт э",
+      "page": 226,
+      "detail": "a justified line with wide gaps between its words: mean 0.65 em, widest 0.65 em",
+      "reason": "A justified line that holds few words: a narrow column beside a note, or inline code, a no-break pair or a word the dictionary cannot hyphenate at its end. Hyphenation, the narrower word space and letter spacing at its invisible limit (paginate.js) leave it as wide as shown; only rewording the sentence closes it."
+    },
+    {
+      "check": "word-gap",
+      "chapter": "11",
+      "where": "т вертикальными срезами (vertical slices), потому",
+      "page": 228,
+      "detail": "a justified line with wide gaps between its words: mean 0.62 em, widest 0.66 em",
+      "reason": "A justified line that holds few words: a narrow column beside a note, or inline code, a no-break pair or a word the dictionary cannot hyphenate at its end. Hyphenation, the narrower word space and letter spacing at its invisible limit (paginate.js) leave it as wide as shown; only rewording the sentence closes it."
+    },
+    {
+      "check": "word-gap",
+      "chapter": "11",
+      "where": "ы пройдутся по ним и всё починят за один раз,",
+      "page": 236,
+      "detail": "a justified line with wide gaps between its words: mean 0.73 em, widest 0.73 em",
+      "reason": "A justified line that holds few words: a narrow column beside a note, or inline code, a no-break pair or a word the dictionary cannot hyphenate at its end. Hyphenation, the narrower word space and letter spacing at its invisible limit (paginate.js) leave it as wide as shown; only rewording the sentence closes it."
+    },
+    {
+      "check": "word-gap",
+      "chapter": "11",
+      "where": "В главе о запуске проекта мы прикладывали видео к пул-реквес",
+      "page": 239,
+      "detail": "a justified line with wide gaps between its words: mean 0.63 em, widest 0.63 em",
+      "reason": "A justified line that holds few words: a narrow column beside a note, or inline code, a no-break pair or a word the dictionary cannot hyphenate at its end. Hyphenation, the narrower word space and letter spacing at its invisible limit (paginate.js) leave it as wide as shown; only rewording the sentence closes it."
+    },
+    {
+      "check": "word-gap",
+      "chapter": "11",
+      "where": "Команда OpenAI в феврале 2026 года рассказала,",
+      "page": 247,
+      "detail": "a justified line with wide gaps between its words: mean 0.91 em, widest 0.91 em",
+      "reason": "A justified line that holds few words: a narrow column beside a note, or inline code, a no-break pair or a word the dictionary cannot hyphenate at its end. Hyphenation, the narrower word space and letter spacing at its invisible limit (paginate.js) leave it as wide as shown; only rewording the sentence closes it."
+    },
+    {
+      "check": "word-gap",
+      "chapter": "11",
+      "where": "яют приоритеты, превращают отзывы пользователей",
+      "page": 247,
+      "detail": "a justified line with wide gaps between its words: mean 0.57 em, widest 0.57 em",
+      "reason": "A justified line that holds few words: a narrow column beside a note, or inline code, a no-break pair or a word the dictionary cannot hyphenate at its end. Hyphenation, the narrower word space and letter spacing at its invisible limit (paginate.js) leave it as wide as shown; only rewording the sentence closes it."
+    }
+  ]
+}

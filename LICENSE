@@ -1,0 +1,27 @@
+Copyright (c) 2026 Artem Puliavin (Тёма Пулявин)
+
+This repository is licensed in parts, each under its own license:
+
+1. The text and pictures of the book (book/, except what points 2 and 5 name) are licensed under
+   Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0).
+   You may share and adapt them for non-commercial purposes, giving credit to the author and the book.
+   Full text: licenses/CC-BY-NC-4.0.txt, https://creativecommons.org/licenses/by-nc/4.0/
+
+2. The prompts, commands and code examples printed in the book (the ```prompt, ```terminal and code
+   fences in book/) are dedicated to the public domain under CC0 1.0 Universal: use them in any way,
+   in your own work too, without conditions.
+   Full text: licenses/CC0-1.0.txt, https://creativecommons.org/publicdomain/zero/1.0/
+
+3. The build and check tool and the repository files (tools/, docs/, .github/, .claude/ and the files in the
+   repository root) are licensed under the PolyForm Noncommercial
+   License 1.0.0: you may use, study and change it for any non-commercial purpose.
+   Full text: licenses/PolyForm-Noncommercial-1.0.0.md, https://polyformproject.org/licenses/noncommercial/1.0.0
+
+4. The fonts in tools/bookkit/theme/fonts/ belong to their authors and are licensed under the
+   SIL Open Font License 1.1: tools/bookkit/theme/fonts/OFL.txt.
+
+5. The author's photo (book/00-front/author.jpg) is not licensed for reuse: all rights reserved.
+
+The characters of the book are an homage to «Encyclopedia of Professor Fortran» (Энциклопедия профессора Фортрана) by A. V. Zaretsky,
+M. O. Zaretskaya, A. V. Trukhanov and the artist E. L. Desyatnik; the drawings in this repository
+are original.

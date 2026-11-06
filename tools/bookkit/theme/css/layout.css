@@ -1,0 +1,21 @@
+/* components/layout.py and the paginator's accents: inset scenes, a picture beside a paragraph.
+   Colors, fonts and sizes come from bookkit/design.py as custom properties; none are literal here. */
+
+/* ---- inset illustration ---- */
+.inset { border: var(--line) solid var(--ink); border-radius: 3mm; overflow: hidden; background: var(--card);
+         box-shadow: 1.4mm 1.4mm 0 var(--shadow); }
+.inset .scene-svg { width: 100%; height: auto; }
+
+/* ---- accent ---- */
+/* A character or an object beside a paragraph, placed by the paginator on a page of solid text so it reads
+   lighter. Its row floats it at one edge (page.css) and the text wraps round it. */
+.accent { position: relative; width: 100%; }
+/* A character's accent is a square box, so its soft circle never sticks out below it into the text;
+   the overlap check measures this box. */
+.accent:not(.is-doodle) { aspect-ratio: 1; display: flex; align-items: flex-end; }
+.accent svg { width: 100%; position: relative; display: block; }
+.accent.is-doodle { transform: rotate(-6deg); }
+.note-right .accent.is-doodle { transform: rotate(6deg); }
+.accent:not(.is-doodle)::before { content: ""; position: absolute; inset: 4%;
+                                  border-radius: 50%; background: var(--accent-soft); }
+.note-left .accent:not(.is-doodle) svg { transform: scaleX(-1); }   /* face the text */

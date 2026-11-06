@@ -1,0 +1,56 @@
+/* components/lists.py: the checklist poster, steps, cast strips.
+   Colors, fonts and sizes come from bookkit/design.py as custom properties; none are literal here. */
+
+/* ---- checklist: a poster held by a character ---- */
+.board { position: relative; padding-top: 25mm; }
+/* The head rests on the top edge of the sheet whatever its height: it is anchored by its bottom. */
+.board-peek { position: absolute; bottom: calc(100% - 25mm - 1px); left: 13mm; width: 34mm; }
+.board-right .board-peek { left: auto; right: 13mm; }
+.board-peek svg { width: 100%; }
+/* Torso up behind the poster: the drawing sits under the sheet, and the grips on the top edge are its hands. */
+.board-hold { padding-top: 40mm; }
+.board-hold .board-peek { bottom: calc(100% - 40mm - 7mm); width: 50mm; left: 10mm; z-index: 0; }
+.board-hold.board-right .board-peek { left: auto; right: 10mm; }
+.board-hold .board-sheet { z-index: 1; }
+.board-hold .grip-left { left: 18mm; } .board-hold .grip-right { left: 41mm; }
+.board-hold.board-right .grip-left { left: auto; right: 41mm; } .board-hold.board-right .grip-right { left: auto; right: 18mm; }
+.board-sheet { position: relative; isolation: isolate; border: var(--line) solid var(--ink); border-radius: 1.4mm;
+               padding: 5mm 6mm 5mm; transform: rotate(-.6deg); box-shadow: 1.6mm 1.6mm 0 var(--shadow); }
+.board-sheet::before { content: ""; position: absolute; inset: 0; z-index: -1;   /* see the note on .crt in code.css */
+                       background: linear-gradient(170deg, var(--sky-low), var(--sky)); clip-path: inset(0 round calc(1.4mm - var(--line))); }
+.board-right .board-sheet { transform: rotate(.6deg); }
+.grip { position: absolute; top: -3.4mm; width: 9mm; }
+.grip-left { left: 4mm; } .grip-right { left: 47mm; }
+.board-right .grip-left { left: auto; right: 47mm; } .board-right .grip-right { left: auto; right: 4mm; }
+.board h4 { font-size: 14.6pt; font-weight: 800; margin: 1.6mm 0 3mm; }
+.checks { list-style: none; padding: 0; margin: 0; }
+.checks li { display: flex; gap: 3mm; align-items: flex-start; margin-top: 2.2mm; font-size: 11.2pt; line-height: 1.4; }
+.checks .box { flex: none; width: 5mm; height: 5mm; margin-top: .25mm; background: var(--white); border: 1.8px solid var(--ink); border-radius: 1mm; position: relative; }
+.checks .box svg { position: absolute; left: .2mm; top: -1.9mm; width: 6.4mm; height: 6.4mm; }
+.checks .num { flex: none; width: 6mm; height: 6mm; margin-top: -.2mm; background: var(--red); color: var(--white); border: 1.8px solid var(--ink);
+               border-radius: 50%; font: 800 9.6pt/1 var(--f-head); display: flex; align-items: center;
+               justify-content: center; padding-top: .15mm; }
+
+/* ---- steps ---- */
+.steps > ol, .steps > ul { list-style: none; padding: 0; margin: 0; counter-reset: s calc(var(--start, 1) - 1);
+                          position: relative; }   /* --start: the second part of steps split between pages */
+.steps > ol::before, .steps > ul::before { content: ""; position: absolute; left: 4.4mm; top: 4mm; bottom: 4mm; border-left: 1.6px dashed var(--ink); opacity: .5; }
+/* The badge is centred on the text: on a single line, and on the middle line of three. A line of
+   text plus this padding is as tall as the badge, so a one-line step is exactly badge-high. */
+.steps > * > li { counter-increment: s; position: relative; padding: var(--step-pad) 0 var(--step-pad) 13mm; margin-top: 2mm; }
+.steps > * > li::before { content: counter(s); position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 9mm; height: 9mm; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; padding-top: .2mm;
+  background: var(--accent); border: var(--line) solid var(--ink); font: 900 13.4pt/1 var(--f-head); }
+.steps li > p:first-child > strong:first-child { font: 700 11.9pt var(--f-head); }
+.main > h4 + .steps { margin-top: 2.6mm; }
+
+/* ---- cast strips ---- */
+.cast { border: var(--line) solid var(--ink); border-radius: 2mm; overflow: hidden; }
+.cast-row { display: flex; align-items: center; gap: 5mm; padding: 3mm 5mm; background: var(--c); }
+.cast-row + .cast-row { border-top: 1.6px dashed var(--ink); }
+.cast-row:nth-child(4n+1) { --c: var(--pink); } .cast-row:nth-child(4n+2) { --c: var(--teal); }
+.cast-row:nth-child(4n+3) { --c: var(--yellow); } .cast-row:nth-child(4n+4) { --c: var(--orange); }
+.medal { flex: none; width: 22mm; height: 22mm; border-radius: 50%; background: var(--white); border: var(--line) solid var(--ink); overflow: hidden; }
+.medal svg { width: 100%; height: 100%; }
+.cast-row b { display: block; font: 800 13.4pt var(--f-head); }
+.cast-row span { font: 500 10.8pt/1.35 var(--f-head); }

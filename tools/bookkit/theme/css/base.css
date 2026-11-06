@@ -1,0 +1,24 @@
+/* Tokens derived from design.py, the reset, and the off-screen staging areas.
+   Colors, fonts and sizes come from bookkit/design.py as custom properties; none are literal here. */
+:root {
+  /* Colors, fonts and page geometry are NOT declared here: `bookkit/design.py` generates them
+     as custom properties (--ink, --paper, --f-head, --col-main, --foot-m ...) ahead of this file.
+     Only values derived from them live in the stylesheet. */
+  --accent: var(--chapter-sky);                                     /* overridden per chapter */
+  --accent-soft: color-mix(in srgb, var(--accent) 22%, var(--paper));
+  --hairline: color-mix(in srgb, var(--ink) 28%, transparent);      /* thin rules and code borders */
+  --shadow: color-mix(in srgb, var(--ink) 15%, transparent);        /* the flat drop shadow of cards */
+}
+/* [data-color="..."] sets --accent per chapter: generated from design.ACCENTS. */
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--desk); color: var(--ink);
+  font: 11.8pt/1.66 var(--f-body);
+  -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  font-kerning: normal; text-rendering: geometricPrecision;
+}
+/* The unpaginated source and the stock of ornaments are laid out off-screen so fonts load and sizes are real. */
+#source, #stock { position: absolute; left: -9999mm; top: 0; width: var(--page-w); visibility: hidden; }
+svg { display: block; }

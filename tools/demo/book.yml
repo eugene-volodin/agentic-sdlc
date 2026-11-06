@@ -1,0 +1,12 @@
+title: Методичка профессора Фортрана      # series name: the plate on the cover
+title_highlight: Фортрана
+headline: Как построить Agentic SDLC в своём репозитории   # the name of the book
+headline_highlight: Agentic SDLC                 # this phrase of the name sits on a colored plate
+topics: [Хуки, Команды, Скиллы, MCP]            # stickers along the top of the cover
+subtitle: для тех, кто начинает — с нуля и в картинках
+author: Тёма Пулявин
+year: 2026
+toc: true
+# kicker: a plain line of text for the top band, used when there are no topics
+# chapters:            # optional explicit order; without it every *.md is taken alphabetically
+#   - 01-znakomstvo.md

@@ -1,0 +1,112 @@
+/* Running text: headings, lists, inline code, tables, figures, plain quotes.
+   Colors, fonts and sizes come from bookkit/design.py as custom properties; none are literal here. */
+
+/* ---- typography ---- */
+p { margin: 0; }
+/* Hyphenation on: Chrome hyphenates Russian by the page's lang; no word under 5 letters, at least 2 letters on
+   each side of a hyphen. No `text-wrap: pretty`: in justified text it widens the word gaps of the lines it evens;
+   a short last word is kept from standing alone by a no-break space instead (markdown.py). */
+p, li { hyphens: auto; hyphenate-limit-chars: 5 2 2; }
+/* Running text is justified; hyphenation, a slightly narrower space and a touch of letter spacing on a loose line
+   (paginate.js) keep the gaps even. */
+.main > p, .main li { text-align: justify; word-spacing: var(--word-space); }
+/* The first part of a paragraph split between pages: its last line is full, the sentence runs on overleaf. */
+.main > p.cut { text-align-last: justify; }
+.main > p + p { margin-top: 2.4mm; }
+/* Running text flows: paragraph after paragraph sits closer than block after block. */
+.row:has(> .main > p:only-child) + .row:has(> .main > p:only-child) { margin-top: var(--gap-text); }
+strong { font-weight: 700; }
+svg.mark { display: inline-block; width: 1em; height: 1em; vertical-align: -.12em; }   /* graphics.MARK_*: sized where used */
+a { color: inherit; text-decoration: underline; text-decoration-color: var(--accent);
+    text-decoration-thickness: 1.6px; text-underline-offset: 2px; }
+/* No gradients that fade to transparent anywhere: Chrome prints them as 72 dpi rasters with a soft mask, which
+   Apple's PDF viewers (iOS, Telegram, Preview) draw torn. The marker is an inset shadow over the lower half. */
+mark { background: none; box-shadow: inset 0 -.5em 0 color-mix(in srgb, var(--yellow) 75%, transparent);
+       color: inherit; padding: 0 .1em; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+code { font: 500 .86em var(--f-mono); background: var(--paper-shade); border: 1px solid var(--hairline);
+       border-radius: 3px; padding: .05em .3em; hyphens: manual; word-spacing: normal;
+       /* Whole, or broken at the <wbr> after a slash (markdown.py); only a token longer than its line breaks
+          elsewhere. Not `anywhere`: that would let a table column or a note shrink to one letter around it. */
+       overflow-wrap: break-word;
+       -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+code.words { display: inline-block; white-space: nowrap; }   /* keeps a short command's spaces as typed */
+kbd { font: 600 .78em var(--f-mono); background: var(--white); border: 1.4px solid var(--ink); border-bottom-width: 3px;
+      border-radius: 4px; padding: .05em .45em; white-space: nowrap; }
+pre { margin: 0; font: 400 9.2pt/1.5 var(--f-mono); white-space: pre-wrap; overflow-wrap: anywhere; tab-size: 2; }
+pre code { all: unset; }
+/* No ligatures in code: "->" and "<!--" must print as typed. Declared after the `font` shorthands, which reset it. */
+code, pre, kbd { font-variant-ligatures: none; }
+
+h1, h2, h3, h4 { font-family: var(--f-head); margin: 0; line-height: 1.12; text-wrap: balance; }
+h2 { font-weight: 800; font-size: 21pt; letter-spacing: -.012em; display: flex; align-items: flex-start; gap: 3mm; }
+h2 .h-tag {                    /* section number on an arrow, echoing the page number tag */
+  flex: none; font-size: 11.8pt; font-weight: 800; background: var(--accent); color: var(--ink);
+  padding: 1.6mm 5mm 1.6mm 2.6mm; margin-top: .7mm;
+  clip-path: polygon(0 0, calc(100% - 3.4mm) 0, 100% 50%, calc(100% - 3.4mm) 100%, 0 100%);
+}
+h3 { font-weight: 700; font-size: 15.1pt; padding-left: 3.2mm; border-left: 2.2mm solid var(--accent); }
+h4 { font-weight: 700; font-size: 12.3pt; }
+.chapter-title { font-weight: 900; font-size: 30pt; letter-spacing: -.02em; }
+p:has(> .lead-in) { margin-top: 2.4mm; }   /* air between a heading and the raised sticker */
+/* The first word of a chapter, as a sticker: heading type on an accent plate, a touch askew. */
+.lead-in { display: inline-block; font: 900 1.25em/1 var(--f-head); letter-spacing: -.01em; white-space: nowrap;
+           background: var(--accent); border: var(--line) solid var(--ink); border-radius: 2mm;
+           padding: .5mm 2.1mm .8mm; transform: rotate(-2.5deg); box-shadow: 1mm 1mm 0 var(--ink);
+           /* Raised, and with negative margins so its box is no taller than a line: the gap between the first and the
+              second line stays the same as between any other two. */
+           vertical-align: .22em; margin: -2.4mm 1.6mm -2.4mm 0; }
+
+ul, ol { margin: 0; padding-left: 6mm; }
+li { margin-top: 1.2mm; } li:first-child { margin-top: 0; }
+li > ul, li > ol, li > pre, li > .code, li > .terminal { margin-top: 1.2mm; }
+.main > ul { list-style: none; padding-left: 6mm; }
+.main > ul > li { position: relative; }
+.main > ul > li::before { content: ""; position: absolute; left: -5mm; top: .52em; width: 2.2mm; height: 2.2mm;
+  background: var(--accent); border: 1.4px solid var(--ink); border-radius: 50%; }
+.main > ol { list-style: none; counter-reset: n calc(var(--start, 1) - 1); padding-left: 7.5mm; }
+.main > ol > li { counter-increment: n; position: relative; }
+/* Numerals in round badges: flex centring with line-height 1 puts the digit in the optical middle. */
+.main > ol > li::before { content: counter(n); position: absolute; left: -7.5mm; top: .08em; width: 5mm; height: 5mm;
+  display: flex; align-items: center; justify-content: center; padding-top: .15mm;
+  font: 800 9pt/1 var(--f-head); background: var(--white); border: 1.4px solid var(--ink); border-radius: 50%; }
+
+hr { border: 0; height: 6mm; margin: 0 auto; width: 21mm; opacity: .8; position: relative; overflow: visible; }
+hr::after { content: ""; position: absolute; left: 2.3mm; top: 1.8mm; width: 2.4mm; height: 2.4mm; border-radius: 50%;
+            background: var(--ink); box-shadow: 7mm 0 var(--ink), 14mm 0 var(--ink); }
+
+blockquote { margin: 0; padding: 1mm 0 1mm 8mm; position: relative; font: italic 14pt/1.42 var(--f-body); }
+/* The opening mark is the same size as the closing one. */
+blockquote::before { content: "\00ab"; position: absolute; left: 0; top: .9mm; font: 900 1.7em/1 var(--f-head); font-style: normal;
+                     color: var(--accent); -webkit-text-stroke: 1.2px var(--ink); }
+/* What opens must close: a matching mark follows the last word. */
+blockquote > p:last-of-type::after { content: "\00a0\00bb"; font: 900 1.7em/0 var(--f-head); font-style: normal; vertical-align: -.08em;
+                                     color: var(--accent); -webkit-text-stroke: 1.2px var(--ink); }
+blockquote cite { display: block; margin-top: 3.4mm; font: 600 9.5pt var(--f-head); font-style: normal;
+                  letter-spacing: .05em; text-transform: uppercase; }
+
+table { border-collapse: separate; border-spacing: 0; width: 100%; font-size: 10.3pt; line-height: 1.38;
+        border: var(--line) solid var(--ink); border-radius: 3mm; overflow: hidden; background: var(--card); }
+th { font: 700 9.6pt var(--f-head); text-align: left; background: var(--accent); border-bottom: var(--line) solid var(--ink); }
+th, td { padding: 1.7mm 2.6mm; vertical-align: top; }
+td { border-top: 1px dashed color-mix(in srgb, var(--ink) 40%, transparent); }
+tr:first-child td { border-top: 0; }
+/* A table taller than a page breaks between its rows (paginate.js); the header repeats, the cut edges are dashed. */
+.split-head table { border-bottom-style: dashed; border-radius: 3mm 3mm 0 0; }
+td + td, th + th { border-left: 1px solid var(--hairline); }
+figure { margin: 0; }
+figure img, .main > p > img { max-width: 100%; max-height: 150mm; border: var(--line) solid var(--ink);
+                              border-radius: 2mm; display: block; }
+figcaption, .caption { font: 500 9.4pt/1.35 var(--f-head); margin-top: 1.4mm; opacity: .8; }
+/* A national flag inline (:flag-us:), level with the text. */
+.flag { display: inline-block; width: 1.9em; height: 1.37em; vertical-align: -.32em; margin-right: .3em; }
+/* A little list inside a table cell ("- one<br>- two"): one item per line, each with a small accent marker. */
+.cell-item { display: block; position: relative; padding-left: 3.4mm; }
+.cell-item + .cell-item { margin-top: .6mm; }
+.cell-item::before { content: ""; position: absolute; left: 0; top: .55em; width: 1.6mm; height: 1.6mm; border-radius: .4mm;
+                     background: var(--accent); border: 1px solid var(--ink); transform: rotate(45deg); }
+/* Scores in a results table: the leaders green, the far behind wine-red, the rest plain (legend in the text). */
+.score { font-weight: 700; padding: .3mm 1.6mm; border-radius: 1.2mm; }
+.score.good { background: color-mix(in srgb, var(--green) 30%, transparent); }
+.score.weak { background: color-mix(in srgb, var(--red) 25%, transparent); color: color-mix(in srgb, var(--red) 70%, var(--ink)); }
+/* A command kept whole and the punctuation after it (markdown.py): never parted at a line end. */
+.glue { white-space: nowrap; }

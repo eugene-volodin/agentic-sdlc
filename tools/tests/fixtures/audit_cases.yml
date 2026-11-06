@@ -1,0 +1,4 @@
+# Russian samples for tests/test_audit.py: text the audit reads as Russian (no Cyrillic in *.py).
+straight_quote: Он сказал "готово" и закрыл задачу.
+hyphen_dash: Агент - это не автокомплит.
+clean: Агент читает репозиторий, запускает сборку и проверяет свою работу, прежде чем сказать, что всё готово.

@@ -1,0 +1,58 @@
+# Checks every pull request and every push to main: the tests, the linter, then one build that audits every page
+# (`book audit`, tools/bookkit/audit.py). It fails on any error and on any warning tools/audit-baseline.json does not
+# accept; the report, the contact sheets of the flagged pages and the PDF are uploaded as artifacts.
+name: check
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: tools
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0              # the audit compares book/ with origin/main
+      - uses: actions/setup-python@v7.0.0
+        with:
+          python-version: "3.12"
+      - uses: astral-sh/setup-uv@v10.3.0
+        with:
+          version: "0.11.18"
+          enable-cache: true
+          cache-dependency-glob: tools/uv.lock
+      - name: Google Chrome
+        # The runner image ships Google Chrome stable; install it only where it is missing.
+        run: google-chrome --version || uv run --frozen playwright install --with-deps chrome
+      - name: Dependencies
+        run: uv sync --frozen
+      - name: Tests
+        run: uv run pytest -q
+      - name: Linter
+        run: uvx ruff@0.17.4 check bookkit tests
+      - name: Audit
+        run: >
+          uv run book audit --base origin/main --baseline audit-baseline.json
+          --md ../report.md --json ../audit.json --sheets ../sheets --pdf ../dist/agentic-sdlc.pdf
+      - name: Job summary
+        if: always()
+        run: if [ -f ../report.md ]; then cat ../report.md >> "$GITHUB_STEP_SUMMARY"; fi
+      - uses: actions/upload-artifact@v7.0.2
+        if: always()
+        with:
+          name: agentic-sdlc-audit
+          path: |
+            report.md
+            audit.json
+            sheets/
+            dist/agentic-sdlc.pdf
+          if-no-files-found: ignore
