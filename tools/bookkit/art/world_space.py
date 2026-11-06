@@ -41,7 +41,7 @@ from .scenes import PROFESSOR_HEIGHT
 from .world_kit import (FLOPPY_K, GAP_MIN, GLASS, SIZE, Pen, Port, Room, burst, cast, clear_path,
                        connect, floppy_size, frac_of, hide, height_of, ledger, letter, motion, path_points, port, puff,
                        room, route, sound, stash, tag_size, wrap)
-from .world_kitchen import _box
+from .world_kitchen import _box, _upright, low, who
 from .worlds import Station, world
 
 SPACE = world("station", opener="station")
@@ -72,12 +72,6 @@ def cabin(s: Strip) -> Hull:
 
 # ============================================================================ the camera
 LOW_CAST = ("agent", "cat", "caterpillar")      # who stands in a low frame: the professor, the tallest, is left out
-
-
-def low(s: Strip) -> bool:
-    """A low frame - a strip or a mid strip - is a close-up: the cast stands as big as the line over their heads
-    lets them, and the professor (the tallest) is left out."""
-    return s.h < 300
 
 
 def camera(s: Strip) -> None:
@@ -111,18 +105,6 @@ def camera(s: Strip) -> None:
         s.tall *= 0.88
     s.unit = s.tall / 137
     s._room = None
-
-
-def _upright(s: Strip, actor) -> float:
-    """How far to turn a thing held in the right fist so it stands upright on the page, whatever the forearm's
-    slant (a drawn-mirrored hand is mirrored back)."""
-    angle = s.grip(actor, "right")[2]
-    return -(180 - angle if actor.flip else angle)
-
-
-def who(s: Strip, name: str, alt: str) -> str:
-    """`name`, or `alt` in a low frame when `name` is the professor."""
-    return alt if name == "professor" and low(s) else name
 
 
 def stand(s: Strip, name: str, fracs: tuple[float, ...], pose: str, mood: str = "smile", face: float | None = None,
@@ -181,9 +163,6 @@ def backdrop(s: Strip, index: int) -> None:
     """The module's shell: space and the hull above it in a tall frame, the plain wall with its panel seams, the end
     bulkheads, the deck plating underfoot with the cable channel of the line along its back. Nothing on the wall
     but what the station's step needs."""
-    s.indoor = True
-    s.decor = False
-    s.dress = False
     ledger(s)
     camera(s)
     c, r = s.back, cabin(s)
@@ -561,7 +540,7 @@ def printer_box(s: Strip, x: float, y: float, k: float, tee: Port, word: str, gr
 
 # The airlock: the round door in the wall through which people and post come aboard from the docked shuttle - a
 # frame bolted to the wall, a heavy door with a wheel and a small window, its name on a tag over it.
-def airlock(s: Strip, x: float, floor: float, k: float, word: str) -> None:
+def airlock(s: Strip, x: float, floor: float, k: float) -> None:
     """The airlock, the middle of its foot at (x, floor): a frame bolted to the wall, a door with rounded corners
     in it - a small window high up, the locking wheel below it, air between them and to the door's edge. No name
     tag: the door reads as a door by itself."""
@@ -605,7 +584,7 @@ def switch_size(s: Strip, k: float) -> tuple[float, float, float, float]:
     return wrap(max(tw + 8, 40.0), k), wrap(th * 2 + gap * 2 + 34, k), size, th
 
 
-def _door(w: float, h: float) -> float:
+def _door(w: float) -> float:
     """How far the open door reaches out to the left of the cabinet."""
     return w * 0.42
 
@@ -614,7 +593,7 @@ def wall_switch(s: Strip, x: float, y: float, k: float, on: bool, tee: Port) -> 
     """The knife switch, its cabinet's middle at (x, y); `on` - the blades up in their jaws."""
     w, h, size, th = switch_size(s, k)
     pen = Pen(s, x, y, k)
-    dw = _door(w, h)
+    dw = _door(w)
     pen.c.shape(f"M{n(-w / 2)},{n(-h / 2)} L{n(-w / 2 - dw)},{n(-h / 2 + 8)} V{n(h / 2 - 8)} L{n(-w / 2)},{n(h / 2)} Z",
                 darken(P.METAL, 0.9), sw=1.6, light=None)                  # the door, swung open on its hinges
     for hy in (-h / 2 + 10, h / 2 - 10):
@@ -668,15 +647,15 @@ def wall_switch(s: Strip, x: float, y: float, k: float, on: bool, tee: Port) -> 
     connect(s, tee, pen.port(gx, -h / 2 - 6, 0, -1, "switch"), "cable", max(2.4, 3.5 * k), depth=1.4)
 
 
-def switch_extent(s: Strip, k: float, on: bool) -> tuple[float, float, float, float]:
+def switch_extent(s: Strip, k: float) -> tuple[float, float, float, float]:
     """How far the switch reaches from its cabinet's middle on the page: left (the open door), up, right, down."""
     w, h, _, _ = switch_size(s, k)
-    return (w / 2 + _door(w, h)) * k, (h / 2 + 6) * k, w / 2 * k, h / 2 * k
+    return (w / 2 + _door(w)) * k, (h / 2 + 6) * k, w / 2 * k, h / 2 * k
 
 
-def _switch_at(s: Strip, spots: tuple[float, ...], y: float, k: float, on: bool) -> float | None:
+def _switch_at(s: Strip, spots: tuple[float, ...], y: float, k: float) -> float | None:
     """The first x of `spots` where the switch fits on the wall with its middle at y, or None."""
-    left, up, right, down = switch_extent(s, k, on)
+    left, up, right, down = switch_extent(s, k)
     r = cabin(s)
     if y - up < r.trunk + r.tube + 6:                      # its gland stays under the trunk it hangs from
         return None
@@ -691,7 +670,7 @@ def task(s: Strip, beat: str) -> None:
     k = s.unit
     ak = min(k, (r.floor - r.trunk - r.tube - 10) / 210)
     ax = s.x(0.0) + 62 * ak
-    airlock(s, ax, r.floor, ak, s.word("airlock"))
+    airlock(s, ax, r.floor, ak)
     after = ax + 62 * ak + s.tall * 0.3                     # the professor stands clear of the door
     sk = k * 1.1                                            # the switch's scale
     if beat == "work":
@@ -715,18 +694,18 @@ def task(s: Strip, beat: str) -> None:
         sx, sy = None, hy                                   # the switch: between the two tubes, or over the inlet's
         for scale in (1.1, 0.9, 0.75, 0.6, 0.5, 0.42):
             sk = k * scale
-            left, up, right, down = switch_extent(s, sk, True)
+            left, up, right, down = switch_extent(s, sk)
             mid = (ib + ob) / 2 - (right - left) / 2
             size = letter(k, 10.0)                          # the outlet's plate reaches back under its mouth
             plate = (wrap(18 + GAP_MIN / k + 3 + tag_size(s.word("outlet"), size, k)[0], k) + 6) * k
             if ib + post_bore(ck) / 2 + 8 < mid - left and mid + right < min(ob - post_bore(ok) / 2, ox - plate) - 8:
-                sx = _switch_at(s, (mid,), hy, sk, True)
+                sx = _switch_at(s, (mid,), hy, sk)
             if sx is None:                                  # over the inlet's run, under the trunk
                 high = hy - post_bore(ck) / 2 - 8 * k - down
                 if high - up > r.trunk + r.tube + 6:
                     edge = ib - post_bore(ck) / 2 - 8 - right       # clear of the tube rising to its tee
                     spots = tuple(x for x in (min(edge, bx + (ib - bx) * 0.4), edge) if x - left > bx + post_bore(ck))
-                    sx = _switch_at(s, spots, high, sk, True)
+                    sx = _switch_at(s, spots, high, sk)
                     sy = high
             if sx is not None:
                 break
@@ -757,7 +736,7 @@ def task(s: Strip, beat: str) -> None:
         sx = None
         for scale in (1.1, 0.8, 0.6, 0.45):               # as big as fits under the trunk
             sk = k * scale
-            sx = _switch_at(s, (s.x(0.8), s.x(0.88)), foot, sk, False)
+            sx = _switch_at(s, (s.x(0.8), s.x(0.88)), foot, sk)
             if sx is not None:
                 break
         sw = switch_size(s, sk)[0] * 0.2 * sk
@@ -773,7 +752,6 @@ def task(s: Strip, beat: str) -> None:
 
 # The tool rack: a pegboard hung from two tees of the trunk by rods; the built-in tools on hooks, each with its
 # name on a tag under it - what an agent has without MCP - and two spare hooks for the tools still to come.
-GRIPS = {"read": (12, 15), "bash": (0, 10), "edit": (0, 2)}   # where a hand holds each tool, in its own units
 TOOLS = ("read", "bash", "edit")
 SPARE = 34.0          # the width of a spare hook's column
 
@@ -1595,9 +1573,6 @@ def finale(s: Strip) -> None:
     with the floor showing under their feet. A panorama adds the modules' names and, over the hull, the dish turned
     to the services and the Earth; a low strip reads without words."""
     from .world_fair import zoom
-    s.indoor = True
-    s.decor = False
-    s.dress = False
     ledger(s)
     zoom(s)
     c = s.back
@@ -1873,7 +1848,7 @@ def opener(st: Stage, accent: str):
         st.put(1, "", place.box(local), name, group="station")
     feed = place.point(*station.feed)
     src = port(st, *feed, *place.turn(0, 1), "station")
-    _services_below(st, place, src)
+    _services_below(st, src)
     drawn = st.render()
     drawn.holders, drawn.links, drawn.ports = st.holders, st.links, st.ports
     return drawn
@@ -1927,7 +1902,7 @@ def _fit(st: Stage, station: _Station) -> _Placed:
     raise ValueError("the station does not fit on its opener")
 
 
-def _services_below(st: Stage, place: _Placed, src: Port) -> None:
+def _services_below(st: Stage, src: Port) -> None:
     """The four services in orbit in a row below the station, as near under the junction's antenna as the page
     allows, each with its name on a tag under it and its dish turned up to the antenna; a dim beam joins each to
     it - the line is not on yet."""
@@ -1989,7 +1964,6 @@ class _Station:
         for _, w, _ in self.MODULES:
             xs.append(x + w / 2)
             x += w + self.COLLAR
-        self.xs = xs
         top = -max(h for _, _, h in self.MODULES) / 2
         self._truss(xs, top)
         ends = [(x - w / 2, x + w / 2) for x, (_, w, _) in zip(xs, self.MODULES, strict=True)]
@@ -2004,7 +1978,6 @@ class _Station:
         boxes = [b for _, b in self.parts]
         self.extent = (min(b[0] for b in boxes), min(b[1] for b in boxes), max(b[2] for b in boxes),
                        max(b[3] for b in boxes))
-        self.belly = max(h for _, _, h in self.MODULES) / 2 + 30
 
     # ------------------------------------------------------------------ the structure
     def _truss(self, xs: list[float], top: float) -> None:

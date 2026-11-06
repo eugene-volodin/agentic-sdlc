@@ -40,6 +40,7 @@ from .world_kit import (SIZE, Pen, clock_hands, floppy_size, hide, ledger, lette
                         tome_size)
 from .world_kitchen import _box, _fit_tall
 from .world_library import ph, span, sparrow
+from .world_sea import F, M, sx
 from .worlds import Station, world
 
 ATTIC = world("attic", opener="workshop")
@@ -64,9 +65,6 @@ def backdrop(s: Strip, index: int) -> None:
     outlines, shelves of screw jars and labelled boxes, a green chest of small drawers, a dormer window with a plant
     on its sill, a clock - turning from frame to frame, calmer than the station; a
     darker skirting and a planked floor."""
-    s.decor = False
-    s.dress = False
-    s.indoor = True
     ledger(s)
     zoom(s)
     c = s.back
@@ -106,7 +104,6 @@ def backdrop(s: Strip, index: int) -> None:
         unit(c, kind, x + 6 * k, x + w - 6 * k, top + 10 * k, base, k, seed=index * 31 + i)
         x += w
         i += 1
-    s.attic_slot = len(c.parts)
     paving(c, -6, W + 6, base, s.h + 4, max(0.8, s.unit), seed=index + 5, tones=BOARDS)
     c.add(f'<rect x="-6" y="{n(base - 6)}" width="{W + 12}" height="10" fill="{darken(P.WOOD_DARK, 0.8)}" '
           f'stroke="{INK}" stroke-width="1.2"/>')                           # the skirting
@@ -233,11 +230,10 @@ def unit(c: Canvas, kind: str, x0: float, x1: float, top: float, foot: float, k:
         c.add(clock_hands(cx, cy, cr * 0.45, cr * 0.62, 2 * k, calm(INK)))
 
 
-def _framed(draw, beats: tuple[str, ...]):
+def _framed(draw):
     """A station drawn mirrored on every other page, so that no two pages in a row look alike: the station and its
-    cast swap sides, the things themselves are never mirrored. `beats` are the station's own, in order."""
+    cast swap sides, the things themselves are never mirrored."""
     def run(s: Strip, beat: str) -> None:
-        s.alt = False                                     # each beat names its own cast
         s.mirror = bool(s.shot)                           # page after page the station swaps sides
         draw(s, beat)
     return run
@@ -263,18 +259,6 @@ def stand(s: Strip, name: str, fracs, pose: str, mood: str = "smile", flip: bool
             if box[1] >= 2 and box[0] >= 2 and box[2] <= W - 2 and s.free(box, 3):
                 return s.actor(name, x, feet, pose, mood, flip=flip, tall=s.tall * SIZE[name] * scale, group=name)
     return None
-
-
-def sx(s: Strip, frac: float) -> float:
-    return s.x(1 - frac if getattr(s, "mirror", False) else frac)
-
-
-def M(s: Strip, fracs: tuple[float, ...]) -> tuple[float, ...]:
-    return tuple(1 - f for f in fracs) if getattr(s, "mirror", False) else fracs
-
-
-def F(s: Strip, flip: bool) -> bool:
-    return (not flip) if getattr(s, "mirror", False) else flip
 
 
 # ============================================================================ things
@@ -557,7 +541,6 @@ def blank_card(x: float, y: float, k: float) -> str:
 
 def sparrow_on(s: Strip, x: float, top: float, group: str, pose: str = "stand") -> None:
     """The sparrow standing on a thing of the station (`group`), as big as the room over it allows."""
-    from .world_kitchen import _box
     for scale in (0.45, 0.36, 0.28):
         bird = _box(s, "sparrow", x, top - 3.5, scale)
         if bird[1] > 2 and all(not b.hits(bird, 3) for b in s.boxes if b.group != group):
@@ -662,46 +645,6 @@ def punch_card(s, x: float, y: float, k: float, word: str, depth: float) -> None
                       f'fill="{INK}"/>' for q in range(count)))
     pen.child(box, "punch_holes", pad, hy - 0.5, pad + 1 + count * 5, hy + 7.7)
     s.put(depth, pen.svg(), None, group="lathe")
-
-
-def skill_card(s, name: str, x: float, foot: float, k: float, title: str) -> tuple[float, float, float, float]:
-    """A skill on a low table, its foot's middle at (x, foot), 140 wide and 130 tall: in front, a big index card in
-    a wooden holder - its name on a tag, two lines of description; behind it, clearly apart, the open tray of what
-    the card needs - a wooden jig, a cut-out steel template, a script rolled up. Returns its box."""
-    c = Canvas()
-    tw, th = 140 * k, 56 * k
-    top = foot - th
-    c.add(f'<rect x="{n(x - tw / 2)}" y="{n(top)}" width="{n(tw)}" height="{n(8 * k)}" rx="{n(2 * k)}" '
-          f'fill="{P.WOOD}" stroke="{INK}" stroke-width="{n(1.4 * k)}"/>')                       # the table
-    for lx in (x - tw / 2 + 8 * k, x + tw / 2 - 14 * k):
-        c.add(f'<rect x="{n(lx)}" y="{n(top + 8 * k)}" width="{n(6 * k)}" height="{n(th - 8 * k)}" '
-              f'fill="{P.WOOD_DARK}" stroke="{INK}" stroke-width="{n(k)}"/>')
-    rx0, rx1 = x + 4 * k, x + 64 * k                                                               # the tray
-    c.add(f'<path d="M{n(rx0)},{n(top)} H{n(rx1)} L{n(rx1 - 6 * k)},{n(top - 24 * k)} H{n(rx0 + 6 * k)} Z" '
-          f'fill="{BEAM}" stroke="{INK}" stroke-width="{n(1.4 * k)}"/>')
-    c.add(f'<path d="M{n(rx0 + 10 * k)},{n(top - 24 * k)} v{n(-22 * k)} h{n(8 * k)} v{n(14 * k)} h{n(16 * k)} '
-          f'v{n(8 * k)} Z" fill="{P.WOOD_LIGHT}" stroke="{INK}" stroke-width="{n(k)}"/>')             # the jig
-    c.add(f'<rect x="{n(rx0 + 30 * k)}" y="{n(top - 52 * k)}" width="{n(16 * k)}" height="{n(28 * k)}" '
-          f'fill="{P.METAL_LIGHT}" stroke="{INK}" stroke-width="{n(k)}"/><circle cx="{n(rx0 + 38 * k)}" '
-          f'cy="{n(top - 40 * k)}" r="{n(4 * k)}" fill="{BEAM}" stroke="{INK}" stroke-width="{n(0.8 * k)}"/>')
-    c.add(f'<rect x="{n(rx0 + 48 * k)}" y="{n(top - 38 * k)}" width="{n(10 * k)}" height="{n(14 * k)}" '
-          f'fill="{P.CARD}" stroke="{INK}" stroke-width="{n(k)}"/><ellipse cx="{n(rx0 + 53 * k)}" '
-          f'cy="{n(top - 38 * k)}" rx="{n(5 * k)}" ry="{n(2 * k)}" fill="{P.CARD}" stroke="{INK}" '
-          f'stroke-width="{n(0.8 * k)}"/>')                                                          # the script
-    s.put(foot - 1.2, c.render(), None, group=name)
-    size = letter(k, 11.0)                                                                           # the card
-    cw, ch = 74.0, 56.0
-    pen = Pen(s, x - 68 * k, top - 8 * k - ch * k, k)
-    box = pen.container(name, 0, 0, cw, ch, P.CARD, radius=3, sw=1.8, light=None)
-    tw_, th_ = tag_size(title, size, k)
-    pen.tag(f"{name}_title", cw / 2, pen.pad(cw, ch) + th_ / 2, title, size, P.YELLOW_PALE, inside=box)
-    ly = pen.pad(cw, ch) + th_ + 8
-    pen.c.line(f"M8,{n(ly)} H66 M8,{n(ly + 8)} H54", 1.4, INK, 0.6)
-    pen.child(box, f"{name}_lines", 7, ly - 1, 67, ly + 9)
-    pen.c.add(f'<rect x="{n(cw / 2 - 20)}" y="{n(ch - 4)}" width="40" height="12" rx="2" fill="{P.WOOD_DARK}" '
-              f'stroke="{INK}" stroke-width="1.4"/>')                                                 # its holder
-    s.put(foot - 1, pen.svg(), (x - tw / 2, top - 52 * k - 10, x + tw / 2, foot), name, group=name)
-    return (x - tw / 2, min(top - 52 * k, top - 8 * k - ch * k), x + tw / 2, foot)
 
 
 def card_cabinet(s, x: float, foot: float, k: float, words: list[str], picked: int = 1) -> tuple:
@@ -848,8 +791,7 @@ def bracket(x: float, y: float, k: float) -> str:
     return _at(c, x, y, k)
 
 
-def long_bench(c: Canvas, x: float, foot: float, k: float, parts: int = 0, vice: bool = True,
-               box_under: bool = True) -> dict:
+def long_bench(c: Canvas, x: float, foot: float, k: float, parts: int = 0, vice: bool = True) -> dict:
     """A long, deep workbench, its foot's middle at (x, foot), 230 wide and 62 tall: a thick top seen a little
     from above, its front apron, four square legs standing on the floor with their feet, a low stretcher shelf, a
     red toolbox on it; a green vice at the right end, an oil can by it; `parts` identical brackets lined up in a
@@ -862,8 +804,7 @@ def long_bench(c: Canvas, x: float, foot: float, k: float, parts: int = 0, vice:
               f'fill="{darken(P.WOOD_DARK, 0.8)}" stroke="{INK}" stroke-width="{n(lw)}"/>')
     c.add(f'<rect x="{n(x - w / 2 + 6 * k)}" y="{n(foot - 18 * k)}" width="{n(w - 12 * k)}" height="{n(6 * k)}" '
           f'fill="{P.WOOD}" stroke="{INK}" stroke-width="{n(lw)}"/>')                       # the stretcher shelf
-    if box_under:
-        c.add(toolbox(x - 30 * k, foot - 18 * k, k * 0.9))
+    c.add(toolbox(x - 30 * k, foot - 18 * k, k * 0.9))
     for lx in (x - w / 2 + 8 * k, x + w / 2 - 16 * k):                                          # the front legs
         c.add(f'<rect x="{n(lx)}" y="{n(top + 10 * k)}" width="{n(8 * k)}" height="{n(h - 12 * k)}" '
               f'fill="{P.WOOD_DARK}" stroke="{INK}" stroke-width="{n(lw)}"/>'
@@ -1166,9 +1107,6 @@ def finale(s: Strip) -> None:
     stations' thing - the playbooks on their beam, the card index cabinet, the long bench with its brackets, the
     lathe with its control box, the shelving of card boxes, the hatch with the parcel - each station's name right
     over its own thing, one or two to a bay; the cast in front on the planks."""
-    s.decor = False
-    s.dress = False
-    s.indoor = True
     ledger(s)
     zoom(s)
     backdrop(s, 2)
@@ -1306,15 +1244,15 @@ def opener(st: Stage, accent: str):
 
 
 ATTIC.stations.extend([
-    Station("playbooks", _framed(playbooks_station, ("read", "tick")), ("read", "tick")),
-    Station("card", _framed(card_station, ("show", "tray")), ("show", "tray")),
-    Station("when", _framed(when_station, ("third", "notice")), ("third", "notice")),
-    Station("index", _framed(index_station, ("pick", "pass")), ("pick", "pass")),
-    Station("write", _framed(write_station, ("write", "read")), ("write", "read")),
-    Station("command", _framed(command_station, ("pull", "run")), ("pull", "run")),
-    Station("where", _framed(where_station, ("shelves", "put")), ("shelves", "put")),
-    Station("check", _framed(check_station, ("make", "stop")), ("make", "stop")),
-    Station("foreign", _framed(foreign_station, ("parcel", "label")), ("parcel", "label")),
+    Station("playbooks", _framed(playbooks_station), ("read", "tick")),
+    Station("card", _framed(card_station), ("show", "tray")),
+    Station("when", _framed(when_station), ("third", "notice")),
+    Station("index", _framed(index_station), ("pick", "pass")),
+    Station("write", _framed(write_station), ("write", "read")),
+    Station("command", _framed(command_station), ("pull", "run")),
+    Station("where", _framed(where_station), ("shelves", "put")),
+    Station("check", _framed(check_station), ("make", "stop")),
+    Station("foreign", _framed(foreign_station), ("parcel", "label")),
 ])
 ATTIC.backdrop = backdrop
 ATTIC.alternate = True                                     # never one moment on two pages in a row

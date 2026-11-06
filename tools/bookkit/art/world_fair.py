@@ -46,7 +46,6 @@ PAVE_A = mix(P.SAND, P.WOOD_LIGHT, 0.3)    # the plaza's pavers, the usual tone 
 PAVE_B = mix(P.SAND, P.TERRACOTTA, 0.3)    # ... and the warmer one among them
 JOINT = darken(PAVE_A, 0.72)               # the joints between them
 SOIL = mix(P.WOOD_DARK, P.DARK_BROWN, 0.5)  # a flower bed's earth
-TARMAC = mix(P.CHARCOAL, P.STONE, 0.55)    # a kart circuit's surface
 # The fair's tents, blue first - the chapter's colour - then the others in turn: (main, stripe).
 TENTS = ((P.BLUE, P.WHITE), (P.YELLOW, P.BLUE), (P.RED, P.WHITE), (P.BLUE, P.YELLOW), (P.GREEN, P.WHITE),
          (P.WHITE, P.BLUE))
@@ -73,7 +72,7 @@ def _ink(w: float) -> float:
 
 # ============================================================================ the fair's buildings
 def tent_art(c: Canvas, x: float, foot: float, w: float, h: float, main: str, stripe: str = P.WHITE,
-             flag: str = P.YELLOW, door: bool = True, lit: bool = False) -> None:
+             flag: str = P.YELLOW, door: bool = True) -> None:
     """A striped fair tent, its foot's middle at (x, foot), `w` wide and `h` tall to the roof's peak: striped
     walls, a peaked roof of coloured wedges with a scalloped valance, its pennant on the pole and - `door` - the
     flaps tied back from a dark doorway."""
@@ -90,7 +89,7 @@ def tent_art(c: Canvas, x: float, foot: float, w: float, h: float, main: str, st
     if door:
         dw = w * 0.2
         c.shape(f"M{n(x - dw)},{n(foot)} V{n(eave + h * 0.14)} Q{n(x)},{n(eave + h * 0.04)} {n(x + dw)},"
-                f"{n(eave + h * 0.14)} V{n(foot)} Z", P.SUN if lit else darken(main, 0.4), sw=lw, light=None)
+                f"{n(eave + h * 0.14)} V{n(foot)} Z", darken(main, 0.4), sw=lw, light=None)
         for way in (-1, 1):                                # the flaps, tied back
             c.shape(f"M{n(x + way * dw * 0.2)},{n(eave + h * 0.02)} L{n(x + way * dw * 1.35)},{n(eave + h * 0.02)} "
                     f"L{n(x + way * dw * 1.35)},{n(foot)} Q{n(x + way * dw * 1.0)},{n(eave + h * 0.3)} "
@@ -215,55 +214,6 @@ def wheel_art(c: Canvas, x: float, foot: float, r: float, turn: float = 0, gondo
     c.shape(rounded_rect_d(x - r * 0.8, foot - r * 0.06, r * 1.6, r * 0.08, 2), P.WOOD, sw=lw, light=None)
 
 
-def carousel_art(c: Canvas, x: float, foot: float, w: float, h: float) -> None:
-    """A merry-go-round, its foot's middle at (x, foot): a striped cone of a canopy with scallops and a pennant on
-    top, the brass middle pole, the round platform, three horses on their brass poles."""
-    lw = _ink(w * 0.008)
-    top, eave = foot - h, foot - h * 0.62
-    deck = foot - h * 0.1
-    hw = w / 2
-    c.shape(rounded_rect_d(x - w * 0.06, eave, w * 0.12, deck - eave, 3), P.SUN, sw=lw, light=None)   # the middle
-    for hx, color, rise in ((x - w * 0.3, P.WHITE, 0.12), (x + w * 0.3, P.PINK, 0.0), (x, P.YELLOW, 0.06)):
-        c.line(f"M{n(hx)},{n(eave)} V{n(deck)}", lw * 2.4, P.SUN)
-        c.line(" ".join(f"M{n(hx - lw)},{n(yy)} l{n(2 * lw)},{n(-3 * lw)}"
-                        for yy in [eave + i * 4 * lw for i in range(1, int((deck - eave) / (4 * lw)))]), lw * 0.6,
-               darken(P.SUN, 0.75))
-        _horse(c, hx, deck - h * (0.14 + rise), w * 0.26, color, lw)
-    c.shape(ellipse_d(x, deck, hw * 0.96, h * 0.05), P.BLUE, sw=lw * 1.4, light=None)                 # the deck
-    c.shape(f"M{n(x - hw * 0.96)},{n(deck)} V{n(foot)} H{n(x + hw * 0.96)} V{n(deck)} Z", darken(P.BLUE, 0.8),
-            sw=lw * 1.4, light=None)
-    roof = (f"M{n(x - hw)},{n(eave)} Q{n(x - hw * 0.5)},{n(eave - (eave - top) * 0.5)} {n(x)},{n(top)} "
-            f"Q{n(x + hw * 0.5)},{n(eave - (eave - top) * 0.5)} {n(x + hw)},{n(eave)} Z")
-    clip = c.shape(roof, P.WHITE, sw=0, light=None, clip=True)
-    wedges = []
-    for i in range(0, 10, 2):
-        a0, a1 = x - hw * 1.1 + w * 1.1 * i / 10, x - hw * 1.1 + w * 1.1 * (i + 1) / 10
-        wedges.append(f"M{n(x)},{n(top - 2)} L{n(a0)},{n(eave + 2)} L{n(a1)},{n(eave + 2)} Z")
-    c.add(f'<g clip-path="url(#{clip})"><path d="{" ".join(wedges)}" fill="{P.BLUE}"/></g>')
-    c.path(roof, "none", lw * 1.4)
-    _scallops(c, x - hw, x + hw, eave, max(5.0, h * 0.045), P.YELLOW, P.RED, lw * 1.4)
-    c.add(f'<circle cx="{n(x)}" cy="{n(top)}" r="{n(w * 0.03)}" fill="{P.SUN}" stroke="{INK}" '
-          f'stroke-width="{n(lw)}"/>')
-    c.line(f"M{n(x)},{n(top)} v{n(-h * 0.1)}", lw, P.WOOD_DARK)
-    c.shape(f"M{n(x)},{n(top - h * 0.1)} l{n(w * 0.1)},{n(h * 0.025)} l{n(-w * 0.1)},{n(h * 0.025)} Z", P.RED, sw=lw,
-            light=None)
-
-
-def _horse(c: Canvas, x: float, y: float, w: float, color: str, lw: float) -> None:
-    """A carousel horse in profile, facing left, its body's middle at (x, y), `w` long."""
-    k = w / 40
-    d = (f"M{n(x - 14 * k)},{n(y - 4 * k)} Q{n(x - 18 * k)},{n(y - 16 * k)} {n(x - 22 * k)},{n(y - 20 * k)} "
-         f"L{n(x - 26 * k)},{n(y - 14 * k)} L{n(x - 20 * k)},{n(y - 12 * k)} L{n(x - 12 * k)},{n(y + 4 * k)} "
-         f"Q{n(x)},{n(y + 8 * k)} {n(x + 14 * k)},{n(y + 4 * k)} Q{n(x + 18 * k)},{n(y - 6 * k)} {n(x + 10 * k)},"
-         f"{n(y - 8 * k)} Z")
-    c.line(f"M{n(x - 8 * k)},{n(y + 4 * k)} l{n(-6 * k)},{n(12 * k)} M{n(x + 10 * k)},{n(y + 4 * k)} "
-           f"l{n(6 * k)},{n(12 * k)}", lw * 2.2, color)
-    c.shape(d, color, sw=lw * 1.2, light=None)
-    c.line(f"M{n(x + 14 * k)},{n(y - 4 * k)} q{n(8 * k)},{n(2 * k)} {n(6 * k)},{n(12 * k)}", lw * 2, P.WOOD_DARK)
-    c.line(f"M{n(x - 20 * k)},{n(y - 19 * k)} q{n(4 * k)},{n(4 * k)} {n(8 * k)},{n(14 * k)}", lw * 1.6, P.WOOD_DARK)
-    c.shape(f"M{n(x - 4 * k)},{n(y - 6 * k)} h{n(10 * k)} v{n(5 * k)} h{n(-10 * k)} Z", P.RED, sw=lw, light=None)
-
-
 # ============================================================================ the place behind every frame
 def mid(s: Strip) -> bool:
     """A mid-height strip, about 220 high: the tallest character there, the professor, is left out where the beat
@@ -291,8 +241,6 @@ def backdrop(s: Strip, index: int) -> None:
     """The fair behind a station: a summer sky and far hills, the grass and the trodden lane. The far fair - its
     tents, its big wheel, its garlands - is put in by `scenery` once the station has placed its cast and things, so
     that nothing of it stands behind a head or peeks out from behind anyone."""
-    s.decor = False
-    s.dress = False
     ledger(s)
     zoom(s)
     c = s.back
@@ -300,7 +248,7 @@ def backdrop(s: Strip, index: int) -> None:
     if s.h >= 190:
         sets.hills(c, s.base + 6, W, (P.HILL_FAR, P.HILL_NEAR), seed=index + 3)
     s.fair_slot = (index, len(c.parts))                 # where the far fair goes: behind everything of the station
-    s.fair_kerb = fairground(c, s.base, s.h, lane(s).feet, s.unit, seed=index + 7)
+    s.fair_kerb = fairground(c, s.base, s.h, s.unit, seed=index + 7)
     s.fair_floor = len(c.parts)                           # where the things lying on the ground go
 
 
@@ -412,17 +360,13 @@ def _framed(draw, turned: tuple[str, ...] = ()):
     return run
 
 
-def fairground(c: Canvas, top: float, bottom: float, feet: float, k: float, seed: int = 0,
-               path: bool = True) -> float:
+def fairground(c: Canvas, top: float, bottom: float, k: float, seed: int = 0) -> float:
     """The fair's floor from the horizon `top` down to `bottom`: a strip of grass verge along the horizon, a low
     stone kerb, and the plaza in front of it - rectangular pavers in two warm tones laid in rows with their joints,
-    a little larger towards the front. Every part a clear shape, no stipple. Returns the kerb's top (`path`
-    False: grass only, for a picture that lays its own plaza)."""
+    a little larger towards the front. Every part a clear shape, no stipple. Returns the kerb's top."""
     edge = (f"M-6,{n(top)} Q{n(W * 0.25)},{n(top - 6)} {n(W * 0.5)},{n(top + 2)} T{W + 6},{n(top - 2)} "
             f"V{n(bottom + 6)} H-6 Z")
     c.shape(edge, P.GRASS, sw=2, light=None)
-    if not path:
-        return bottom
     kerb_y = top + 1                                      # the kerb right at the horizon: feet stand on the paving
     paving(c, -6, W + 6, kerb_y + 4 * k, bottom + 4, k, seed)
     kerb(c, -6, W + 6, kerb_y, k)
@@ -536,16 +480,6 @@ def track_kerbs(c: Canvas, x0: float, x1: float, y: float, k: float) -> None:
                   for x in [x0 + step * i for i in range(int((x1 - x0) / step))]))
 
 
-def tyres(c: Canvas, x: float, y: float, k: float, count: int = 3) -> None:
-    """A stack of old tyres at a circuit's corner, their foot's middle at (x, y), each 30 wide."""
-    for i in range(count):
-        ty = y - i * 9 * k
-        c.shape(rounded_rect_d(x - 15 * k, ty - 9 * k, 30 * k, 9 * k, 4 * k), P.CHARCOAL, sw=1.4, light=None)
-        c.add(f'<rect x="{n(x - 9 * k)}" y="{n(ty - 6 * k)}" width="{n(18 * k)}" height="{n(3 * k)}" '
-              f'rx="{n(1.5 * k)}" fill="{P.METAL_DARK}"/>')
-        c.line(f"M{n(x - 12 * k)},{n(ty - 2 * k)} h{n(24 * k)}", 1, P.WHITE, 0.6)
-
-
 def fence(c: Canvas, x0: float, x1: float, y: float, k: float) -> None:
     """A low white fence along y: posts and two rails."""
     h = 16 * k
@@ -557,23 +491,6 @@ def fence(c: Canvas, x0: float, x1: float, y: float, k: float) -> None:
     for ry in (y - h * 0.4, y - h * 0.85):
         c.line(f"M{n(x0)},{n(ry)} H{n(x1)}", max(2.4, 3.4 * k), INK)
         c.line(f"M{n(x0)},{n(ry)} H{n(x1)}", max(1.2, 2 * k), P.WHITE)
-
-
-def gantry(c: Canvas, x: float, foot: float, span: float, tall: float, k: float) -> None:
-    """The start gantry over a circuit: two posts and a beam, the panel of five start lights on it."""
-    for px in (x - span / 2, x + span / 2):
-        c.shape(rounded_rect_d(px - 3 * k, foot - tall, 6 * k, tall, 2), P.METAL_LIGHT, sw=1.4, light=None)
-    c.shape(rounded_rect_d(x - span / 2 - 4 * k, foot - tall - 8 * k, span + 8 * k, 8 * k, 2), P.BLUE, sw=1.6,
-            light=None)
-    pw = 64 * k
-    c.shape(rounded_rect_d(x - pw / 2, foot - tall, pw, 14 * k, 3), P.CHARCOAL, sw=1.4, light=None)
-    for i in range(5):
-        c.add(f'<circle cx="{n(x - pw / 2 + pw * (i + 0.5) / 5)}" cy="{n(foot - tall + 7 * k)}" r="{n(4 * k)}" '
-              f'fill="{P.RED}" stroke="{INK}" stroke-width="1"/>')
-
-
-
-
 
 
 def boardwalk(c: Canvas, x0: float, x1: float, y: float, depth: float, k: float) -> None:
@@ -730,9 +647,10 @@ def engine(x: float, y: float, k: float, size: str = "big", running: bool = Fals
     return _at(c, x, y, k * ENGINE[size], flip)
 
 
-def engine_box(x: float, y: float, k: float, size: str = "big", running: bool = False) -> tuple:
+def engine_box(x: float, y: float, k: float, size: str = "big") -> tuple:
+    """The engine's box (`engine`, not running: no puffs over its exhaust)."""
     z = k * ENGINE[size]
-    return (x - 46 * z, y - (90 if running else 66) * z, x + 48 * z, y)
+    return (x - 46 * z, y - 66 * z, x + 48 * z, y)
 
 
 def inlet(x: float, y: float, k: float, size: str = "big", flip: bool = False) -> tuple[float, float]:
@@ -786,8 +704,8 @@ def kart(x: float, y: float, k: float, body: str = P.BLUE, number: str = "7", to
     return _at(c, x, y, k, flip) + lettering(rx, y - 29.2 * k, number, 11 * k, INK, style="plain")
 
 
-def kart_box(x: float, y: float, k: float, tooled: bool = False, motor: bool = True, flip: bool = False) -> tuple:
-    top = 114 if tooled else (78 if motor else 72)
+def kart_box(x: float, y: float, k: float, tooled: bool = False, flip: bool = False) -> tuple:
+    top = 114 if tooled else 78
     back, nose = (84, 90) if flip else (90, 84)
     return (x - back * k, y - top * k, x + nose * k, y)
 
@@ -864,16 +782,15 @@ def graphics_card(x: float, y: float, k: float) -> str:
     return _at(c, x, y, k)
 
 
-def barrow(x: float, y: float, k: float, load: bool = True, flip: bool = False) -> str:
+def barrow(x: float, y: float, k: float, flip: bool = False) -> str:
     """A wheelbarrow in profile, wheel to the right (to the left if `flip`), the wheel's foot at (x, y): a deep
     steel tray with a rolled rim and rivets, two rails running from the wheel's axle back to rubber grips, two legs
-    with feet, the spoked wheel on its axle under the tray's front; `load`, a graphics card riding in the tray. 176
+    with feet, the spoked wheel on its axle under the tray's front; a graphics card riding in the tray. 176
     long."""
     c = Canvas()
     c.line("M0,-20 L-150,-60", 4, P.WOOD_DARK)                                                  # the far rail
     c.line("M-136,-56 L-150,-60", 6, P.CHARCOAL)
-    if load:
-        c.add(f'<g transform="rotate(-6 -52 -76)">{graphics_card(-52, -72, 0.9)}</g>')   # half out of the tray
+    c.add(f'<g transform="rotate(-6 -52 -76)">{graphics_card(-52, -72, 0.9)}</g>')   # half out of the tray
     c.shape("M-112,-82 L12,-82 L-8,-44 L-90,-44 Z", P.BLUE, sw=2.2, light=(-2, -2), shade_k=0.8)   # the tray
     c.shape(rounded_rect_d(-116, -86, 132, 7, 3.5), P.METAL_LIGHT, sw=1.8, light=None)           # its rim
     c.add("".join(f'<circle cx="{xx}" cy="-74" r="1.6" fill="{P.METAL_DARK}"/>' for xx in range(-98, 6, 16)))
@@ -1505,8 +1422,6 @@ def finale(s: Strip) -> None:
     so the sign and the thing explain each other, and who works there beside it - the engine and the agent, the
     tooled kart and the professor, the cones and the cat with its stopwatch, the scoreboard, the workbench and the
     caterpillar, the gate and the sparrow."""
-    s.decor = False
-    s.dress = False
     ledger(s)
     zoom(s)
     c = s.back
@@ -1514,7 +1429,7 @@ def finale(s: Strip) -> None:
     if s.h >= 190:
         sets.hills(c, s.base + 6, W, (P.HILL_FAR, P.HILL_NEAR), seed=5)
     r = lane(s)
-    fairground(c, s.base, s.h, r.feet, s.unit, seed=8)
+    fairground(c, s.base, s.h, s.unit, seed=8)
     left, right = s.lo, s.hi
     wide = (right - left) / 6
     named = s.h >= 300

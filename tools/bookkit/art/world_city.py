@@ -29,12 +29,12 @@ import random
 from .. import design as P
 from ..design import darken, mix
 from . import handheld, sets, stories
-from .farewell import basket, dots, handcart
+from .farewell import basket, city_view, dots, handcart
 from .footers import Strip
 from .ink import INK, Canvas, lettering, n, rounded_rect_d
 from .road import Road, birds, body_box, furnish, long_shadow, rim, walk_along
 from .openers import CLEAR_MM, H, W, Stage
-from .world_courtyard import _framed, apple_tree, cast, pk
+from .world_courtyard import _framed, apple_tree, cast, gate, house, pickets, pk, roof
 from .world_fair import lane, zoom
 from .world_harbour import fx, place
 from .world_kit import SIZE, Holder, Pen, _tag_pad, ledger, text_box
@@ -56,7 +56,6 @@ COBBLE = (mix(P.STONE, P.SAND, 0.35), mix(P.PEBBLE, P.SAND, 0.25), mix(P.STONE, 
 # ============================================================================ the far land
 @functools.cache
 def _city_view() -> str:
-    from .farewell import city_view
     return city_view()
 
 
@@ -277,9 +276,6 @@ def _span(lo: float, hi: float, step: float) -> list[float]:
 def backdrop(s: Strip, index: int) -> None:
     """Behind every station: the late sky, the low sun, the computer city small on the horizon, the fields in
     bands with a row of apple trees, the grass verge and the cobbled road the cast stands on."""
-    s.decor = False
-    s.dress = False
-    s.indoor = False
     ledger(s)
     zoom(s)
     feet = lane(s).feet
@@ -383,9 +379,6 @@ def finale(s: Strip) -> None:
     narrowing exactly to the gate's width; fields in their rows up to the city wall, the hedge, the ditch with its
     bridge, the milestone and the bench by the road, birds over the fields; the four walking in along the road
     towards the bend, all one way, the agent ahead, the sparrow flying on ahead; agents at work far off. No labels."""
-    s.decor = False
-    s.dress = False
-    s.indoor = False
     ledger(s)
     zoom(s)
     s.mirror = False
@@ -520,7 +513,6 @@ def opener(st: Stage, accent: str):
     cap; crops in their rows to the corners - wheat far off, orchards, vineyards, cabbages near. The caterpillar is
     already off along the road, the agent and the cat wave to the reader, the professor stands by his gate under
     his bubble."""
-    from .world_courtyard import gate, house, pickets, roof
     ledger(st)
     c = st.back
     hz, vx = 770.0, 560.0

@@ -29,9 +29,11 @@ import math
 from .. import design as P
 from ..design import darken, lighten, mix
 from . import handheld, props, sets, stories, things
+from .characters import module as char_module
 from .footers import Strip
 from .ink import INK, Canvas, ellipse_d, lettering, lettering_width, n, rounded_rect_d
 from .openers import CLEAR_MM, H, W, Stage
+from .scenes import PROFESSOR_HEIGHT
 from .world_kit import (GAP_MIN, SIZE, Holder, Pen, Room, cast, clock_hands, hide, ledger, letter, room, sound,
                         stash_along, tag_size, wrap)
 from .worlds import Station, world
@@ -55,7 +57,6 @@ class Counter(Room):
         self.ceil = 0.0                                   # a kitchen has no hull: the wall goes up to the frame's top
         self.wall = self.floor
         self.counter = self.floor - s.tall * 0.5          # the counter's top
-        self.belt = 0.0                                   # no belt: things stand on the counter itself
         self.surf = self.counter
         self.tile = max(8.0, s.tall * 0.075)              # a splashback tile
         self.splash = self.counter - self.tile * 3        # the splashback's top
@@ -120,9 +121,6 @@ def backdrop(s: Strip, index: int) -> None:
     """The kitchen behind a station: the warm wall, the tiled splashback over the counter, the floor of square tiles
     in two tones running back to the wall. The counter and its cabinets, the wall cupboards in the chapter's pink,
     the window and the clock go in after the station (`finish`), round what it has put there."""
-    s.indoor = True
-    s.decor = False
-    s.dress = False
     ledger(s)
     camera(s, index)
     s.index = index
@@ -196,7 +194,7 @@ def _floor(s: Strip, r: Counter) -> None:
           f'stroke-width="1.2"/>')
 
 
-def counter_row(c: Canvas, top: float, floor: float, k: float, niches: list[tuple[float, float]],
+def counter_row(c: Canvas, top: float, floor: float, niches: list[tuple[float, float]],
                 width: float = W, door: float | None = None) -> None:
     """The counter along the back wall: base cabinets on a dark plinth, a row of drawers under the worktop and the
     doors under them, each with its handle, the worktop over all with its front edge - broken where the stove and
@@ -253,7 +251,7 @@ def counter_row(c: Canvas, top: float, floor: float, k: float, niches: list[tupl
 def _counter(s: Strip, r: Counter) -> None:
     """The counter across the frame, around whatever appliances the station has put in it."""
     big = (r.floor - r.counter) * 1.5 if strip(s) else None   # a close-up: fewer, bigger doors
-    counter_row(s.back, r.counter, r.floor, r.k, getattr(s, "niches", []), door=big)
+    counter_row(s.back, r.counter, r.floor, getattr(s, "niches", []), door=big)
 
 
 def _upper_wall(s: Strip, r: Counter, index: int) -> None:
@@ -333,35 +331,6 @@ def cupboard(x: float, bottom: float, w: float, h: float, seed: int = 0) -> str:
         kx = dx + dw - pad * 0.9 if j == 0 else dx + pad * 0.9                           # the knobs, by the meeting
         c.add(f'<circle cx="{n(kx)}" cy="{n(top + h / 2)}" r="{n(max(1.6, w * 0.02))}" fill="{P.METAL_DARK}" '
               f'stroke="{INK}" stroke-width=".7"/>')
-    return c.render()
-
-
-def plate_shelf(x: float, bottom: float, w: float, h: float, seed: int = 0) -> str:
-    """A short pink wall shelf over the splashback on two brackets, its foot's middle at (x, bottom): plates
-    standing on edge against the wall and two cups."""
-    c = Canvas()
-    left = x - w / 2
-    board = max(3.0, h * 0.12)
-    sy = bottom - h * 0.25                                # the board, the brackets under it
-    for bx in (left + w * 0.15, left + w * 0.85):
-        c.add(f'<path d="M{n(bx - 2)},{n(sy)} H{n(bx + 2)} V{n(bottom)} L{n(bx - 2)},{n(sy + 4)} Z" '
-              f'fill="{UPPER_DARK}" stroke="{INK}" stroke-width="1"/>')
-    pr = (sy - (bottom - h)) * 0.46
-    for i in range(3):
-        px = left + w * (0.2 + i * 0.17)
-        c.add(f'<ellipse cx="{n(px)}" cy="{n(sy - pr - 0.5)}" rx="{n(pr * 0.5)}" ry="{n(pr)}" fill="{P.WHITE}" '
-              f'stroke="{INK}" stroke-width="1"/><ellipse cx="{n(px)}" cy="{n(sy - pr - 0.5)}" rx="{n(pr * 0.3)}" '
-              f'ry="{n(pr * 0.62)}" fill="none" stroke="{P.KITCHEN_CABINET}" stroke-width="1"/>')
-    cw = pr * 0.9
-    for i in range(2):
-        ux = left + w * (0.7 + i * 0.15)
-        cup = P.RED if (i + seed) % 2 else P.KITCHEN_CABINET
-        c.add(f'<path d="M{n(ux - cw / 2)},{n(sy - cw)} H{n(ux + cw / 2)} L{n(ux + cw * 0.4)},{n(sy)} '
-              f'H{n(ux - cw * 0.4)} Z" fill="{cup}" stroke="{INK}" stroke-width="1"/>'
-              f'<path d="M{n(ux + cw * 0.45)},{n(sy - cw * 0.75)} q{n(cw * 0.35)},{n(cw * 0.1)} 0,{n(cw * 0.45)}" '
-              f'fill="none" stroke="{INK}" stroke-width="1"/>')
-    c.add(f'<rect x="{n(left)}" y="{n(sy)}" width="{n(w)}" height="{n(board)}" rx="1" fill="{UPPER}" '
-          f'stroke="{INK}" stroke-width="1.3"/>')
     return c.render()
 
 
@@ -649,8 +618,6 @@ def goods(c: Canvas, x: float, y: float, label: str, kind: str, size: float,
 
 def _box(s, name: str, x: float, feet: float, scale: float = 1.0) -> tuple[float, float, float, float]:
     """Where a character drawn at its readable size (times `scale`) with its feet at (x, feet) would stand."""
-    from .characters import module as char_module
-    from .scenes import PROFESSOR_HEIGHT
     mod = char_module(name)
     k = s.tall * SIZE[name] * scale / PROFESSOR_HEIGHT * mod.SCENE_SCALE
     half = mod.SIZE[0] * 0.40 * k
@@ -940,7 +907,6 @@ def pantry(s, left: float, top: float, k: float, rows: tuple[tuple[str, ...], ..
 def _rest_hand_mirrored() -> bool:
     """Whether the agent's right hand hanging at his side is drawn mirrored: a thing held in it turns its
     lettering back accordingly, or the label reads back to front."""
-    from .characters import module as char_module
     return char_module("agent").hands("stand")["right"].mirror
 
 
@@ -1265,12 +1231,11 @@ def smoke_cloud(x: float, y: float, k: float, dark: bool = True) -> str:
     return c.render()
 
 
-def fridge(s, x: float, feet: float, tall: float, k: float, note: str | None,
-           sheet: bool = False) -> tuple[float, float, float, float]:
+def fridge(s, x: float, feet: float, tall: float, k: float, note: str | None) -> tuple[float, float, float, float]:
     """The fridge standing on the floor at (x, feet), `tall` high on the page, a fridge's proportions: the freezer
     door over the big door, their long handles, the grille at its foot; `note` - the house rules pinned to the big
-    door with a magnet at eye height, as big as the door allows and still readable (else a plain sheet), or None;
-    `sheet` alone - a plain sheet with ruled lines (the finale). Returns its box."""
+    door with a magnet at eye height, as big as the door allows and still readable (else a plain sheet with ruled
+    lines), or None. Returns its box."""
     h = tall / k
     w = h * 0.48                                          # a tall fridge: a head taller than the counter and more
     if hasattr(s, "niches"):
@@ -1312,7 +1277,7 @@ def fridge(s, x: float, feet: float, tall: float, k: float, note: str | None,
                 body.children.append(("note", pen.box(nl, room_t - 6, nl + nw * kn / k, room_t + nh * kn / k)))
                 placed = True
                 break
-    if (sheet or note) and not placed:
+    if note and not placed:
         sw_, sh = min(room_w, w * 0.5), min(room_h, w * 0.55)
         sl, st_ = room_l + (room_w - sw_) / 2, room_t + 4
         if sh > 12 and sw_ > 10:
@@ -1503,9 +1468,6 @@ def finale(s: Strip) -> None:
     sparrow over them. A tall frame names each station on a tag just over its things; a low strip reads without
     words and keeps only what stands whole."""
     from .world_fair import zoom
-    s.indoor = True
-    s.decor = False
-    s.dress = False
     ledger(s)
     zoom(s)
     s.shot, s.mirror, s.index = 0, False, 0
@@ -1644,8 +1606,6 @@ def finale(s: Strip) -> None:
 
 def _fit_tall(name: str, width: float, height: float) -> float:
     """The professor-height that makes the character fit `width` by `height`, never bigger than in a frame."""
-    from .characters import module as char_module
-    from .scenes import PROFESSOR_HEIGHT
     mod = char_module(name)
     per = mod.SCENE_SCALE / PROFESSOR_HEIGHT
     return min(width / (mod.SIZE[0] * 0.8 * per), height / ((mod.FEET_Y - mod.HEAD_TOP) * per))
@@ -1739,7 +1699,7 @@ def opener(st: Stage, accent: str):
             break
     if placed is not None:
         hood(st, placed, counter, floor)
-    counter_row(c, counter, floor, 1.25, st.niches)       # the cabinets around the stove and the fridge
+    counter_row(c, counter, floor, st.niches)       # the cabinets around the stove and the fridge
     drawn = st.render()
     drawn.holders, drawn.links, drawn.ports = st.holders, st.links, st.ports
     return drawn

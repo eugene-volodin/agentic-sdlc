@@ -103,17 +103,17 @@ def bottle(c: Canvas, x: float, y: float, k: float, color: str, kind: int) -> No
     c.line(f"M{n(x - w * 0.3)},{n(y - h * 0.7)} h{n(w * 0.6)}", max(0.5, 0.6 * k), INK, 0.6)
 
 
-def wall_clock(c: Canvas, x: float, y: float, r: float, calm_: bool = True) -> None:
-    """The lab's big wall clock: a yellow rim, a white dial with its twelve marks and hands."""
-    f = calm if calm_ else (lambda col: col)
-    c.add(f'<circle cx="{n(x)}" cy="{n(y)}" r="{n(r)}" fill="{f(P.WHITE)}" stroke="{f(YELLOW)}" '
+def wall_clock(c: Canvas, x: float, y: float, r: float) -> None:
+    """The lab's big wall clock, calmed into the back wall: a yellow rim, a white dial with its twelve marks and
+    hands."""
+    c.add(f'<circle cx="{n(x)}" cy="{n(y)}" r="{n(r)}" fill="{calm(P.WHITE)}" stroke="{calm(YELLOW)}" '
           f'stroke-width="{n(r * 0.16)}"/><circle cx="{n(x)}" cy="{n(y)}" r="{n(r * 1.08)}" fill="none" '
-          f'stroke="{f(INK)}" stroke-width="1.2"/>')
+          f'stroke="{calm(INK)}" stroke-width="1.2"/>')
     c.line(" ".join(f"M{n(x + math.cos(a) * r * 0.74)},{n(y + math.sin(a) * r * 0.74)} "
                     f"L{n(x + math.cos(a) * r * 0.86)},{n(y + math.sin(a) * r * 0.86)}"
-                    for a in [i * math.pi / 6 for i in range(12)]), max(1.0, r * 0.06), f(INK))
-    c.add(clock_hands(x, y, r * 0.46, r * 0.64, max(1.2, r * 0.08), f(INK)))
-    c.line(f"M{n(x)},{n(y)} L{n(x - r * 0.5)},{n(y + r * 0.4)}", max(0.6, r * 0.03), f(P.RED))
+                    for a in [i * math.pi / 6 for i in range(12)]), max(1.0, r * 0.06), calm(INK))
+    c.add(clock_hands(x, y, r * 0.46, r * 0.64, max(1.2, r * 0.08), calm(INK)))
+    c.line(f"M{n(x)},{n(y)} L{n(x - r * 0.5)},{n(y + r * 0.4)}", max(0.6, r * 0.03), calm(P.RED))
 
 
 def back_unit(c: Canvas, kind: str, x0: float, x1: float, top: float, foot: float, k: float, seed: int) -> None:
@@ -191,9 +191,6 @@ def backdrop(s: Strip, index: int) -> None:
     cornice in a taller frame, and along the wall shelves of reagent bottles, fume hoods, the clock, the eyewash
     station, a window, the safety shower - turning from frame to frame and calmer than the station; the tiled
     floor."""
-    s.decor = False
-    s.dress = False
-    s.indoor = True
     ledger(s)
     zoom(s)
     c = s.back
@@ -535,20 +532,6 @@ def microscope(c: Canvas, x: float, y: float, k: float) -> None:
           f'stroke-width="{n(max(0.5, 0.7 * k))}"/>')                                      # its focus knob
 
 
-def fix_label(c: Canvas, x: float, y: float, k: float) -> None:
-    """The cat's label at (x, y), its top-left corner: a white card - the fault underlined in red, an arrow, the
-    fix in green after it."""
-    c.add(f'<rect x="{n(x)}" y="{n(y)}" width="{n(30 * k)}" height="{n(18 * k)}" rx="{n(1.4 * k)}" fill="{P.WHITE}" '
-          f'stroke="{INK}" stroke-width="{n(max(0.6, 0.8 * k))}"/>')
-    c.line(f"M{n(x + 3 * k)},{n(y + 6 * k)} h{n(9 * k)} M{n(x + 3 * k)},{n(y + 12 * k)} h{n(7 * k)}", max(0.8, 1.4 * k),
-           P.RED)
-    c.add(f'<path d="M{n(x + 13 * k)},{n(y + 9 * k)} h{n(5 * k)} l{n(-2 * k)},{n(-2 * k)} '
-          f'M{n(x + 18 * k)},{n(y + 9 * k)} '
-          f'l{n(-2 * k)},{n(2 * k)}" fill="none" stroke="{INK}" stroke-width="{n(max(0.7, k))}"/>')
-    c.line(f"M{n(x + 20 * k)},{n(y + 6 * k)} h{n(7 * k)} M{n(x + 20 * k)},{n(y + 12 * k)} h{n(6 * k)}",
-           max(0.8, 1.4 * k), P.GREEN)
-
-
 def analyzer(c: Canvas, x: float, y: float, k: float, lamp: str, paper: int, sample: str | None) -> dict:
     """The automatic analyzer standing on the bench at (x, y), 110 wide and 70 tall: a white case with a yellow
     lid, the sample tray sliding in at its front with a tube in it, a row of three lamps - the lit one `lamp`
@@ -857,9 +840,6 @@ def finale(s: Strip) -> None:
     """The whole lab at once: one long room along its tiled wall, each station in its bay - the racks, the
     indicator, the still, the stress chamber, the microscope, the analyzer with its hatch, the analyzer catching
     the broken sample - each bay's name on a plate over it; the cast at work in front."""
-    s.decor = False
-    s.dress = False
-    s.indoor = True
     ledger(s)
     zoom(s)
     backdrop(s, 3)

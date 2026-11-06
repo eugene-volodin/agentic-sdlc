@@ -751,9 +751,6 @@ def backdrop(s: Strip, index: int) -> None:
     the far sea; the far shore, turning from frame to frame and calmer than the station - the beach with dunes and
     beach huts, warehouses, a crane, the lighthouse far off, a small town on its hill, boats along the quay; then
     the narrow near water with its foam at the pier, and the plank pier underfoot."""
-    s.decor = False
-    s.dress = False
-    s.indoor = False
     ledger(s)
     zoom(s)
     feet = lane(s).feet                                                # the cast leaves the stations room:
@@ -872,8 +869,8 @@ def true_size(s: Strip, height: float, width: float) -> float | None:
 
 
 def across(s: Strip, c: Canvas) -> None:
-    """Put something drawn the canonical way round across the water on the far quay, behind the near water
-    (mirrored on a mirrored page)."""
+    """Put something drawn the canonical way round in the distance - the far quay, the far side of a clearing -
+    behind the station (mirrored on a mirrored page)."""
     svg = c.render()
     if getattr(s, "mirror", False):
         svg = f'<g transform="translate({n(s.lo + s.hi)},0) scale(-1,1)">{svg}</g>'
@@ -1223,7 +1220,6 @@ def bypass_station(s: Strip, beat: str) -> None:
 BAYS = ("entrance", "inspection", "lock", "clock", "fix", "flaky", "owners", "bypass")
 QUAY = ("clock", "owners")                               # the buildings, on the far quay
 AFLOAT = ("entrance", "lock", "flaky", "bypass")         # out on the inner water
-ASHORE = ("inspection", "fix")                           # on the pier, in front
 
 
 def finale(s: Strip) -> None:
@@ -1233,8 +1229,6 @@ def finale(s: Strip) -> None:
     boat rising in it, the quarantine berth with its boat under the yellow Q flag, the boom shackled to the mole; on
     the pier in front the opened container and the agent's boat on its blocks under green - each station's name on
     a plaque right over it; the cast on the pier, all at one scale, the professor at the start."""
-    s.decor = False
-    s.dress = False
     ledger(s)
     zoom(s)
     backdrop(s, 2)

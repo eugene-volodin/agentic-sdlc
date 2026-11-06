@@ -64,8 +64,7 @@ def calm(color: str) -> str:
 
 
 # ============================================================================ the sea outside
-def reef(c: Canvas, x0: float, y0: float, x1: float, y1: float, k: float, seed: int = 0, fish: int = 3,
-         rays: bool = True) -> None:
+def reef(c: Canvas, x0: float, y0: float, x1: float, y1: float, k: float, seed: int = 0, fish: int = 3) -> None:
     """The sea seen through glass between (x0, y0) and (x1, y1): violet-blue water darker below, light coming down
     in slanting rays, a sandy floor with coral heads - branching, brain and fan coral - and swaying kelp, a few fish
     and a string of bubbles."""
@@ -74,11 +73,10 @@ def reef(c: Canvas, x0: float, y0: float, x1: float, y1: float, k: float, seed: 
     c.add(f'<rect x="{n(x0)}" y="{n(y0)}" width="{n(w)}" height="{n(h)}" fill="{WATER}"/>')
     c.add(f'<rect x="{n(x0)}" y="{n(y0 + h * 0.55)}" width="{n(w)}" height="{n(h * 0.45)}" fill="{WATER_DEEP}" '
           f'fill-opacity=".35"/>')
-    if rays:
-        for i in range(3):                                # light from the surface, slanting down
-            rx = x0 + w * (0.15 + i * 0.32) + rnd.uniform(-6, 6)
-            c.add(f'<path d="M{n(rx)},{n(y0)} h{n(w * 0.08)} L{n(rx + w * 0.2)},{n(y1)} h{n(-w * 0.16)} Z" '
-                  f'fill="{P.WHITE}" fill-opacity=".14"/>')
+    for i in range(3):                                # light from the surface, slanting down
+        rx = x0 + w * (0.15 + i * 0.32) + rnd.uniform(-6, 6)
+        c.add(f'<path d="M{n(rx)},{n(y0)} h{n(w * 0.08)} L{n(rx + w * 0.2)},{n(y1)} h{n(-w * 0.16)} Z" '
+              f'fill="{P.WHITE}" fill-opacity=".14"/>')
     floor = y1 - h * 0.18
     c.add(f'<path d="M{n(x0)},{n(floor)} Q{n(x0 + w * 0.3)},{n(floor - h * 0.06)} {n(x0 + w * 0.6)},{n(floor)} '
           f'T{n(x1)},{n(floor - h * 0.03)} V{n(y1)} H{n(x0)} Z" fill="{mix(P.SAND, VIOLET, 0.25)}"/>')
@@ -138,7 +136,7 @@ def fishy(x: float, y: float, k: float, way: int, color: str) -> str:
     return _at(c, x, y, k, mirror=way < 0)
 
 
-def porthole(c: Canvas, cx: float, cy: float, r: float, k: float, seed: int = 0, view=None) -> None:
+def porthole(c: Canvas, cx: float, cy: float, r: float, seed: int = 0, view=None) -> None:
     """A round porthole in the hull: its thick brass rim with bolts all round and, through the glass, the sea -
     the reef, or what `view(c, x0, y0, x1, y1)` draws there. The glass is a disc: the view is clipped to it."""
     g = Canvas()
@@ -355,9 +353,6 @@ def backdrop(s: Strip, index: int) -> None:
     the maze in every frame, calmed so the station stands out - between them riveted violet hull ribs with pipes,
     a valve and a gauge, now and then a pressure door with its wheel or a locker; under the windows a panelled
     violet dado, a pipe run along the top in a taller frame; the deck plates with their treads underfoot."""
-    s.decor = False
-    s.dress = False
-    s.indoor = True
     ledger(s)
     zoom(s)
     c = s.back
@@ -834,7 +829,7 @@ def big_porthole(s: Strip, x: float, cy: float, r: float, view, name: str) -> tu
     r = min(r, (lane(s).feet - 16) / 2.5)
     cy = max(cy, 6 + r * 1.22)
     c = Canvas()
-    porthole(c, x, cy, r, r / 50, view=view)
+    porthole(c, x, cy, r, view=view)
     box = (x - r * 1.2, cy - r * 1.2, x + r * 1.2, cy + r * 1.2)
     s.put(0.95, c.render(), box, name, group=name)
     return box
@@ -1238,9 +1233,6 @@ def finale(s: Strip) -> None:
     town's porthole, the map table, the control desk, the replay monitor under the camera's porthole, the
     labyrinth's exit through a porthole, the pressure chamber; each room's name on a brass plate over it, the cast
     in the rooms they work in."""
-    s.decor = False
-    s.dress = False
-    s.indoor = True
     ledger(s)
     zoom(s)
     r = lane(s)
@@ -1326,7 +1318,7 @@ def finale(s: Strip) -> None:
                 tops.append(monitor(things, x, floor, k, True)["box"][1])
             elif key == "check":
                 pr = min(fit / 2.6, room * 0.36)
-                porthole(things, x, floor - room * 0.5, pr, pr / 50,
+                porthole(things, x, floor - room * 0.5, pr,
                          view=lambda cc, a, b, c_, d: exit_view(cc, a, b, c_, d, True))
                 tops.append(floor - room * 0.5 - pr * 1.2)
             else:

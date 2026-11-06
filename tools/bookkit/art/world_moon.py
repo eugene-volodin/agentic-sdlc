@@ -42,7 +42,7 @@ from .openers import CLEAR_MM, H, W, Stage
 from .world_fair import held, lane, zoom
 from .world_harbour import fx, middle, place, room
 from .world_kit import SIZE, Pen, hide, ledger, stash_along, tag_size
-from .world_kitchen import _box
+from .world_kitchen import _box, low
 from .world_sea import beside, sparrow_on
 from .worlds import Station, world
 
@@ -89,17 +89,6 @@ def module_far(c: Canvas, x: float, ground: float, k: float, color: str = INDIGO
     c.add(_at(d, x, ground, k))
 
 
-def dome_far(c: Canvas, x: float, ground: float, k: float) -> None:
-    """The far greenhouse: a glass dome on its ring, its ribs, the green of the plants inside."""
-    d = Canvas()
-    d.add(f'<path d="M-34,0 A34,30 0 0 1 34,0 Z" fill="{far(mix(P.LENS, P.WHITE, 0.3))}" stroke="{INK}" '
-          f'stroke-width=".8"/><path d="M-26,0 Q-20,-12 -12,-6 Q-4,-16 4,-6 Q12,-14 22,-4 L26,0 Z" '
-          f'fill="{far(P.GREEN)}"/>')
-    d.line("M-34,0 A34,30 0 0 1 34,0 M0,-30 V0 M-24,-21 Q-12,-8 -14,0 M24,-21 Q12,-8 14,0", 0.9, far(P.METAL_DARK))
-    d.add(f'<rect x="-36" y="0" width="72" height="4" fill="{far(P.METAL)}"/>')
-    c.add(_at(d, x, ground, k))
-
-
 def dish_far(c: Canvas, x: float, ground: float, k: float) -> None:
     """A far aerial: a lattice mast with a dish turned up to the Earth."""
     d = Canvas()
@@ -114,54 +103,6 @@ def pad_far(c: Canvas, x: float, ground: float, k: float) -> None:
     c.add(f'<ellipse cx="{n(x)}" cy="{n(ground)}" rx="{n(34 * k)}" ry="{n(6 * k)}" fill="{far(P.METAL)}" '
           f'stroke="{INK}" stroke-width=".7"/><ellipse cx="{n(x)}" cy="{n(ground)}" rx="{n(20 * k)}" '
           f'ry="{n(3.4 * k)}" fill="none" stroke="{far(P.YELLOW)}" stroke-width="{n(max(0.8, 1.4 * k))}"/>')
-
-
-def surface(s: Strip, c: Canvas, top: float, bottom: float, k: float, seed: int, units: bool = True) -> None:
-    """The Moon from the horizon at `top` down to the base's wall at `bottom`: the grey regolith darker far off, low
-    hills along the horizon, craters, rover tracks; along the far edge the rest of the base - modules, the
-    greenhouse dome, an aerial, a landing pad - turning from frame to frame."""
-    rnd = random.Random(seed)
-    c.add(f'<rect x="-6" y="{n(top)}" width="{W + 12}" height="{n(bottom - top + 2)}" fill="{REGOLITH}"/>')
-    for _ in range(int(W / 120)):                                     # darker maria and lighter ejecta
-        px, py = rnd.uniform(0, W), rnd.uniform(top + 4, bottom)
-        w_ = rnd.uniform(60, 160) * k
-        c.add(f'<ellipse cx="{n(px)}" cy="{n(py)}" rx="{n(w_)}" ry="{n(w_ * 0.12)}" '
-              f'fill="{darken(REGOLITH, 0.9) if rnd.random() < 0.5 else lighten(REGOLITH, 0.08)}"/>')
-    c.add(f'<path d="M-6,{n(top + 2)} Q{n(W * 0.2)},{n(top - 14 * k)} {n(W * 0.38)},{n(top - 4 * k)} '
-          f'T{n(W * 0.75)},{n(top - 8 * k)} T{n(W + 6)},{n(top)} V{n(top + 4)} H-6 Z" fill="{REGOLITH_DARK}"/>')
-    for _ in range(max(3, int(W / 110))):
-        py = rnd.uniform(top + (bottom - top) * 0.3, bottom - 4)
-        crater(c, rnd.uniform(0, W), py, rnd.uniform(8, 26) * k * (0.5 + (py - top) / (bottom - top)))
-    for _ in range(int(W / 70)):                                      # boulders, lit on top
-        px, py = rnd.uniform(0, W), rnd.uniform(top + (bottom - top) * 0.25, bottom - 2)
-        r_ = rnd.uniform(2.5, 6) * k * (0.5 + (py - top) / (bottom - top))
-        c.add(f'<path d="M{n(px - r_)},{n(py)} Q{n(px - r_)},{n(py - r_ * 1.2)} {n(px)},{n(py - r_ * 1.1)} '
-              f'Q{n(px + r_)},{n(py - r_)} {n(px + r_)},{n(py)} Z" fill="{darken(REGOLITH, 0.8)}" stroke="{INK}" '
-              f'stroke-width=".6" stroke-opacity=".5"/>')
-    ty = top + (bottom - top) * 0.6                                   # a rover's track across the dust
-    c.line(f"M-6,{n(ty)} Q{n(W * 0.4)},{n(ty - 6 * k)} {n(W + 6)},{n(ty + 4 * k)}", max(1.0, 2 * k), REGOLITH_DARK,
-           0.6)
-    c.line(f"M-6,{n(ty + 5 * k)} Q{n(W * 0.4)},{n(ty - 1 * k)} {n(W + 6)},{n(ty + 9 * k)}", max(1.0, 2 * k),
-           REGOLITH_DARK, 0.6)
-    if not units:
-        return
-    ground = top + 6 * k
-    kinds = ("module", "dome", "dish", "module", "pad", "module")
-    x, i = -30 * k * (seed % 3), seed
-    while x < W + 40:
-        kind = kinds[i % len(kinds)]
-        w = {"module": 110, "dome": 90, "dish": 50, "pad": 90}[kind] * k
-        cx = x + w / 2
-        if kind == "module":
-            module_far(c, cx, ground, k * 0.8)
-        elif kind == "dome":
-            dome_far(c, cx, ground, k * 0.8)
-        elif kind == "dish":
-            dish_far(c, cx, ground, k * 0.8)
-        else:
-            pad_far(c, cx, ground + 2 * k, k * 0.8)
-        x += w + rnd.uniform(20, 60) * k
-        i += 1
 
 
 def deck(c: Canvas, x0: float, x1: float, y0: float, y1: float, k: float) -> None:
@@ -191,26 +132,11 @@ def deck(c: Canvas, x0: float, x1: float, y0: float, y1: float, k: float) -> Non
 INNER = mix(INDIGO, P.WHITE, 0.18)                  # the module's inner hull panels
 
 
-def other(s: Strip, name: str, alt: str) -> str:
-    """Who stands at a station: here always `name` - each beat of a station has its own cast, so that two pages in a
-    row never show the same pair (the mirror and the nearer camera already vary the repeats)."""
-    return name
-
-
-def low(s: Strip) -> bool:
-    """A low frame - a strip or a mid strip - is a close-up: the cast nearly fills its height, the professor (the
-    tallest) is left out, and a station shows only its parts that stand there at their true size."""
-    return s.h < 300
-
-
 def backdrop(s: Strip, index: int) -> None:
     """Inside a module of the base: the curved hull wall in indigo panels with its ribs bowing over, a seam along
     it, the ceiling's band with its warm light panels at the top, a skirting rail along the floor, and the steel
     deck plates the cast stands on. The cast keeps the stations room. The Moon is seen only through the windows
     and portholes the stations and `_framed` put into the wall."""
-    s.decor = False
-    s.dress = False
-    s.indoor = True
     ledger(s)
     zoom(s)
     feet = lane(s).feet
@@ -1247,7 +1173,7 @@ def pile_station(s: Strip, beat: str) -> None:
     dk = desk(c, x0 + w - 57 * kk, r.feet, kk, opened=True)
     tops = min(r.feet + (dy - 59) * kc for _, dy in spots)
     box = place(s, c, (bh["box"][0], min(bh["box"][1], tops, dk["box"][1]), dk["box"][2], r.feet), "airlock")
-    lead_ = other(s, "professor", "agent")
+    lead_ = "professor"
     mate = "cat" if beat == "pile" else "agent"
     cast(s, box, ((lead_, 1, "read" if beat == "pile" else "think", "talk" if beat == "pile" else "worry",
                    None if beat == "heap" else handheld.sheet),
@@ -1321,7 +1247,7 @@ def decide_station(s: Strip, beat: str) -> None:
         box = (box[0], win[1], box[2], box[3])
     for (px, py, w), key in zip(cn["plates"], ("accept", "reject"), strict=True):
         words(s, fx(s, px), py, s.word(key), w)
-    lead_ = other(s, "professor", "cat")
+    lead_ = "professor"
     mate = "agent" if beat == "decide" else ("cat" if lead_ != "cat" else "caterpillar")
     cast(s, box, ((lead_, -1, "point" if beat == "decide" else "think", "talk", None),
                   (mate, 1, "present", "smile", space_mug if mate == "cat" else None)))
@@ -1350,7 +1276,7 @@ def rover_station(s: Strip, beat: str) -> None:
         scan(c, rv["scanner"], (cx_ - 20 * kc, r.feet - 48 * kc, r.feet - 8 * kc))
     box = place(s, c, (x0 - 8, rv["box"][1], max(cx_ + 24 * kc, x0 + w + 8), r.feet), "bay")
     cast(s, box, (("agent", -1, "point" if beat == "scan" else "present", "smile", None),
-                  (other(s, "cat", "caterpillar"), 1, "think", "smile",
+                  ("cat", 1, "think", "smile",
                    space_mug if beat == "scan" else checklist(mates(s)))))
     perch(s, fx(s, cx_), r.feet - 59 * kc, "bay")
 
@@ -1380,7 +1306,7 @@ def tunnel_station(s: Strip, beat: str) -> None:
         sb = status_board(c, x0 + width + 6 + 76 * kbd, r.feet - pr * 0.72, kbd, lamps)
         box = place(s, c, (x0, min(sb["box"][1], top - 60 * kc), sb["box"][2], r.feet), "tunnel")
         cast(s, box, (("agent", -1, "point" if stop else "present", "smile", None),
-                      (other(s, "cat" if not stop else "caterpillar", "professor"), 1, "think",
+                      (("cat" if not stop else "caterpillar"), 1, "think",
                        "smile" if not stop else "talk",
                        space_mug if not stop else None)))
         perch(s, fx(s, x0 + width * 0.55), top - 59 * kc, "tunnel")
@@ -1396,7 +1322,7 @@ def tunnel_station(s: Strip, beat: str) -> None:
     cargo(c, x0 + 0.16 * pr, top, kc)                                  # the next one waiting on the belt
     box = place(s, c, (x0, r.feet - 153 * ka, x0 + width, r.feet), "tunnel")
     cast(s, box, (("agent", -1, "point" if stop else "present", "smile", None),
-                  (other(s, "cat" if not stop else "caterpillar", "professor"), 1, "think",
+                  (("cat" if not stop else "caterpillar"), 1, "think",
                        "smile" if not stop else "talk",
                    space_mug if not stop else None)))
     perch(s, fx(s, x0 + 0.62 * pr), r.feet - 150 * ka, "tunnel")
@@ -1511,7 +1437,7 @@ def keepers_station(s: Strip, beat: str) -> None:
             box = place(s, c, (gb["box"][0], gb["box"][1], ct["box"][2], r.feet), "greenhouse")
             glass(s, box)
             cast(s, box, (("caterpillar", -1, "present", "smile", watering_can),
-                          (other(s, "agent", "cat"), 1, "present", "smile", None)))
+                          ("agent", 1, "present", "smile", None)))
         return
     if beat == "plates":
         def geom():
@@ -1548,7 +1474,7 @@ def keepers_station(s: Strip, beat: str) -> None:
         box = place(s, c, (gr["box"][0], gr["box"][1], ct["box"][2] + 6, r.feet), "greenhouse")
         glass(s, box)
         cast(s, box, (("caterpillar", -1, "present", "smile", watering_can),
-                      (other(s, "agent", "cat"), 1, "present", "smile", None)))
+                      ("agent", 1, "present", "smile", None)))
 
 
 def test_station(s: Strip, beat: str) -> None:
@@ -1631,8 +1557,6 @@ def finale(s: Strip) -> None:
     the briefing screen, the console with its two buttons, the rover's bay, the conveyor through its arches; on
     the lower deck the telescope, the inner hatch and its cart, the greenhouse rack, the test arch - each station's
     name on a plaque over it; the cast on the lower deck, all at one scale."""
-    s.decor = False
-    s.dress = False
     backdrop(s, 3)
     r = lane(s)
     left, right = s.lo, s.hi
@@ -1865,16 +1789,6 @@ def big_earth(c: Canvas, x: float, y: float, r: float) -> None:
           f'stroke="{P.WHITE}" stroke-width="5" fill="none" stroke-linecap="round" opacity=".9"/>'
           f'<path d="M14,-60 A50,50 0 0 1 14,60 A60,60 0 0 0 14,-60 Z" fill="{INK}" fill-opacity=".35"/></g>')
     c.add(_at(d, x, y, r / 50))
-
-
-def railing(c: Canvas, x0: float, x1: float, top: float, foot: float) -> None:
-    """The observation deck's railing: steel posts, the top rail and a mid rail, a glass panel between."""
-    c.add(f'<rect x="{n(x0)}" y="{n(top)}" width="{n(x1 - x0)}" height="{n(foot - top)}" '
-          f'fill="{mix(P.LENS, P.WHITE, 0.5)}" fill-opacity=".3"/>')
-    c.line(" ".join(f"M{n(q)},{n(top)} V{n(foot)}" for q in range(int(x0), int(x1) + 1, 70)), 5, INDIGO)
-    for ry, w_ in ((top, 9), (top + (foot - top) * 0.5, 5)):         # the top rail and the mid rail
-        c.line(f"M{n(x0)},{n(ry)} H{n(x1)}", w_ + 2.6, INK)
-        c.line(f"M{n(x0)},{n(ry)} H{n(x1)}", w_, INDIGO if w_ > 6 else P.METAL_LIGHT)
 
 
 def opener(st: Stage, accent: str):

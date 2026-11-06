@@ -45,8 +45,9 @@ from .footers import Strip
 from .ink import INK, Canvas, ellipse_d, lettering, n, rounded_rect_d
 from .openers import IN_FRONT, Box, Stage, W
 from .world_fair import lane, zoom
-from .world_kit import SIZE, Pen, clock_hands, connect, ledger, tag_size
-from .world_kitchen import _box
+from .world_kit import SIZE, Pen, clock_hands, connect, ledger, port, tag_size
+from .world_courtyard import merged
+from .world_kitchen import _box, low
 from .world_camp import mug
 from .world_moon import checklist, height, mates
 from .world_harbour import in_hand
@@ -102,13 +103,6 @@ def puffs(c: Canvas, x0: float, y0: float, rise: float, drift: float, r0: float,
         c.add("</g>")
 
 
-def merged(c: Canvas, shapes: dict[str, list[str]], stroke: str = "") -> None:
-    """Many small shapes of one colour as one path each (one element per colour, not per stone or brick)."""
-    for fill, ds in shapes.items():
-        if ds:
-            c.add(f'<path d="{" ".join(ds)}" fill="{fill}"{stroke}/>')
-
-
 # ============================================================================ the camera and the ground
 class Line:
     """Where things are in a frame, front to back: the feet on the near platform, its coping, the near track's
@@ -144,11 +138,6 @@ def deep_front(s: Strip) -> float:
 
 def agent_h(s: Strip) -> float:
     return height(s, "agent")
-
-
-def low(s: Strip) -> bool:
-    """A strip: the cast nearly fills its height, and nothing taller than they can stand there whole."""
-    return s.h < 300
 
 
 BACK = 0.15                     # the share of a tall frame over the far platform: the station building
@@ -187,9 +176,6 @@ def setting(s: Strip, vehicle: float = 0.0, roads: int = 1, steam: float = 0.0, 
 
 def prepare(s: Strip, index: int) -> None:
     """Before a station: the close camera (`zoom`), the ledger of its containers and lines."""
-    s.decor = False
-    s.dress = False
-    s.indoor = False
     ledger(s)
     zoom(s)
     s.index = index
@@ -441,7 +427,7 @@ def facade(c: Canvas, s: Strip, g: Line) -> None:
     for i, bx in enumerate(bays):                                      # gas lamps on every other pilaster
         if (i + s.index) % 2 == 0:
             gas_lamp(c, bx, foot - 1.22 * t, t)
-    canopy_front(c, s, canopy, t, bays)
+    canopy_front(c, canopy, t, bays)
 
 
 def opening(c: Canvas, mid: float, sill: float, w: float, h: float, t: float, door: bool = False) -> None:
@@ -519,7 +505,7 @@ def gas_lamp(c: Canvas, x: float, y: float, t: float) -> None:
     c.add(f'<rect x="{n(lx - 5 * k)}" y="{n(y - 2 * k)}" width="{n(10 * k)}" height="{n(3 * k)}" fill="{IRON}"/>')
 
 
-def canopy_front(c: Canvas, s: Strip, edge: float, t: float, bays: list[float]) -> None:
+def canopy_front(c: Canvas, edge: float, t: float, bays: list[float]) -> None:
     """The platform canopy, seen from across the track: its glazed roof sloping up to the wall, carried on a
     cast-iron bracket at every pilaster - a scrolled spandrel with a ring in it - and along its front the fretted
     valance of cream boards, each cut to a point with a hole over it."""
@@ -700,7 +686,7 @@ COACH_L = 330
 VEHICLES = ("handcar", "engine", "wagon", "stock", "train", "buffer", "bogie")   # what runs on the rails, by name
 
 
-def coach(c: Canvas, x: float, rail: float, k: float, seed: int = 0, way: int = 1) -> dict:
+def coach(c: Canvas, x: float, rail: float, k: float, way: int = 1) -> dict:
     """A passenger coach, its right buffer face at (x, rail), 330 long and 270 tall: buffers at each end, the
     underframe, two bogies of two wheels with their frames and springs, the ruby body with its cream window band
     and windows, two doors with their handles and droplights, the gold lining, the curved roof with its
@@ -861,11 +847,11 @@ def buffer_stop(c: Canvas, x: float, rail: float, k: float, way: int = 1) -> dic
 BOARD_ROWS_TEXT = (("16:04", "1"), ("16:20", "2"), ("16:45", "3"))   # departure time, platform
 
 
-def flap_board(s: Strip, left: float, top: float, k: float, flipping: bool) -> tuple[float, float]:
+def flap_board(s: Strip, left: float, top: float, k: float) -> tuple[float, float]:
     """The departures board's face as a container, its top-left corner at (left, top) in page space: the black
     board, and inside its margin three rows of split flaps - each departure's time in yellow and its platform
-    number in white, a flap per figure - the top row turning over when `flipping`, its flaps half fallen. Returns
-    the page point of the top row's middle."""
+    number in white, a flap per figure, its hinge across the middle. Returns the page point of the top row's
+    middle."""
     pen = Pen(s, left, top, k)
     hold = pen.container("flaps", 0, 0, 128, 56, P.CHARCOAL, radius=4, sw=1.8, light=None)
     pad = pen.pad(128, 56)
@@ -1154,16 +1140,16 @@ def stop_block(c: Canvas, x: float, rail: float, k: float, way: int = 1) -> dict
     return {"box": (lo_, rail - 87 * k, hi_, rail), "face": x - way * 14 * k}
 
 
-def wall_board(s: Strip, x: float, top: float, k: float, flipping: bool) -> tuple:
+def wall_board(s: Strip, x: float, top: float, k: float) -> tuple:
     """The departures board hung on the station wall under the canopy, its top at `top`: the two iron brackets out
-    of the wall, the chains, and the split-flap face (`flap_board`) - the top row turning over. Returns its box."""
+    of the wall, the chains, and the split-flap face (`flap_board`). Returns its box and the top row's middle."""
     c = Canvas()
     for bx in (x + 18 * k, x + 110 * k):
         c.line(f"M{n(bx)},{n(top)} V{n(top + 16 * k)}", max(1.0, 1.6 * k), P.METAL_DARK)
         c.add(f'<rect x="{n(bx - 6 * k)}" y="{n(top - 4 * k)}" width="{n(12 * k)}" height="{n(5 * k)}" '
               f'fill="{IRON}" stroke="{INK}" stroke-width="1"/>')
     s.put(s.line.feet - 1, c.render(), None)
-    row = flap_board(s, x, top + 16 * k, k, flipping)
+    row = flap_board(s, x, top + 16 * k, k)
     return (x - 6 * k, top - 4 * k, x + 134 * k, top + 72 * k), row
 
 
@@ -1216,7 +1202,6 @@ def tapper(x: float, y: float, k: float) -> str:
 
 
 TAPPER_TIP = (48.0, 3.0)
-TAPPER_LEN = math.hypot(*TAPPER_TIP)
 
 
 def telegram(x: float, y: float, k: float) -> str:
@@ -1570,16 +1555,9 @@ def stand(s: Strip, name: str, x: float, pose: str, mood: str = "smile", face: i
           feet: float | None = None, depth: float | None = None):
     """A character at x on the platform (or at `feet`), facing `face` (1 right, -1 left)."""
     feet = s.line.feet if feet is None else feet
-    name = cast_name(s, name)
     pose = pose if pose in characters.module(name).POSES else "present"
     return s.actor(name, x, feet, pose, mood, flip=face < 0, tall=tall_of(s, name), group=group or name,
                    depth=depth)
-
-
-def cast_name(s: Strip, name: str) -> str:
-    """Who stands for the professor in a strip, where he is left out (the tallest): the first of the others not
-    in the frame yet."""
-    return name
 
 
 def fit_x(s: Strip, name: str, x: float, feet: float | None = None) -> float:
@@ -1595,7 +1573,7 @@ def place_free(s: Strip, name: str, f0: float, pose: str, mood: str = "smile", f
     """A character at the nearest spot to `f0` (read from the station's side) where it stands whole and clear
     of everything but the furniture it stands in front of; None if there is none."""
     feet = s.line.feet
-    name = getattr(s, "swap", {}).get(name, cast_name(s, name))
+    name = getattr(s, "swap", {}).get(name, name)
     if not name or any(b.kind == "actor" and b.name == name for b in s.boxes):
         return None
     near = [b for b in s.boxes if b.kind != "backdrop" or b.bottom > feet - IN_FRONT]
@@ -1871,7 +1849,6 @@ def roles_station(s: Strip, beat: str) -> None:
         s.hold(who, controller)
         a = in_hand(s, who, *CONTROLLER_PORT)
         b_ = in_hand(s, who, CONTROLLER_PORT[0], CONTROLLER_PORT[1] + 1)
-        from .world_kit import port
         pa = port(s, a[0], a[1], b_[0] - a[0], b_[1] - a[1], "caterpillar")
         tx_, ty_ = ml["terminal"]
         pb = port(s, tx_, ty_ + 4 * k, 0, 1, "model")
@@ -1930,7 +1907,7 @@ def plan_station(s: Strip, beat: str) -> None:
 
     if beat == "sign":
         target = probe_(3, False)["sign"]
-        who_name, make, tip, pose = cast_name(s, "professor"), pen, PEN_TIP, "present"
+        who_name, make, tip, pose = "professor", pen, PEN_TIP, "present"
     else:
         rows = board_rows(foot, k)
         gy = grip_at(s, "agent", 0, "present", -w)[1]
@@ -2093,7 +2070,7 @@ def to_pr_station(s: Strip, beat: str) -> None:
 
 def to_prod_station(s: Strip, beat: str) -> None:
     """From merge to production: "depart" - the semaphore at the platform end has dropped its arm, the train pulls
-    out in its steam, the departures board under the far canopy turns over; the caterpillar cheers, the agent
+    out in its steam, the departures board hangs under the far canopy; the caterpillar cheers, the agent
     points at the signal; "terminus" - at the end of the line the engine stands buffers to buffers against the
     buffer stop (in a strip the last wagon), the professor and the cat at it."""
     w = s.way
@@ -2103,10 +2080,10 @@ def to_prod_station(s: Strip, beat: str) -> None:
         g = setting(s, vehicle=0 if low(s) or beat == "board" else 2.95)
         k = rs_k(s)
         c = Canvas()
-        if low(s) or beat == "board":                                  # the board turning over on the wall
+        if low(s) or beat == "board":                                  # the departures board on the wall
             bk = min(g.t * 1.1 / 134, (g.feet - 0.4 * g.t - 10) / 80)
             bx = X(s, 0.6) - 67 * bk
-            box, row = wall_board(s, bx, 6 + 4 * bk, bk, True)
+            box, row = wall_board(s, bx, 6 + 4 * bk, bk)
             s.put(g.feet - 1, "", box, "board", group="board")
             half = (_box(s, "agent", 0, g.feet)[2] - _box(s, "agent", 0, g.feet)[0]) / 2
             ax = box[2] + half + 6 if w > 0 else box[0] - half - 6     # beside the board, pointing at its row
@@ -2496,7 +2473,7 @@ def metrics_more(s: Strip, beat: str) -> None:
         place_free(s, "caterpillar", 0.95, "think", "smile", face=-w)
         return
     bk = min(t_ * 1.0 / 134, (g.feet - 0.4 * t_ - 10) / 80)
-    box, _ = wall_board(s, X(s, 0.62) - 67 * bk, 6 + 4 * bk, bk, False)
+    box, _ = wall_board(s, X(s, 0.62) - 67 * bk, 6 + 4 * bk, bk)
     s.put(g.feet - 1, "", box, "board", group="board")
     place_free(s, "cat", 0.7, "read", "smile", face=-w)
     place_free(s, "caterpillar", 0.2, "write", "smile", face=w)
@@ -2693,7 +2670,6 @@ def finale(s: Strip) -> None:
     cat_ = stand(s, "caterpillar", ml["box"][2] + wd["caterpillar"] / 2 + 2, "present", "smile", face=-1,
                  group="model")
     s.hold(cat_, controller)
-    from .world_kit import port
     pa_, pb_ = in_hand(s, cat_, *CONTROLLER_PORT), in_hand(s, cat_, CONTROLLER_PORT[0], CONTROLLER_PORT[1] + 1)
     pa = port(s, pa_[0], pa_[1], pb_[0] - pa_[0], pb_[1] - pa_[1], "caterpillar")
     pb = port(s, ml["terminal"][0], ml["terminal"][1] + 4 * mk, 0, 1, "model")

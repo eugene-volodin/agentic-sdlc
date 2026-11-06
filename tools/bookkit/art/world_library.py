@@ -58,9 +58,6 @@ def backdrop(s: Strip, index: int) -> None:
     books, the pale wall showing only as a strip under the cornice; now and then a bay without shelves - an arched
     window over panelling, or a framed map and a clock over panelling - with a sconce glowing between bays; the
     choice of bays turns with the frame so neighbours differ. The parquet floor in front."""
-    s.decor = False
-    s.dress = False
-    s.indoor = True
     ledger(s)
     zoom(s)
     c = s.back
@@ -485,15 +482,6 @@ def card(x: float, y: float, k: float) -> str:
     return _at(c, x, y, k)
 
 
-def book_held(x: float, y: float, k: float, color: str = P.TEAL) -> str:
-    """A closed book held by its spine at (x, y)."""
-    c = Canvas()
-    c.shape(rounded_rect_d(-2, -34, 26, 34, 2), color, sw=1.6, light=(-1, -1))
-    c.line("M2,-30 V-4", 2, lighten(color, 0.45))
-    c.shape(rounded_rect_d(20, -32, 4, 30, 1), P.CARD, sw=0.8, light=None)
-    return _at(c, x, y, k)
-
-
 def archive_height(k: float, words: list[str]) -> float:
     """How tall the archive stands on the page at scale k, the folder being filed included (its tabs keep their
     readable size, so a small k makes the folder relatively taller)."""
@@ -908,9 +896,6 @@ def finale(s: Strip) -> None:
     below, six bays, each a teal bookcase with its station's thing in front of it - the door with its sheet, the
     desk, an aisle's sign, the catalogue and the trolley, the archive and the binders, the lectern - its name on the
     bay's cornice right over it; the cast in front on the parquet."""
-    s.decor = False
-    s.dress = False
-    s.indoor = True
     ledger(s)
     zoom(s)
     backdrop(s, 0)

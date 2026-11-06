@@ -37,7 +37,7 @@ from .footers import Strip
 from .ink import INK, Canvas, lettering, n, rounded_rect_d
 from .openers import CLEAR_MM, H, W, Stage
 from .world_fair import lane, zoom
-from .world_harbour import fx, place
+from .world_harbour import across, fx, place
 from .world_kit import SIZE, Pen, ledger, tag_size
 from .world_kitchen import _box
 from .world_moon import cast, checklist, height, low, mates, perch
@@ -179,13 +179,11 @@ def watchtower(c: Canvas, x: float, foot: float, k: float) -> None:
     c.add(_at(d, x, foot, k))
 
 
-def far_camp(s: Strip, c: Canvas, land: float, k: float, seed: int, units: bool = True) -> None:
+def far_camp(c: Canvas, land: float, k: float, seed: int) -> None:
     """Across the clearing, calmer than the stations: two rows of pines with the forest behind them, and in
     front of them the camp - tents, cabins, the watchtower, the palisade, the lake with its jetty - turning from
     frame to frame."""
     rnd = random.Random(seed)
-    if not units:
-        return
     kinds = ("tents", "cabin", "woodpile", "lake", "tower", "washstand", "tents", "palisade")
     x, i = -30 * k * (seed % 3), seed
     while x < W + 40:
@@ -343,9 +341,6 @@ def backdrop(s: Strip, index: int) -> None:
     """Behind every station: the summer sky over the pines, the forest and the camp across the clearing, the
     mown meadow, and the plank walkway the cast stands on. In a low frame the cast nearly fills it and the
     professor is left out."""
-    s.decor = False
-    s.dress = False
-    s.indoor = False
     ledger(s)
     zoom(s)
     feet = lane(s).feet
@@ -371,18 +366,9 @@ def backdrop(s: Strip, index: int) -> None:
               f'q{n(14 * k)},{n(-16 * k)} {n(30 * k)},0 q{n(16 * k)},{n(-4 * k)} {n(24 * k)},{n(8 * k)} Z" '
               f'fill="{P.WHITE}" fill-opacity=".85"/>')
     forest(c, 0, s.land, k, index)
-    far_camp(s, c, s.land, k, index)
+    far_camp(c, s.land, k, index)
     clearing(c, s.land, base + 1, k, index, (s.x(0.3), s.x(0.7)))
     boardwalk(c, -6, W + 6, base, s.h + 4, max(0.8, s.unit))
-
-
-def across(s: Strip, c: Canvas) -> None:
-    """Put something drawn the canonical way round across the clearing, behind the stations (mirrored on a
-    mirrored page)."""
-    svg = c.render()
-    if getattr(s, "mirror", False):
-        svg = f'<g transform="translate({n(s.lo + s.hi)},0) scale(-1,1)">{svg}</g>'
-    s.put(0.5, svg, None)
 
 
 def far_k(s: Strip, height_: float, tall: float = 1.2) -> float:
@@ -971,8 +957,6 @@ def finale(s: Strip) -> None:
     key cabinet, the letterbox, the yard's sawhorses behind their fence, the sentry's table with the parcel, the
     notice board, the practice tent, the supply chest, the camp table and the drill at the chest - all at one scale
     and filling the frame's height, each with its name on a plaque right over it."""
-    s.decor = False
-    s.dress = False
     backdrop(s, 3)
     r = lane(s)
     left, right = s.lo, s.hi

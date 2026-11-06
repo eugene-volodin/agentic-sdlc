@@ -124,7 +124,7 @@ def tiles(c: Canvas, outline: str, x0: float, x1: float, top: float, bottom: flo
     c.path(outline, "none", max(0.8, row * 0.13))
 
 
-def window(c: Canvas, x: float, sill: float, w: float, h: float, shutters: bool = True, box: bool = True,
+def window(c: Canvas, x: float, sill: float, w: float, h: float, shutters: bool = True,
            curtain: str = P.PINK) -> None:
     """A cottage window, its sill's middle at (x, sill): the white frame with its glazing bars, the sky in the
     panes, curtains tied back inside, a stone sill, louvred shutters folded back on either side and a flower box
@@ -149,17 +149,16 @@ def window(c: Canvas, x: float, sill: float, w: float, h: float, shutters: bool 
     c.line(f"M{n(x)},{n(top + 4)} V{n(sill - 4)} M{n(left + 4)},{n(top + h * 0.45)} H{n(left + w - 4)}", 0.5,
            darken(TRIM, 0.75))
     c.shape(rounded_rect_d(left - 4, sill - 1, w + 8, 4, 1), STONE_, sw=1, light=None)           # the sill
-    if box:
-        c.shape(rounded_rect_d(left + 2, sill + 3, w - 4, 7, 1), P.TERRACOTTA, sw=1, light=None)  # flower box
-        rnd = random.Random(int(x * 7 + sill))
-        leaves, blooms = [], []
-        for i in range(int(w / 5)):
-            fx_ = left + 5 + i * 5 + rnd.uniform(-1, 1)
-            leaves.append(f"M{n(fx_ - 3)},{n(sill + 3)} a3,2.4 0 1 1 6,0 Z")
-            if i % 2 == 0:
-                blooms.append(f"M{n(fx_ + 2.2)},{n(sill - 1)} a2.2,2.2 0 1 1 -4.4,0 a2.2,2.2 0 1 1 4.4,0 Z")
-        c.add(f'<path d="{" ".join(leaves)}" fill="{P.LEAF}" stroke="{INK}" stroke-width=".5"/>')
-        c.add(f'<path d="{" ".join(blooms)}" fill="{P.RED}" stroke="{INK}" stroke-width=".5"/>')
+    c.shape(rounded_rect_d(left + 2, sill + 3, w - 4, 7, 1), P.TERRACOTTA, sw=1, light=None)  # flower box
+    rnd = random.Random(int(x * 7 + sill))
+    leaves, blooms = [], []
+    for i in range(int(w / 5)):
+        fx_ = left + 5 + i * 5 + rnd.uniform(-1, 1)
+        leaves.append(f"M{n(fx_ - 3)},{n(sill + 3)} a3,2.4 0 1 1 6,0 Z")
+        if i % 2 == 0:
+            blooms.append(f"M{n(fx_ + 2.2)},{n(sill - 1)} a2.2,2.2 0 1 1 -4.4,0 a2.2,2.2 0 1 1 4.4,0 Z")
+    c.add(f'<path d="{" ".join(leaves)}" fill="{P.LEAF}" stroke="{INK}" stroke-width=".5"/>')
+    c.add(f'<path d="{" ".join(blooms)}" fill="{P.RED}" stroke="{INK}" stroke-width=".5"/>')
 
 
 def door(c: Canvas, x: float, foot: float, w: float = 54, h: float = 128, lamp: int = 1) -> None:
@@ -234,14 +233,13 @@ COTTAGE_WALL = 172       # its walls, plinth to eaves
 COTTAGE_H = 300          # to the top of its chimney pots
 
 
-def cottage(c: Canvas, x: float, foot: float, k: float, door_at: float = -86, seed: int = 0,
-            garden: bool = True) -> None:
+def cottage(c: Canvas, x: float, foot: float, k: float, door_at: float = -86, seed: int = 0) -> None:
     """The professor's cottage at (x, foot), 330 wide, 172 to the eaves and 300 to the chimney's pots, in units of
     the professor's height (100): a stone plinth; walls of cream clapboard, each board's lap shading the next, white
     corner boards; the hipped roof of terracotta tiles in staggered courses over deep eaves with the half-round
     gutter and its downpipe to a shoe; the brick chimney with its cap and two pots; the front door with its canopy,
     steps and lantern at `door_at`; windows with shutters and flower boxes; a climbing rose on its trellis by the
-    door; a soft shadow under the eaves; flowers along its foot (`garden`)."""
+    door; a soft shadow under the eaves; flowers along its foot."""
     d = Canvas()
     hw, wall = COTTAGE_W / 2, COTTAGE_WALL
     d.add(f'<ellipse cx="0" cy="1" rx="{hw + 10}" ry="4" fill="{INK}" fill-opacity=".12"/>')
@@ -280,8 +278,7 @@ def cottage(c: Canvas, x: float, foot: float, k: float, door_at: float = -86, se
     d.shape(f"M{hw + 4},{eave + 4} V-10 q0,6 7,8 h3 v-5 h-3 q-2,-1 -2,-4 V{eave + 4} Z", P.METAL_LIGHT, sw=1.1,
             light=None)                                                                           # the downpipe
     d.line(" ".join(f"M{hw + 2},{n(-wall + 30 + q * 40)} h10" for q in range(4)), 1.4, P.METAL_DARK)
-    if garden:
-        flowers(d, -hw + 12, hw - 14, 1, 1, seed + 1, avoid=(door_at - 36, door_at + 36))
+    flowers(d, -hw + 12, hw - 14, 1, 1, seed + 1, avoid=(door_at - 36, door_at + 36))
     c.add(_at(d, x, foot, k))
 
 
@@ -790,7 +787,6 @@ def mailbox(c: Canvas, x: float, foot: float, k: float, open_: bool, flag: bool,
     c.add(_at(d, x, foot, k, mirror=way < 0))
 
 
-MAILBOX_DOOR = (17.0, -57.0)        # the open mouth of the mailbox, for a hand to reach into
 
 
 def little_library(s: Strip, x: float, foot: float, k: float, open_: bool) -> tuple:
@@ -949,9 +945,6 @@ def veil(s: Strip) -> None:
 # ============================================================================ the camera
 def prepare(s: Strip) -> None:
     """The yard's camera, close: the cast as big as the frame lets it be, the floor showing under their feet."""
-    s.decor = False
-    s.dress = False
-    s.indoor = False
     ledger(s)
     zoom(s)
     feet = lane(s).feet
@@ -2437,18 +2430,6 @@ def intro_backdrop(s: Strip, index: int) -> None:
     stretch of its row."""
     prepare(s)
     yard(s, VIEW[COURTYARD.stations[index].key] + (s.seed % 2) * 60, s.seed + 7)
-
-
-def scale_cast(s: Strip) -> None:
-    """The yard's camera: the cast as big as the frame lets it be (as `prepare` sets it)."""
-    feet = lane(s).feet
-    names = ("professor", "cat", "agent", "caterpillar")
-    if s.h < 300:
-        top = max(_box(s, name, 0, feet)[3] - _box(s, name, 0, feet)[1] for name in names)
-        s.tall *= (feet - 6) / top
-    widest = max(_box(s, name, 0, feet)[2] - _box(s, name, 0, feet)[0] for name in names)
-    s.tall *= min(1.0, (s.hi - s.lo) * 0.19 / widest)
-    s.unit = s.tall / 137
 
 
 def intro_finale(s: Strip) -> None:
