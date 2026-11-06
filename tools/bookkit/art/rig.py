@@ -14,7 +14,7 @@ the wrist out through the knuckles), and the handle or edge that is gripped runs
 thumb's side, which a character's hand turns towards its head when the arm is raised or held out, so "up" in a
 prop's drawing is up in the picture for the usual poses. The prop therefore turns with the forearm. A prop is any
 `make(x, y, k) -> svg` that draws itself with its grip at (x, y), `k` being the holder's height over 100 (the same
-makers `footers.Strip.in_hand` takes); `handheld.py` has ready ones whose handles sit where the fist closes.
+makers `Stage.hold` takes); `handheld.py` has ready ones whose handles sit where the fist closes.
 
     frame = hand_frame(elbow, wrist, width, hand_scale, hand_turn, toward=neck)   # pure geometry
     arm(c, shoulder, elbow, wrist, ..., kind="hold", toward=neck)                  # draws the back of the fist

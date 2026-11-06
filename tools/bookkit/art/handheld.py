@@ -161,19 +161,3 @@ def jar(x: float, y: float, k: float, label: str | None = None, size: float = 2.
         text = lettering(0, top + 1.4 + lab_h / 2 + size * 0.36, label, size, INK, style="label")
         c.add(f'<g transform="scale(-1,1)">{text}</g>' if mirrored else text)
     return _at(c, x, y, k)
-
-
-# For the pose sheets: what each character holds to show the grip, label -> (pose, options of `draw`).
-DEMO = {
-    "cat": {"stopwatch": ("present", {"hold": {"right": stopwatch}}),
-            "caliper": ("present", {"hold": {"right": caliper}}),
-            "card": ("present", {"hold": {"right": (card, 20)}}),
-            "clipboard": ("present", {"hold": {"right": (clipboard, 24)}})},
-    "agent": {"card": ("present", {"hold": {"right": (card, 15)}}),
-              "pencil": ("present", {"hold": {"right": pencil}}),
-              "book": ("present", {"hold": {"right": (book, 15)}})},
-    "professor": {"sheet": ("present", {"hold": {"right": (sheet, 20)}}),
-                  "magnifier": ("present", {"hold": {"right": magnifier}})},
-    "caterpillar": {"notebook": ("present", {"hold": {"right": (notebook, 15)}}),
-                    "stopwatch": ("present", {"hold": {"right": stopwatch}})},
-}

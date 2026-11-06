@@ -23,7 +23,7 @@ Optional:
     PORTRAIT_OPTIONS  extra `draw` options for cropped views (the cat hides its tail)
     SEAT              "chair" or "desk": where the character sits in the study scene
     BALLOON_GRIP      {pose: (x, y)} where a balloon string ends, for characters that carry one
-    MOUTH             (x, y) where a speech bubble's tail points (a footer's `Strip.say`)
+    MOUTH             (x, y) of the mouth, where speech comes from (a footer's `Strip.mouth`)
     HOLD_Y            y down to which the character is drawn behind a poster it holds (the checklist block)
     hand_point(pose, side) -> (x, y)   where a character without wrists holds things (the sparrow's wing tips)
     hands(pose, grips=()) -> {"left": HandFrame, "right": HandFrame}, with `draw(..., grips=(sides))` closing

@@ -25,7 +25,7 @@ SAND = P.SAND
 WATER = P.WATER
 FLOOR = P.FLOOR
 
-# Footer storylines, cycled by page: little episodes of the characters working with the Agent.
+# Storylines a scene plays when it is given no cast, picked by its seed: the characters working with the Agent.
 # A cast member is (character, pose, mood, mark); a mark is a badge over the head: "?", "!", "ok", "idea".
 # `prop` puts a story object between the first two characters: (kind, label).
 STORIES = (

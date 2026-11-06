@@ -250,9 +250,9 @@ def draw(pose: str = "stand", mood: str = "smile", held: str = "sheet", wear: st
     """Draw the Agent. See `POSES` and `MOODS` for the options.
 
     `held` is what it reads in the `read` pose: a clean `sheet`, or an `old` module - a grey binder thick with
-    dust, taken off the bottom shelf (the chapter 1 opener); in the `carry` pose a `crate` of apples instead of the
+    dust, taken off the bottom shelf (the `morning` story); in the `carry` pose a `crate` of apples instead of the
     stack of folders (the farewell's fields). `wear="harness"` puts on braces and a
-    tool belt with a wrench: the agent trying on a harness at the fair (the chapter 2 opener). `grips` closes
+    tool belt with a wrench: the agent trying on a harness at the fair (the `fair` story). `grips` closes
     those hands ("left", "right") round a handle for `rig.hold` (see `characters.draw(hold=...)`)."""
     stance, left, right = POSES[pose]
     if stance == "stride":

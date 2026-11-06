@@ -324,24 +324,6 @@ def fanfold(points: list[tuple[float, float]], width: float, flags: list[tuple[f
     return c.render()
 
 
-def bin_with_paper(x: float, y: float, scale: float = 1.0, seed: int = 0) -> str:
-    """A wire waste-paper bin overflowing with crumpled sheets; one ball has rolled away."""
-    c = Canvas()
-    rnd = random.Random(seed)
-    c.shape(ellipse_d(0, -60, 30, 5), P.METAL_DARK, sw=2.1, light=None)          # the inside, behind the paper
-    for i, (bx, by, r) in enumerate(((-15, -66, 10), (13, -67, 10), (-1, -75, 11), (23, -63, 8), (-23, -62, 8))):
-        c.add(paper_ball(bx, by, r / 10, seed=seed * 7 + i))
-    c.shape("M-30,-60 Q0,-55 30,-60 L22,0 H-22 Z", P.METAL, sw=2.3, light=(-3, -2), shade_k=0.85)
-    for i in range(7):
-        t = i / 6
-        c.line(f"M{n(-30 + 60 * t)},{n(-60 + 5 * math.sin(math.pi * t))} L{n(-22 + 44 * t)},0", 1.1, opacity=0.6)
-    c.line("M-28,-42 Q0,-38 28,-42 M-25,-22 Q0,-18 25,-22", 1.1, opacity=0.6)
-    c.line("M-30,-60 Q0,-50 30,-60", 4.4)                                          # the front of the rim
-    c.line("M-30,-60 Q0,-50 30,-60", 2, P.METAL_LIGHT)
-    c.add(paper_ball(46 + rnd.uniform(-2, 2), -9, 1, seed=seed * 7 + 9))
-    return _at(c, x, y, scale)
-
-
 def paper_ball(x: float, y: float, scale: float = 1.0, seed: int = 0) -> str:
     """A crumpled sheet of paper centred on (x, y), about 20 across: a lumpy, faceted outline with creases
     running out to its edges and a few facets in grey - angular all over, so it never reads as a face."""
@@ -393,10 +375,6 @@ def yarn(x: float, y: float, r: float = 14, color: str = P.RED, thread: str = ""
             f"{r * 0.8},{n(-r * (0.9 + k * 0.1))}",
                1.1, opacity=0.6)
     return _at(c, x, y)
-
-
-def mug_at(x: float, y: float, size: float = 40) -> str:
-    return doodle_at("mug", x, y, size)
 
 
 def coat_rack(x: float, y: float, scale: float = 1.0) -> str:
@@ -597,26 +575,6 @@ def hot_air_balloon(x: float, y: float, scale: float = 1.0, colors: tuple = (P.R
     c.line("M-16,-18 H16 M-15,-9 H15 M-6,-26 V0 M6,-26 V0", 1, opacity=0.6)
     c.shape(rounded_rect_d(-12, 2, 9, 12, 3), P.TERRACOTTA, sw=1.6, light=None)   # a sandbag
     return _at(c, x, y, scale)
-
-
-def bunting(points: list[tuple[float, float]], seed: int = 0, size: float = 18) -> str:
-    """A garland of triangle flags sagging between points."""
-    rnd = random.Random(seed)
-    c = Canvas()
-    colors = (P.RED, P.YELLOW, P.BLUE, P.GREEN, P.PINK, P.ORANGE)
-    for (x1, y1), (x2, y2) in zip(points, points[1:], strict=False):
-        sag = abs(x2 - x1) * 0.12
-        mx, my = (x1 + x2) / 2, (y1 + y2) / 2 + sag * 2
-        c.line(f"M{n(x1)},{n(y1)} Q{n(mx)},{n(my)} {n(x2)},{n(y2)}", 1.6)
-        count = max(2, int(abs(x2 - x1) / (size * 1.5)))
-        for k in range(1, count):
-            t = k / count
-            px = (1 - t) ** 2 * x1 + 2 * (1 - t) * t * mx + t * t * x2
-            py = (1 - t) ** 2 * y1 + 2 * (1 - t) * t * my + t * t * y2
-            color = colors[(k + rnd.randrange(6)) % 6]
-            c.shape(f"M{n(px - size / 2)},{n(py)} L{n(px + size / 2)},{n(py)} L{n(px)},{n(py + size * 1.2)} Z", color,
-                    sw=1.5, light=None)
-    return c.render()
 
 
 def stall(x: float, y: float, w: float = 200, h: float = 290, color: str = P.RED, sign: str = "") -> str:
@@ -1040,20 +998,6 @@ def boat(x: float, y: float, scale: float = 1.0, mirror: bool = False) -> str:
     c.line("M-52,-12 H52", 1.2, opacity=0.6)
     c.line("M-70,4 q8,-4 16,0 M50,6 q8,-4 16,0", 1.4, P.WHITE)
     return _at(c, x, y, scale, mirror)
-
-
-def lily(x: float, y: float, scale: float = 1.0, frog: bool = False) -> str:
-    c = Canvas()
-    c.shape("M0,0 m-22,0 a22,7 0 1 0 44,0 a22,7 0 1 0 -44,0 Z M0,0 L20,-3 L18,3 Z", P.LEAF, sw=1.8, light=None)
-    if frog:
-        c.shape("M-12,-2 Q-14,-18 0,-20 Q14,-18 12,-2 Z", P.GREEN, sw=1.8, light=(-1, -1))
-        for ex in (-6, 6):
-            c.shape(ellipse_d(ex, -20, 5, 5), P.GREEN, sw=1.6, light=None)
-            c.dot(ex, -20, 2)
-        c.line("M-6,-10 q6,4 12,0", 1.4)
-    else:
-        c.shape("M-4,-4 q4,-14 8,0 q-4,3 -8,0 Z", P.PINK_PALE, sw=1.4, light=None)
-    return _at(c, x, y, scale)
 
 
 def dragonfly(x: float, y: float, scale: float = 1.0) -> str:
