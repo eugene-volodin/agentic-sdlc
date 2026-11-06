@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import contextlib
+import hashlib
 import json
 import os
 import re
@@ -19,6 +20,7 @@ from . import design
 from .art.footers import footers
 from .art.ink import id_scope
 from .markup import BuildError
+from .pdftext import strip_soft_hyphens
 
 CSS_PX_PER_MM = 96 / 25.4
 PAGE_VIEWPORT = {"width": round(design.PAGE_WIDTH * CSS_PX_PER_MM),
@@ -29,18 +31,42 @@ RUN_SWITCH = "bookkit-run"   # `--bookkit-run=<run>` marks the browsers of one i
                               # can find and end them
 
 
+INSTALL_BROWSER = "uv run playwright install chromium"
+
+
 def _launch(playwright):
-    """Prefer the installed Chrome; fall back to Playwright's own Chromium."""
+    """Playwright's own Chromium, the build pinned by the playwright version in uv.lock: one browser on every machine,
+    so the book lays out the same everywhere. The system's Google Chrome is never used."""
     run = os.environ.get("BOOKKIT_RUN")
     args = [f"--{RUN_SWITCH}={run}"] if run else []
     try:
-        return playwright.chromium.launch(channel="chrome", args=args)
-    except PlaywrightError:
-        try:
-            return playwright.chromium.launch(args=args)
-        except PlaywrightError as error:
-            raise BuildError("no browser available: install Google Chrome or run "
-                             "'uv run playwright install chromium'") from error
+        return playwright.chromium.launch(channel="chromium", args=args)
+    except PlaywrightError as error:
+        raise BuildError(f"Playwright's Chromium is not installed or does not start: run '{INSTALL_BROWSER}' in "
+                         f"tools/ (on Linux add '--with-deps' for its system libraries); "
+                         f"{_first_line(error)}") from error
+
+
+# What each page holds, laid out: its text (without soft hyphens) and the number of lines of each block of text. Two
+# builds that break one line differently differ here; the hash of it shows at a glance whether two machines agree.
+LAYOUT_JS = r"""() => [...document.querySelectorAll('#book > .page')].map((page) => {
+  const body = page.querySelector('.p-body') || page;
+  const lines = [];
+  for (const block of body.querySelectorAll('p, li, td, th, h1, h2, h3, h4, pre')) {
+    const range = document.createRange();
+    range.selectNodeContents(block);
+    const half = (parseFloat(getComputedStyle(block).lineHeight) || 16) / 2;
+    const tops = [...range.getClientRects()].filter((r) => r.width > 0).map((r) => r.top).sort((a, b) => a - b);
+    lines.push(tops.filter((top, k) => k === 0 || top - tops[k - 1] > half).length);
+  }
+  return body.innerText.replace(/\u00ad/g, '').replace(/\s+/g, ' ').trim() + '|' + lines.join(',');
+})"""
+
+
+def layout_fingerprint(pages: list[str]) -> dict:
+    """`{"fingerprint": 12 hex digits for the whole book, "pages": 8 for each page}`."""
+    hashes = [hashlib.sha256(text.encode("utf-8")).hexdigest()[:8] for text in pages]
+    return {"fingerprint": hashlib.sha256(" ".join(hashes).encode()).hexdigest()[:12], "pages": hashes}
 
 
 # How long each step may take before the build gives up with an error instead of waiting for ever. The whole
@@ -108,6 +134,8 @@ def render(html_path: Path, pdf_path: Path | None = None, shots_dir: Path | None
                     raise BuildError(f"the drawings could not be given unique ids: {clash}")
                 report = page.evaluate("window.__bookReport")
                 report["warnings"] += footer_warnings(report.get("feet", []))
+                report["browser"] = f"chromium {browser.version}"
+                report["layout"] = layout_fingerprint(page.evaluate(LAYOUT_JS))
                 report["shots"] = []
                 if audit is not None:
                     from . import audit as auditing
@@ -146,9 +174,19 @@ def render(html_path: Path, pdf_path: Path | None = None, shots_dir: Path | None
                             cdp.send("HeapProfiler.collectGarbage")
                     page.evaluate("() => document.querySelectorAll('.page').forEach(p => p.classList.remove('unshot'))")
                 if pdf_path:
+                    # Printing takes the most memory: let the browser drop what the layout, the proofs and the audit
+                    # left behind first, or a machine with little memory (a container on a laptop) crashes the page.
+                    pressure = page.context.new_cdp_session(page)
+                    pressure.send("Memory.simulatePressureNotification", {"level": "critical"})
+                    pressure.send("HeapProfiler.collectGarbage")
+                    pressure.detach()
                     step = "printing the PDF"
                     page.pdf(path=str(partial), prefer_css_page_size=True, print_background=True,
                              outline=True, tagged=True)
+                    step = "taking the soft hyphens out of the PDF's text"
+                    cleaned, dropped = strip_soft_hyphens(partial.read_bytes(), pdf_path.name)
+                    if dropped:
+                        partial.write_bytes(cleaned)
                     pictures = page.evaluate("new Set([...document.images].map(i => i.currentSrc)).size")
                     report["warnings"] += _raster_warnings(partial, pictures, pdf_path.name)
                     report["warnings"] += _font_warnings(partial, pdf_path.name)

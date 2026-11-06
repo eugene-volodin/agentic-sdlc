@@ -10,6 +10,7 @@ import pytest
 from bookkit import design
 from bookkit import render as rendering
 from bookkit.compiler import build_html
+from bookkit.hyphenate import SHY
 from bookkit.render import footer_warnings
 
 FRONT = "---\ntitle: Test\nscene: fair\n---\n\n# Test\n\n"
@@ -185,10 +186,11 @@ PROMPT = ('```prompt title="Long" note="-"\n' + "".join(f"Line {n} of a prompt t
                                                        for n in range(26)) + "```\n\n")
 STUCK_PROMPT = "## Section\n\n" + PARAGRAPH * 2 + PROMPT + PARAGRAPH
 STUCK_PROMPT_PAGES = 6        # the layout of STUCK_PROMPT before footers could grow to fill: it must not change
-# The handbook's page count when footers learned to grow to fill a page (it was the same before). A footer never adds a
-# page; raise this only when the text itself grows, never for a change of the footers.
+# The handbook's page count, laid out in Playwright's Chromium with the soft hyphens of hyphenate.py: the same on every
+# machine. A footer never adds a page; raise this only when the text or its hyphenation changes, never for a change of
+# the footers.
 BOOK = Path(__file__).resolve().parents[2] / "book"
-BOOK_PAGES = 255
+BOOK_PAGES = 257
 
 
 def test_a_prompt_that_moved_on_whole_leaves_a_footer_grown_to_the_last_line(tmp_path, monkeypatch):
@@ -216,9 +218,13 @@ def test_footers_grown_to_fill_never_add_a_page_to_the_handbook(monkeypatch):
     if not (BOOK / "book.yml").is_file():
         pytest.skip("the handbook is not beside the tool")
     monkeypatch.setattr(rendering, "footers", lambda requests, vocabulary: ["<svg></svg>" for _ in requests])
+    html = build_html(BOOK).html
     with tempfile.TemporaryDirectory() as work:
         source = Path(work) / "book.html"
-        source.write_text(build_html(BOOK).html, encoding="utf-8")
+        source.write_text(html, encoding="utf-8")
         report = rendering.render(source)
-    assert report["pages"] <= BOOK_PAGES
+    # Another browser or no soft hyphens lays the text out differently: say which, so a mismatch of machines is plain.
+    assert report["pages"] <= BOOK_PAGES, (
+        f"{report['pages']} pages, at most {BOOK_PAGES} expected; laid out in {report.get('browser')}, "
+        f"{html.count(SHY)} soft hyphens in the text")
     assert any(foot["size"] == "fill" for foot in report["feet"])

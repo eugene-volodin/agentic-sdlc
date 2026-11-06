@@ -6,15 +6,17 @@ changing the tool.
 
 ## Commands
 
-Run from `tools/`. Requires uv and Google Chrome.
+The reference: `tools/container.sh` runs `tools/ci.sh` (tests, linter, `book audit`) in the image of `tools/Dockerfile`,
+exactly as CI; the PDF and the report go to `dist/ci/`. Needs Docker. The rest runs natively from `tools/`, needs uv
+and Playwright's Chromium, and may break a line differently from the container.
 
-- Install: `uv sync`
+- Install: `uv sync`, then `uv run playwright install chromium`
 - Build the book: `uv run book build --strict` → `../dist/agentic-sdlc.pdf`
 - Build one chapter with page images: `uv run book build --only <folder> --shots all --no-pdf`
   (PNG files go to `<temp>/bookkit/book/pages/`)
 - Check every page, as CI does: `uv run book audit --base origin/main --baseline audit-baseline.json`
 - Show every markup block: `uv run book build --demo --shots all`; reference: `uv run book components`
-- Tests: `uv run pytest -q`; linter: `uvx ruff check bookkit tests`
+- Tests: `uv run pytest -q`; linter: `uv run ruff check bookkit tests`
 
 ## Layout of the repository
 

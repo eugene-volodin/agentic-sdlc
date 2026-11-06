@@ -16,7 +16,11 @@
   const report = window.__bookReport || {};
   const feet = new Map((report.feet || []).map((f) => [f.page, f]));
   const pages = [...document.querySelectorAll('#book > .page')];
-  const snippet = (text, n = 60) => String(text || '').replace(/\s+/g, ' ').trim().slice(0, n);
+  // The soft hyphens of running text (hyphenate.py) are break points, not text: whatever is reported or compared
+  // goes without them.
+  const SHY = '\u00ad';
+  const plain = (text) => String(text || '').replaceAll(SHY, '');
+  const snippet = (text, n = 60) => plain(text).replace(/\s+/g, ' ').trim().slice(0, n);
 
   let current = null;                                           // the page being audited
   function add(check, severity, where, detail, numbers = {}, box = null, page = current) {
@@ -27,7 +31,7 @@
       rect = { x: r.left - sheet.left, y: r.top - sheet.top, w: r.width, h: r.height };
     }
     findings.push({ check, severity, page: page ? +page.dataset.page : 0, chapter: page ? page.dataset.chapter || '' : '',
-                    where: snippet(where), detail, numbers, rect });
+                    where: snippet(where), detail: plain(detail), numbers, rect });
   }
   const union = (a, b) => {
     const left = Math.min(a.left, b.left), top = Math.min(a.top, b.top);
@@ -49,8 +53,8 @@
   function charBox(node, i) {
     range.setStart(node, i);
     range.setEnd(node, i + 1);
-    for (const r of range.getClientRects()) if (r.width > 0 || r.height > 0) return r;
-    return null;
+    // The last box: the letter after a soft hyphen that broke the line also gets that hyphen's box on the line above.
+    return [...range.getClientRects()].filter((r) => r.width > 0 || r.height > 0).pop() || null;
   }
   function textNodes(block) {
     const out = [];
@@ -70,6 +74,7 @@
     for (const node of textNodes(block)) {
       const text = node.data;
       for (let i = 0; i < text.length; i++) {
+        if (text[i] === SHY) continue;                          // a break point, not a letter of the word
         if (SPACE.test(text[i])) {
           word = null;
           if (!space) { space = { kind: 'space', parts: [] }; tokens.push(space); }
@@ -380,7 +385,7 @@
       const so = texts.get(block) || '';
       if (node.parentElement.closest(NOT_TEXT)) {       // code stands in as one sign: the spaces round it stay single
         if (!so.endsWith('\u00a7')) texts.set(block, so + '\u00a7');
-      } else texts.set(block, so + node.data);
+      } else texts.set(block, so + plain(node.data));
     }
     for (const [box, text] of texts) {
       const around = snippet(box.textContent, 60);

@@ -1,4 +1,4 @@
-# 0001. The PDF is printed by Google Chrome
+# 0001. The PDF is printed by Chromium
 
 Status: accepted
 
@@ -10,8 +10,10 @@ artist would do it, and the source must stay plain Markdown that readers can edi
 
 ## Decision
 
-Chapters are compiled to HTML and CSS, and a headless Google Chrome (or Playwright's Chromium as a fallback), driven by Playwright, lays the pages out and
-prints the PDF. Pagination runs in the browser (`tools/bookkit/theme/paginate.js`), because only the browser knows
+Chapters are compiled to HTML and CSS, and a headless Chromium, driven by Playwright, lays the pages out and prints the
+PDF. It is Playwright's own Chromium, the build pinned by the playwright version in `tools/uv.lock`, run in the image of
+`tools/Dockerfile` in CI and for the reference build on any machine: the system's Google Chrome and a system's
+hyphenation dictionaries laid the same book out on fewer or more pages on another machine. Pagination runs in the browser (`tools/bookkit/theme/paginate.js`), because only the browser knows
 how tall every line, note and picture really is.
 
 ## Considered
@@ -23,6 +25,7 @@ how tall every line, note and picture really is.
 
 ## Consequences
 
-- The build needs Google Chrome. CI installs it when the runner lacks it.
+- The build needs Playwright's Chromium (`uv run playwright install chromium`), or Docker for the reference build.
+- Hyphenation is done in Python (`tools/bookkit/hyphenate.py`), not by the browser.
 - Layout rules are code and are tested (`tools/tests/test_pagination.py`), and `book audit` measures every built page.
 - Chrome prints some effects as rasters; ADR 0002 limits the drawings to what it prints as vectors.

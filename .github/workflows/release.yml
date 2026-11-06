@@ -1,7 +1,8 @@
-# Releases the book on every push to main: builds agentic-sdlc.pdf and publishes it as a GitHub release tagged with
-# the version from book/book.yml. The link https://github.com/<owner>/agentic-sdlc/releases/latest/download/agentic-sdlc.pdf
-# (the QR code and the button on the book's «Свежая версия» page) always leads to the newest one. A version that already has
-# a release is not released again: every change of the book raises the version (check.yml fails without it).
+# Releases the book on every push to main: runs tools/ci.sh inside the image of tools/Dockerfile (tools/container.sh,
+# exactly as check.yml) and publishes the PDF it built as a GitHub release tagged with the version from book/book.yml.
+# The link https://github.com/<owner>/agentic-sdlc/releases/latest/download/agentic-sdlc.pdf (the QR code and the
+# button on the book's «Свежая версия» page) always leads to the newest one. A version that already has a release is
+# not released again: every change of the book raises the version (check.yml fails without it).
 name: release
 
 on:
@@ -19,39 +20,37 @@ concurrency:
 jobs:
   release:
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
-    defaults:
-      run:
-        working-directory: tools
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v7.0.1
-      - uses: actions/setup-python@v7.0.0
-        with:
-          python-version: "3.12"
-      - uses: astral-sh/setup-uv@v10.3.0
-        with:
-          version: "0.11.18"
-          enable-cache: true
-          cache-dependency-glob: tools/uv.lock
-      - name: Google Chrome
-        run: google-chrome --version || uv run --frozen playwright install --with-deps chrome
-      - name: Dependencies
-        run: uv sync --frozen
       - name: Version
         id: version
-        run: echo "tag=v$(uv run --frozen python -c 'import yaml; print(yaml.safe_load(open("../book/book.yml"))["version"])')" >> "$GITHUB_OUTPUT"
+        run: echo "tag=v$(sed -n 's/^version: *"\{0,1\}\([^"]*\)"\{0,1\} *$/\1/p' book/book.yml)" >> "$GITHUB_OUTPUT"
       - name: Already released?
         id: exists
         env:
           GH_TOKEN: ${{ github.token }}
         run: if gh release view "${{ steps.version.outputs.tag }}" >/dev/null 2>&1; then echo "yes=1" >> "$GITHUB_OUTPUT"; fi
-      - name: Build
+      - uses: docker/setup-buildx-action@v3
         if: steps.exists.outputs.yes != '1'
-        run: uv run book build --strict
+      - name: Build image
+        if: steps.exists.outputs.yes != '1'
+        uses: docker/build-push-action@v6
+        with:
+          context: tools
+          tags: bookkit-build
+          load: true
+          cache-from: type=gha,scope=bookkit-build
+          cache-to: type=gha,mode=max,scope=bookkit-build
+      - name: Build and check
+        if: steps.exists.outputs.yes != '1'
+        env:
+          BOOKKIT_IMAGE: bookkit-build
+        run: tools/container.sh
       - name: Release
         if: steps.exists.outputs.yes != '1'
         env:
           GH_TOKEN: ${{ github.token }}
         run: >
-          gh release create "${{ steps.version.outputs.tag }}" ../dist/agentic-sdlc.pdf --target "${{ github.sha }}"
+          gh release create "${{ steps.version.outputs.tag }}" dist/ci/agentic-sdlc.pdf --target "${{ github.sha }}"
           --title "${{ steps.version.outputs.tag }}" --notes "How to build an Agentic SDLC in your repository (in Russian), version ${{ steps.version.outputs.tag }}."

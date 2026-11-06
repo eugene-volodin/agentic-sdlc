@@ -72,19 +72,28 @@
 ## Как собирается книга
 
 Главы написаны в Markdown с несколькими своими блоками: сноски героев, промпты в нарисованных мониторах, таблицы,
-шаги. Инструмент на Python превращает их в HTML, Google Chrome раскладывает каждую страницу и печатает векторный
+шаги. Инструмент на Python превращает их в HTML, Chromium раскладывает каждую страницу и печатает векторный
 PDF, а все рисунки — герои, сцены, миры глав — генерируются кодом.
+
+Эталонная сборка — в контейнере, той же командой и в том же образе, что и CI (нужен Docker):
+
+```bash
+tools/container.sh            # тесты, линтер и book audit, как в CI -> dist/ci/agentic-sdlc.pdf и dist/ci/report.md
+```
+
+Быстрая сборка без контейнера, чтобы смотреть правки по ходу работы; строки в ней могут переноситься чуть иначе, чем в
+контейнере, поэтому эталон — контейнер:
 
 ```bash
 cd tools
 uv sync
+uv run playwright install chromium                  # один раз
 uv run book build --strict                          # ../book -> ../dist/agentic-sdlc.pdf
-uv run book audit --baseline audit-baseline.json    # собрать книгу и проверить каждую страницу, как в CI
 uv run book build --demo                            # витрина всех блоков
 uv run pytest                                       # тесты
 ```
 
-Нужны [uv](https://docs.astral.sh/uv/) и Google Chrome. Подробнее — в [`docs/build.md`](docs/build.md) и
+Нужны [uv](https://docs.astral.sh/uv/), для эталонной сборки — Docker. Подробнее — в [`docs/build.md`](docs/build.md) и
 [`docs/design-system.md`](docs/design-system.md) (на английском).
 
 ## Как помочь

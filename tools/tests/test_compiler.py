@@ -7,6 +7,7 @@ import pytest
 from bookkit.art.characters import MODULES, MOODS, figure
 from bookkit.art.scenes import SCENE_KINDS, STORIES, scene
 from bookkit.cli import parse_pages
+from bookkit.hyphenate import strip
 from bookkit.compiler import build_html
 from bookkit.markup import BuildError
 
@@ -100,7 +101,7 @@ def test_short_words_are_glued_but_code_is_untouched(tmp_path):
     config = "title: Test\nstrings:\n  typography:\n    short_words: [a, in, to]\n"
     text = "# A\n\nHe went in a hurry to town and typed `go to town`.\n"
     build = build_html(write_book(tmp_path, {"01-a.md": text}, config))
-    assert "in\u00a0a\u00a0hurry to\u00a0town" in build.html
+    assert "in\u00a0a\u00a0hurry to\u00a0town" in strip(build.html)     # without its soft hyphens
     assert '<code class="words">go to town</code>' in build.html
 
 

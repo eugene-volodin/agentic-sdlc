@@ -23,9 +23,9 @@
                           vector-effect: non-scaling-stroke; }
 .bubble .tail-fill path { fill: var(--white); }
 .bubble p + p { margin-top: 1.6mm; }
-/* Bubbles are speech and stay ragged-right: justified, a bubble's short lines opened holes between the words.
-   Running text is justified (typography.css). */
-.bubble p { hyphens: auto; text-align: left; }
+/* Bubbles are speech and stay ragged-right, without hyphenation: justified, a bubble's short lines opened holes
+   between the words. Running text is justified (typography.css). */
+.bubble p { text-align: left; }
 /* The tail's two layers share this box. --ax is the x of the point of the drawing that sits on the
    bubble's edge. Whatever holds a bubble is its own stacking context, so the ink layers (z-index
    below zero) stay above the page. */

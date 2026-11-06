@@ -384,6 +384,9 @@ def markdown(result: dict) -> str:
              f"{result['pages']} pages, {result['seconds']:.0f} s. "
              f"**{counts['error']} error(s), {counts['warning']} new warning(s)**, "
              f"{sum(1 for f in found if f.get('baselined'))} accepted by the baseline, {counts['info']} note(s).", ""]
+    if result.get("layout"):
+        lines += [f"Layout fingerprint `{result['layout']['fingerprint']}`, laid out in {result.get('browser')}: "
+                  f"the same text and line breaks give the same fingerprint on every machine.", ""]
     if result.get("sheets"):
         lines += ["Contact sheets of the flagged pages: " +
                   ", ".join(f"`{Path(s['path']).name}` (pages {', '.join(map(str, s['pages']))})"
@@ -431,6 +434,9 @@ def summary(result: dict) -> str:
     head = (f"audit: {result['pages']} pages in {result['seconds']:.0f} s - "
             f"{sum(f['severity'] == 'error' for f in new)} error(s), {sum(f['severity'] == 'warning' for f in new)} "
             f"new warning(s), {accepted} accepted")
+    layout = result.get("layout") or {}
+    if layout:
+        out.append(f"  layout: {layout['fingerprint']} in {result.get('browser')}")
     return "\n".join([head, *out])
 
 
@@ -445,7 +451,7 @@ def run(content: Path, *, only: str | None = None, baseline: Path | None = None,
         vocabulary_of=None) -> dict:
     """Build and audit the book in `content`.
 
-    Returns `{"pages", "seconds", "findings", "sheets", "stale", "timing"}`."""
+    Returns `{"pages", "seconds", "findings", "sheets", "stale", "timing", "browser", "layout"}`."""
     from .cli import vocabulary
     from .compiler import build_html
     from .render import render_isolated
@@ -471,4 +477,5 @@ def run(content: Path, *, only: str | None = None, baseline: Path | None = None,
             found.append(finding("build", "error", warning, where=warning))
     stale = apply_baseline(found, entries)
     return {"pages": report["pages"], "seconds": round(time.time() - started, 1), "findings": found,
-            "sheets": audit["sheets"], "stale": stale, "timing": audit["timing"]}
+            "sheets": audit["sheets"], "stale": stale, "timing": audit["timing"],
+            "browser": report.get("browser", ""), "layout": report.get("layout", {})}

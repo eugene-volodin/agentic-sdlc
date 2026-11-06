@@ -25,17 +25,35 @@ What the pages look like - the grid, the tokens, the blocks, the layout and draw
 
 ## Quick start
 
-You need [uv](https://docs.astral.sh/uv/) and Google Chrome. All commands run from `tools/` (from elsewhere:
-`uv run --project tools book ...`).
+There are two ways to build, and the first is the reference.
+
+**The reference build, in the container.** Needs Docker. `tools/container.sh` builds the image of `tools/Dockerfile`
+(Playwright's image for the playwright version in `uv.lock`: Ubuntu, Python, that version's Chromium; amd64 and arm64)
+and runs `tools/ci.sh` inside it with the repository mounted: the tests, the linter and `book audit`, exactly what CI
+runs. It writes the PDF, the report, the findings and the contact sheets to `dist/ci/`. The same image and command on
+any machine give the same pages: compare the page count and the layout fingerprint the audit prints with those of CI.
+The build takes up to about 3 GB of memory inside the container; give Docker at least 4 GB.
+
+```bash
+tools/container.sh                                        # what CI runs -> dist/ci/agentic-sdlc.pdf, dist/ci/report.md
+BASE=origin/main tools/container.sh                       # the same, with the version check of a pull request
+tools/container.sh uv run --frozen book build --strict    # any other command, inside the container, from tools/
+```
+
+**The quick native build**, for iteration. Needs [uv](https://docs.astral.sh/uv/) and Playwright's Chromium (once:
+`uv run playwright install chromium`). It uses the same browser version, but the system draws the fonts, so a line may
+break elsewhere than in the container; the container is the reference. All commands run from `tools/` (from
+elsewhere: `uv run --project tools book ...`).
 
 ```bash
 cd tools
 uv sync                                            # once
+uv run playwright install chromium                 # once, and after playwright moves in uv.lock
 uv run book build --strict                         # ../book -> ../dist/agentic-sdlc.pdf
 uv run book build --only why --shots all --no-pdf  # one chapter, a PNG of every page
-uv run book audit --baseline audit-baseline.json   # build once and check every page, as CI does
+uv run book audit --baseline audit-baseline.json   # build once and check every page
 uv run pytest -q                                   # tests
-uvx ruff check bookkit tests                       # linter
+uv run ruff check bookkit tests                    # linter
 ```
 
 ---
@@ -54,12 +72,12 @@ compiler.py          every top-level block -> one grid row (text column 116 mm +
 pages.py             cover, contents, map, openers, farewell; one HTML document:
    │                 design tokens as CSS custom properties, then the sheets of theme/css/
    ▼
-render.py ── Chrome (Playwright, a child process)
+render.py ── Chromium (Playwright, a child process)
    │  theme/paginate.js   distributes rows over pages, places notes, splits blocks, sizes footers
    │  art/footers.py      Python draws a scene for every footer height the paginator reports
    │  --shots             PNG proofs of pages
    ▼
-PDF (printed by Chrome, written atomically) + PNG proofs
+PDF (printed by Chromium, soft hyphens out of its text, written atomically) + PNG proofs
 ```
 
 1. **Read.** `config.py` loads `book/book.yml` and merges it over the built-in locale. The chapters are the Markdown
@@ -70,17 +88,27 @@ PDF (printed by Chrome, written atomically) + PNG proofs
 3. **Assemble.** `pages.py` builds one HTML document: the tokens of `design.py` become CSS custom properties
    (`css_variables()`), followed by the style sheets of `theme/css/`, the cover, the contents, the map, the chapter
    openers and every row.
-4. **Paginate.** `render.py` opens the document in Google Chrome through Playwright. In the browser `paginate.js`
+4. **Paginate.** `render.py` opens the document in Playwright's Chromium. In the browser `paginate.js`
    distributes the rows over pages, keeps margin notes from colliding, splits paragraphs, lists and long blocks,
    places accents, and reports for each page the height left for its footer, its chapter, its headings and text.
 5. **Illustrate.** Python draws a footer scene for each page (`art/footers.py`, `art/worlds.py`) and hands the SVG
    back to the page.
-6. **Print.** Chrome prints the PDF; `render.py` scans it for rasters and foreign fonts (see
+6. **Print.** Chromium prints the PDF; `pdftext.py` takes the soft hyphens out of its text layer, and `render.py`
+   scans it for rasters and foreign fonts (see
    [design-system.md](design-system.md#printing-the-same-pdf-in-every-viewer)). With `--shots` it saves PNG proofs.
 
 Why Chrome: [ADR 0001](adr/0001-pdf-through-chrome.md). Why everything must be a vector:
-[ADR 0002](adr/0002-vectors-only.md). If no Chrome is installed the build falls back to Playwright's own Chromium
-(`uv run playwright install chromium`).
+[ADR 0002](adr/0002-vectors-only.md). The browser is always Playwright's own Chromium, the build pinned by the
+playwright version in `uv.lock`, never the system's Google Chrome; without it the build stops and names the command
+that installs it.
+
+**Hyphenation** is done at build time, not by the browser: `hyphenate.py` puts soft hyphens (U+00AD) into the words of
+paragraphs and list items from the pyphen dictionaries (`ru_RU`, `en_US`), and the style sheets say `hyphens: manual`.
+A browser's own hyphenation uses the dictionaries of the system, which differ between machines, and so would the
+pages. Code, links, headings, bubbles, margin notes and pictures get no soft hyphens, nor do short words (under
+`HYPHEN_MIN_WORD` letters), names, acronyms, paths and the last word of a block. Whatever is reported, searched or
+compared (the audit, the paginator's warnings, the text the footers are picked by) goes without them, and so does the
+PDF's text layer: copying or searching a word finds it whole.
 
 ---
 
@@ -96,6 +124,9 @@ docs/
 tools/
   pyproject.toml        package `bookkit`, script `book`
   audit-baseline.json   the audit's accepted warnings, each with its reason
+  Dockerfile            the reference environment: Playwright's image, uv, the locked dependencies
+  ci.sh                 what CI runs: tests, linter, `book audit` -> ../dist/ci/
+  container.sh          runs ci.sh (or any command) inside the image, with the repository mounted
   demo/                 00-vitrina.md: a chapter showing every block, with its own book.yml (never published)
   tests/                pytest; fixtures/ holds the Russian samples
   bookkit/
@@ -103,6 +134,7 @@ tools/
     config.py           book.yml + locale
     markup.py           syntax: "::: block", options, front matter, fences, BuildError
     markdown.py         Markdown + typography (quotes, no-break spaces, [[keys]], ==marker==, images)
+    hyphenate.py        soft hyphens in paragraphs and list items, from the pyphen dictionaries
     compiler.py         chapters -> grid rows; front-matter validation; errors with file and line
     components/         THE COMPONENT LIBRARY
       base.py           registry, @block/@fence, option types, validation, reference (read first)
@@ -119,7 +151,8 @@ tools/
     title.py            an opener's title drawn from the real outlines of the heading face
     reading.py          a chapter's reading time
     fonts.py            variable fonts cut into static weights for the browser
-    render.py           browser: pagination -> footer scenes -> PDF / PNG; the isolated child process
+    render.py           browser: pagination -> footer scenes -> PDF / PNG; the isolated child process; layout fingerprint
+    pdftext.py          the PDF's text layer without soft hyphens
     audit.py            build once and measure every page (`book audit`)
     proofs.py           proof sheets: characters, doodles, palette
     cli.py              build / watch / storyboard / sheet / prompts / components / audit; where book/, demo/,
@@ -386,8 +419,17 @@ Russian test samples live in `tools/tests/fixtures/`; no Cyrillic in `*.py`, `*.
 
 | Workflow | When | What it does |
 |---|---|---|
-| [`check.yml`](../.github/workflows/check.yml) | every pull request and every push to `main` | `uv run pytest -q`, `ruff check bookkit tests`, then `book audit --base origin/main --baseline audit-baseline.json`. The report goes to the job summary; the report, the findings, the contact sheets of the flagged pages and the PDF are uploaded as the `agentic-sdlc-audit` artifact |
-| [`release.yml`](../.github/workflows/release.yml) | every push to `main` that touches `book/` or `tools/` | reads `version:` from `book/book.yml`; unless a release `v<version>` already exists, builds the book with `--strict` and publishes the GitHub release `v<version>` with `agentic-sdlc.pdf` |
+| [`check.yml`](../.github/workflows/check.yml) | every pull request and every push to `main` | builds the image of `tools/Dockerfile` (cached in the GitHub Actions cache) and runs `BASE=origin/main tools/container.sh`: `tools/ci.sh` inside it - `pytest -q`, `ruff check bookkit tests`, then `book audit --base origin/main --baseline audit-baseline.json`. The report goes to the job summary; the report, the findings, the contact sheets of the flagged pages and the PDF are uploaded as the `agentic-sdlc-audit` artifact |
+| [`release.yml`](../.github/workflows/release.yml) | every push to `main` that touches `book/` or `tools/` | reads `version:` from `book/book.yml`; unless a release `v<version>` already exists, runs `tools/container.sh` as `check.yml` does and publishes the GitHub release `v<version>` with the `agentic-sdlc.pdf` it built |
+
+**One environment.** CI and an author's machine run the same command (`tools/ci.sh`) in the same image
+(`tools/Dockerfile`), so they get the same PDF: the same page count and the same **layout fingerprint**, a hash of
+every page's text and the number of lines of each of its blocks, printed by `book build` and `book audit` and written to
+the audit's report. When CI and a local container build disagree, the fingerprints differ; when they agree, a build
+seen locally is the build CI releases. The page count of the handbook is also guarded by
+`test_footers_grown_to_fill_never_add_a_page_to_the_handbook`, measured in the container; its message names the
+browser and the number of soft hyphens. When `uv.lock` moves to another playwright, the tag in `tools/Dockerfile`
+follows it.
 
 **Versions.** `version:` in `book/book.yml` is `MAJOR.MINOR-MM.YYYY`, the month and year of the release. It is printed
 on the cover and on the «Свежая версия» page. Every change under `book/` raises it (MINOR + 1, the current month and

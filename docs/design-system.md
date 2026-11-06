@@ -346,8 +346,10 @@ The sticker is raised and its box is no taller than a line, so the gap between t
 other; it never runs into the line below. A word of one or two letters takes the next word along; punctuation right
 after it goes inside it.
 
-**Justified text.** Running text and list items are justified with hyphenation (`hyphens: auto`, Chrome's dictionary
-by the page's `lang`; `hyphenate-limit-chars: 5 2 2`). No `text-wrap: pretty`: in justified text it widens the gaps of
+**Justified text.** Running text and list items are justified with hyphenation: soft hyphens put in at build time
+from the pyphen dictionaries (`hyphenate.py`, `hyphens: manual`; no word under 5 letters, at least 2 letters on each
+side of a break, the last word of a block whole), so every machine breaks the same words. Bubbles are not hyphenated.
+No `text-wrap: pretty`: in justified text it widens the gaps of
 the lines it evens. The space between words is `WORD_SPACE` narrower than the font's own; after layout, a line whose
 mean gap is still over `TRACK_TARGET` has the letters of its plain words spaced out by at most `TRACK_MAX`
 (`paginate.js`, "even word gaps"), and the block is put back if any line would break elsewhere.

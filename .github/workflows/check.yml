@@ -1,6 +1,8 @@
-# Checks every pull request and every push to main: the tests, the linter, then one build that audits every page
-# (`book audit`, tools/bookkit/audit.py). It fails on any error and on any warning tools/audit-baseline.json does not
-# accept; the report, the contact sheets of the flagged pages and the PDF are uploaded as artifacts.
+# Checks every pull request and every push to main with tools/ci.sh - the tests, the linter, then one build that audits
+# every page (`book audit`, tools/bookkit/audit.py) - run by tools/container.sh inside the image of tools/Dockerfile, the
+# same command and the same image as on an author's machine. It fails on any error and on any warning
+# tools/audit-baseline.json does not accept; the report, the contact sheets of the flagged pages and the PDF are
+# uploaded as artifacts.
 name: check
 
 on:
@@ -14,45 +16,35 @@ permissions:
 jobs:
   audit:
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
-    defaults:
-      run:
-        working-directory: tools
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v7.0.1
         with:
           fetch-depth: 0              # the audit compares book/ with origin/main
-      - uses: actions/setup-python@v7.0.0
+      - uses: docker/setup-buildx-action@v3
+      - name: Build image
+        uses: docker/build-push-action@v6
         with:
-          python-version: "3.12"
-      - uses: astral-sh/setup-uv@v10.3.0
-        with:
-          version: "0.11.18"
-          enable-cache: true
-          cache-dependency-glob: tools/uv.lock
-      - name: Google Chrome
-        # The runner image ships Google Chrome stable; install it only where it is missing.
-        run: google-chrome --version || uv run --frozen playwright install --with-deps chrome
-      - name: Dependencies
-        run: uv sync --frozen
-      - name: Tests
-        run: uv run pytest -q
-      - name: Linter
-        run: uvx ruff@0.17.4 check bookkit tests
-      - name: Audit
-        run: >
-          uv run book audit --base origin/main --baseline audit-baseline.json
-          --md ../report.md --json ../audit.json --sheets ../sheets --pdf ../dist/agentic-sdlc.pdf
+          context: tools
+          tags: bookkit-build
+          load: true
+          cache-from: type=gha,scope=bookkit-build
+          cache-to: type=gha,mode=max,scope=bookkit-build
+      - name: Checks
+        env:
+          BOOKKIT_IMAGE: bookkit-build
+          BASE: origin/main
+        run: tools/container.sh
       - name: Job summary
         if: always()
-        run: if [ -f ../report.md ]; then cat ../report.md >> "$GITHUB_STEP_SUMMARY"; fi
+        run: if [ -f dist/ci/report.md ]; then cat dist/ci/report.md >> "$GITHUB_STEP_SUMMARY"; fi
       - uses: actions/upload-artifact@v7.0.2
         if: always()
         with:
           name: agentic-sdlc-audit
           path: |
-            report.md
-            audit.json
-            sheets/
-            dist/agentic-sdlc.pdf
+            dist/ci/report.md
+            dist/ci/audit.json
+            dist/ci/sheets/
+            dist/ci/agentic-sdlc.pdf
           if-no-files-found: ignore

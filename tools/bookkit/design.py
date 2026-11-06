@@ -258,6 +258,14 @@ SIGN_WORD = 0.16         # extra word spacing, in em: the rim must not close the
 SIGN_BALLOON_FROM = 11   # smaller lettering is set flat: a rim would clog it
 ILLUSTRATION_FONT = "Balsamiq Sans"    # speech in pictures, like the book's bubbles
 ILLUSTRATION_WEIGHT = 700
+# Hyphenation of running text (hyphenate.py): soft hyphens inserted at build time from the pyphen dictionaries, so
+# every browser breaks the same words at the same places. No word shorter than HYPHEN_MIN_WORD letters, at least
+# HYPHEN_LEFT letters before a break and HYPHEN_RIGHT after it.
+HYPHEN_MIN_WORD = 5
+HYPHEN_LEFT = 2
+HYPHEN_RIGHT = 2
+# The dictionary for each script: Cyrillic words by the Russian one, Latin words by the American English one.
+HYPHEN_DICTIONARIES = {"cyrillic": "ru_RU", "latin": "en_US"}
 
 # ============================================================================ page geometry (millimetres)
 PAGE_WIDTH = 210

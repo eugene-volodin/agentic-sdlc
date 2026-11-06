@@ -1,0 +1,4 @@
+# The image needs only the locked dependencies; the repository is mounted when it runs.
+*
+!pyproject.toml
+!uv.lock

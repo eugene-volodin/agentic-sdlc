@@ -148,6 +148,8 @@ def build(args) -> int:
         print(f"  warning: {warning}")
     where = "" if args.no_pdf else f" -> {out}"
     print(f"ok: {report['pages']} pages{where} ({time.time() - started:.1f} s)")
+    if report.get("layout"):
+        print(f"  layout {report['layout']['fingerprint']} in {report.get('browser')}")
     for shot in report["shots"]:
         print(f"  {shot}")
     return 1 if report["warnings"] and args.strict else 0

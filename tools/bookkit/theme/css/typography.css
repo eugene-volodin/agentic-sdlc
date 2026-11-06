@@ -3,10 +3,11 @@
 
 /* ---- typography ---- */
 p { margin: 0; }
-/* Hyphenation on: Chrome hyphenates Russian by the page's lang; no word under 5 letters, at least 2 letters on
-   each side of a hyphen. No `text-wrap: pretty`: in justified text it widens the word gaps of the lines it evens;
-   a short last word is kept from standing alone by a no-break space instead (markdown.py). */
-p, li { hyphens: auto; hyphenate-limit-chars: 5 2 2; }
+/* Hyphenation at the soft hyphens hyphenate.py puts into paragraphs and list items, never by the browser's own
+   dictionaries: those differ between systems, and so would the pages. No `text-wrap: pretty`: in justified text it
+   widens the word gaps of the lines it evens; a short last word is kept from standing alone by a no-break space
+   instead (markdown.py). */
+p, li { hyphens: manual; }
 /* Running text is justified; hyphenation, a slightly narrower space and a touch of letter spacing on a loose line
    (paginate.js) keep the gaps even. */
 .main > p, .main li { text-align: justify; word-spacing: var(--word-space); }

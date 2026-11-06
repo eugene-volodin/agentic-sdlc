@@ -28,7 +28,12 @@
   /* Every warning is also kept structured, for `book audit` (audit.py): what was checked, on which page, a short
    * snippet that says where, and the box on the page to mark on its contact sheet. */
   const findings = [];
+  // The soft hyphens of running text (hyphenate.py) are break points, not text: whatever is reported or compared
+  // goes without them.
+  const SHY = /\u00ad/g;
+  const plain = (text) => String(text || '').replace(SHY, '');
   function warn(check, record, where, text, box = null) {
+    text = plain(text);
     warnings.push(text);
     const el = record && record.el;
     let rect = null;
@@ -39,7 +44,7 @@
     }
     findings.push({ check, severity: 'error', page: record ? record.number : 0,
                     chapter: record ? String(record.chapter || '') : '',
-                    where: String(where || '').replace(/\s+/g, ' ').trim().slice(0, 60), detail: text, rect });
+                    where: plain(where).replace(/\s+/g, ' ').trim().slice(0, 60), detail: text, rect });
   }
   await Promise.all([...document.fonts].map((face) => face.load().catch(() => null)));
   await document.fonts.ready;
@@ -510,7 +515,9 @@
         if (!point || /\s/.test(point[0].textContent[point[1]] || ' ')) break;
         range.setStart(...point);
         range.setEnd(point[0], point[1] + 1);
-        const rect = range.getClientRects()[0];
+        // The letter's own box is its last: the letter after a soft hyphen that broke the line also gets the box of
+        // that hyphen, at the end of the line above.
+        const rect = [...range.getClientRects()].filter((r) => r.width > 0).pop();
         if (rect && of(rect.top) >= k) { tries.push({ at: i, hyphen: true }); break; }
       }
       // Without the hyphen: before the next line's first word, or before the hyphenated word.
@@ -524,8 +531,13 @@
         range.setStart(...point);
         range.setEnd(p, p.childNodes.length);
         const tail = range.extractContents();
-        // A word broken at its own hyphen (state-manager) keeps that one; only a syllable break gets one added.
-        if (hyphen && !/[-‐‑]$/.test(p.textContent)) p.append('-');
+        // A word broken at its own hyphen (state-manager) keeps that one; only a syllable break gets one added, in
+        // place of the soft hyphen it broke at.
+        if (hyphen && !/[-‐‑]$/.test(p.textContent)) {
+          const end = pointAt(p, p.textContent.length);
+          if (end && end[1] > 0 && end[0].data[end[1] - 1] === '\u00ad') end[0].deleteData(end[1] - 1, 1);
+          p.append('-');
+        }
         p.classList.add('cut');                          // its last line is justified: the sentence runs on
         if (lineCount(p) === k && fullLastLine(p) && fits() && sectionFits() && !hangs() && tailLines(tail) >= MIN_LINES) {
           return tail;
@@ -1116,8 +1128,9 @@
   function charTop(node, i) {
     charRange.setStart(node, i);
     charRange.setEnd(node, i + 1);
-    for (const r of charRange.getClientRects()) if (r.width > 0 || r.height > 0) return r.top;
-    return null;
+    // The last box: the letter after a soft hyphen that broke the line also gets that hyphen's box on the line above.
+    const box = [...charRange.getClientRects()].filter((r) => r.width > 0 || r.height > 0).pop();
+    return box ? box.top : null;
   }
   function textsOf(block, plain) {
     const out = [];
@@ -1174,6 +1187,7 @@
       line.runs.push(run);
       const text = run.node.data.slice(run.start, run.end);
       for (let k = 0; k < text.length; k++) {
+        if (text[k] === '\u00ad') continue;            // a soft hyphen is no letter: it takes no spacing
         if (!GAPS.test(text[k])) { line.letters++; continue; }
         charRange.setStart(run.node, run.start + k);
         charRange.setEnd(run.node, run.start + k + 1);
@@ -1334,8 +1348,8 @@
   // Footer scenes are drawn by Python: publish the requests, receive the SVG.
   const withFoot = pages.filter((p) => p.foot);
   // Each footer is drawn for its page: Python reads the page's headings and text to pick an episode about them.
-  const textOf = (p) => (p.el.querySelector('.p-body') || p.el).innerText.replace(/\s+/g, ' ').slice(0, 6000);
-  const headsOf = (p) => [...p.el.querySelectorAll('.p-body h1, .p-body h2, .p-body h3')].map((h) => h.innerText).join(' | ');
+  const textOf = (p) => plain((p.el.querySelector('.p-body') || p.el).innerText).replace(/\s+/g, ' ').slice(0, 6000);
+  const headsOf = (p) => [...p.el.querySelectorAll('.p-body h1, .p-body h2, .p-body h3')].map((h) => plain(h.innerText)).join(' | ');
   window.__bookScenes = withFoot.map((p) => ({ page: p.number, clear: p.foot.clear, mm: p.foot.height, size: p.foot.size,
                                                chapter: p.chapter, world: p.world, text: textOf(p), heads: headsOf(p),
                                                accent: getComputedStyle(p.el).getPropertyValue('--accent').trim() }));

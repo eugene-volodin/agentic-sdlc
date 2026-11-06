@@ -26,6 +26,7 @@ from .components.graphics import MARK_STAR, TAIL
 from .config import THEME, BookConfig
 from .markup import BuildError
 from .fonts import font_faces
+from .hyphenate import hyphenate
 from .title import draw as draw_title
 
 # What may stand beside a paragraph to lighten a page of solid text, in the order used:
@@ -292,7 +293,7 @@ def document(compiler: Compiler, chapters: list[Chapter], front_matter: bool = T
 <meta name="author" content="{escape(config.author)}">
 <style>{stylesheet()}</style>
 </head><body>
-<div id="source">{front}{sections}</div>
+<div id="source">{hyphenate(front + sections)}</div>
 <div id="stock">{stock()}</div>
 <div id="book"></div>
 <script>window.__bookConfig = {settings};</script>

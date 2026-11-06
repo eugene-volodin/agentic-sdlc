@@ -1,0 +1,8 @@
+# Russian samples for tests/test_hyphenation.py (no Cyrillic in *.py). A "|" marks a soft hyphen.
+word: автоматизация
+word_hyphenated: ав|то|ма|ти|за|ция
+short: агент
+paragraph: <p>Агент читает репозиторий и проверяет свою работу.</p>
+paragraph_hyphenated: <p>Агент чи|та|ет ре|по|зи|то|рий и про|ве|ря|ет свою работу.</p>
+split_word: <p>Мы <strong>авто</strong>матизируем сборку проекта.</p>
+split_word_hyphenated: <p>Мы <strong>авто</strong>матизируем сбор|ку проекта.</p>
