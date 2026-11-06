@@ -23,8 +23,8 @@
 
 <p align="center">
   <a href="https://github.com/pulyavin/agentic-sdlc/actions/workflows/check.yml"><img src="https://github.com/pulyavin/agentic-sdlc/actions/workflows/check.yml/badge.svg" alt="check"></a>
-  <a href="https://github.com/pulyavin/agentic-sdlc/releases/latest"><img src="https://img.shields.io/github/v/release/pulyavin/agentic-sdlc?label=версия" alt="версия"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/текст-CC%20BY--NC%204.0-blue" alt="CC BY-NC 4.0"></a>
+  <a href="https://github.com/pulyavin/agentic-sdlc/releases/latest"><img src="https://img.shields.io/github/v/release/pulyavin/agentic-sdlc?label=%D0%B2%D0%B5%D1%80%D1%81%D0%B8%D1%8F" alt="версия"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/%D1%82%D0%B5%D0%BA%D1%81%D1%82-CC%20BY--NC%204.0-blue" alt="CC BY-NC 4.0"></a>
 </p>
 
 ---
