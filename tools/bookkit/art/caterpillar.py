@@ -9,7 +9,7 @@ from __future__ import annotations
 from .. import design as P
 from .handheld import notebook, pencil
 from .ink import Canvas, ellipse_d
-from .rig import HandFrame, arm, hand_frame, hold
+from .rig import HandFrame, arm, hold, pose_hands
 
 SIZE = (230, 270)
 VIEW_BOX = "-34 0 290 270"
@@ -51,6 +51,7 @@ RECAP_POSE = "write"
 NECK = (100, 128)           # the hands turn their thumbs towards it
 ARM_WIDTH = 8
 HAND_SCALE = 0.84
+GLOVE = dict(sleeve=YELLOW, width=ARM_WIDTH, skin=YELLOW, hand_scale=HAND_SCALE, toward=NECK)   # her arms
 
 
 def _spike(c: Canvas, x: float, y: float, turn: float) -> None:
@@ -113,9 +114,7 @@ def _face(c: Canvas, mood: str) -> None:
 def hands(pose: str, grips: tuple[str, ...] = ()) -> dict[str, HandFrame]:
     """Where the hands of a pose are drawn (see `rig.HandFrame`); `grips` names the ones closed round a handle."""
     _, left, right = POSES[pose]
-    return {side: hand_frame(limb[0], limb[1], ARM_WIDTH, HAND_SCALE, limb[3],
-                             "hold" if side in grips else limb[2], NECK)
-            for side, limb in (("left", left), ("right", right))}
+    return pose_hands({"left": left, "right": right}, ARM_WIDTH, HAND_SCALE, NECK, grips)
 
 
 def draw(pose: str = "wave", mood: str = "smile", grips: tuple[str, ...] = ()) -> Canvas:
@@ -139,7 +138,6 @@ def draw(pose: str = "wave", mood: str = "smile", grips: tuple[str, ...] = ()) -
     for fx, fy, hx, hy in feet:
         c.tube(f"M{hx},{hy} L{fx + 4},{fy - 4}", YELLOW, 9)
         c.shape(ellipse_d(fx, fy + 1, 14, 7.5), YELLOW, light=(-2, -2))
-    glove = dict(sleeve=YELLOW, width=ARM_WIDTH, skin=YELLOW, hand_scale=HAND_SCALE, toward=NECK)
 
     def reaches_across(limb: tuple) -> bool:
         """An arm whose hand ends over the belly is drawn in front of the body."""
@@ -148,7 +146,7 @@ def draw(pose: str = "wave", mood: str = "smile", grips: tuple[str, ...] = ()) -
     # Arms that hang or wave at the sides come out from behind the body.
     for shoulder, limb in ((SHOULDER_L, left), (SHOULDER_R, right)):
         if not reaches_across(limb):
-            arm(c, shoulder, limb[0], limb[1], kind=limb[2], hand_turn=limb[3], **glove)
+            arm(c, shoulder, limb[0], limb[1], kind=limb[2], hand_turn=limb[3], **GLOVE)
     # Body, bottom to top: each green back segment peeks out behind its yellow belly segment.
     for cy, rx in ((216, 32), (192, 31), (168, 29), (145, 26)):
         c.shape(ellipse_d(118, cy, rx, 18), GREEN, light=(-2, -3))
@@ -156,9 +154,9 @@ def draw(pose: str = "wave", mood: str = "smile", grips: tuple[str, ...] = ()) -
         c.shape(ellipse_d(101, cy, rx, 17), YELLOW, light=(-4, -4),
                 stipple=(101, cy - 14, rx, 30, 12, "right"))
     if reaches_across(left) or pose == "write":
-        arm(c, SHOULDER_L, left[0], left[1], kind=left[2], hand_turn=left[3], **glove)
+        arm(c, SHOULDER_L, left[0], left[1], kind=left[2], hand_turn=left[3], **GLOVE)
     if reaches_across(right) and pose != "think":
-        arm(c, SHOULDER_R, right[0], right[1], kind=right[2], hand_turn=right[3], **glove)
+        arm(c, SHOULDER_R, right[0], right[1], kind=right[2], hand_turn=right[3], **GLOVE)
     if pose == "write":  # a notebook held up in the left hand by its corner, the pencil in the right on its page
         frames = hands(pose, ("left", "right"))
         k = (FEET_Y - HEAD_TOP) / 100
@@ -166,7 +164,7 @@ def draw(pose: str = "wave", mood: str = "smile", grips: tuple[str, ...] = ()) -
         hold(c, frames["right"], YELLOW, pencil, k, -30)
     _head(c, mood)
     if pose == "think":  # the finger rests on the cheek, so this arm goes over the head
-        arm(c, SHOULDER_R, right[0], right[1], kind=right[2], hand_turn=right[3], **glove)
+        arm(c, SHOULDER_R, right[0], right[1], kind=right[2], hand_turn=right[3], **GLOVE)
     return c
 
 
@@ -174,14 +172,13 @@ def _stride(pose: str, mood: str, grips: tuple[str, ...], left: tuple, right: tu
     """Walking to the right: the tail trailing on the ground behind her (on the left), the far arm behind the body
     swinging forward, the feet stepping, the segments with their green backs behind and the yellow belly ahead, the
     head turned the way she goes, the near arm swinging back."""
-    glove = dict(sleeve=YELLOW, width=ARM_WIDTH, skin=YELLOW, hand_scale=HAND_SCALE, toward=NECK)
     kl = "hold" if "left" in grips else left[2]
     kr = "hold" if "right" in grips else right[2]
     c = Canvas()
     for cx, cy, rx, ry in ((-6, 232, 8, 6), (10, 236, 13, 9), (32, 238, 19, 12), (59, 233, 24, 15)):
         c.shape(ellipse_d(cx, cy, rx, ry), GREEN, light=(-2, -3))
         _spike(c, cx - 1, cy - ry + 1, -8)
-    arm(c, (128, 146), right[0], right[1], kind=kr, hand_turn=right[3], **glove)   # the far arm, behind, forward
+    arm(c, (128, 146), right[0], right[1], kind=kr, hand_turn=right[3], **GLOVE)   # the far arm, behind, forward
     for fx, fy, hx, hy in ((80, 248, 94, 226), (136, 250, 116, 226)):
         c.tube(f"M{hx},{hy} L{fx - 2},{fy - 4}", YELLOW, 9)
         c.shape(ellipse_d(fx + 4, fy + 1, 14, 7.5), YELLOW, light=(-2, -2))
@@ -190,5 +187,5 @@ def _stride(pose: str, mood: str, grips: tuple[str, ...], left: tuple, right: tu
         _spike(c, 92 - rx + 3, cy - 6, -62)
         c.shape(ellipse_d(108, cy, rx, 17), YELLOW, light=(-4, -4), stipple=(108, cy - 14, rx, 30, 12, "right"))
     _head(c, mood, turned=True)
-    arm(c, (84, 150), left[0], left[1], kind=kl, hand_turn=left[3], **glove)          # the near arm, swinging back
+    arm(c, (84, 150), left[0], left[1], kind=kl, hand_turn=left[3], **GLOVE)          # the near arm, swinging back
     return c

@@ -44,11 +44,17 @@ RECAP_POSE = "point"
 
 
 def hand_point(pose: str, side: str = "right") -> tuple[float, float]:
-    """Where a wing ends in a pose, on the canvas: he has wings, not wrists, and holds things at their tips."""
-    angle = math.radians(POSES[pose][2 if side == "right" else 1])
+    """Where a wing ends in a pose, on the canvas: he has wings, not wrists, and holds things at their tips. The
+    body's tilt in the pose turns the wing tips with it, about the same centre as `draw`."""
+    _, left, right, tilt = POSES[pose]
+    angle = math.radians(right if side == "right" else left)
     if side == "right":
-        return 142 + 58 * math.cos(angle), 110 + 58 * math.sin(angle)
-    return 60 - 58 * math.cos(angle), 110 + 58 * math.sin(angle)
+        x, y = 142 + 58 * math.cos(angle), 110 + 58 * math.sin(angle)
+    else:
+        x, y = 60 - 58 * math.cos(angle), 110 + 58 * math.sin(angle)
+    turn = math.radians(tilt)
+    return (100 + (x - 100) * math.cos(turn) - (y - 110) * math.sin(turn),
+            110 + (x - 100) * math.sin(turn) + (y - 110) * math.cos(turn))
 
 
 def _wing(c: Canvas, x: float, y: float, rotation: float, mirror: bool = False) -> None:

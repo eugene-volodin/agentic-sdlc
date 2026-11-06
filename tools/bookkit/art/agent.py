@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from .. import design as P
 from .ink import Canvas, ellipse_d, n, uid
-from .rig import HandFrame, arm, fingers, hand, hand_frame
+from .rig import HandFrame, arm, fingers, hand, pose_hands
 
 SIZE = (220, 280)
 VIEW_BOX = "-40 0 300 280"
@@ -117,7 +117,6 @@ def _face(c: Canvas, mood: str) -> None:
             c.add(f'<path d="M97,92 Q109,106 124,91" {stroke}/>')
 
 
-TURN = "translate(124,0) scale(.84,1) translate(-110,0)"   # turned to the right: shifted, narrower
 
 
 def _head(mood: str, turned: bool = False) -> Canvas:
@@ -166,7 +165,7 @@ def _head_turned(c: Canvas, mood: str) -> None:
             c.add(f'<path d="M113,92 Q123,104 136,90" {stroke}/>')
 
 
-def _head_parts(c: Canvas, mood: str, far_ear: bool = True) -> None:
+def _head_parts(c: Canvas, mood: str) -> None:
     """The antenna, the ears, the shell, the screen and the face."""
     # A bent antenna with a wobbly lamp.
     c.line("M108,36 q-7,-9 1,-14 q8,-5 3,-11", 4.6, METAL)
@@ -174,9 +173,8 @@ def _head_parts(c: Canvas, mood: str, far_ear: bool = True) -> None:
     c.shape("M105,9 Q106,2 113,2 Q120,3 119,10 Q118,16 111,16 Q105,15 105,9 Z", P.YELLOW, light=(-2, -2))
     # Ears: two mismatched bolts.
     c.shape("M60,68 Q50,66 49,78 Q48,92 58,94 L63,92 Z", METAL, light=(-2, -2))
-    if far_ear:
-        c.shape("M160,66 Q171,66 172,76 Q173,89 163,92 L158,90 Z", METAL, light=(-2, -2))
-        c.line("M163,74 h6 M163,82 h6", 1.4)
+    c.shape("M160,66 Q171,66 172,76 Q173,89 163,92 L158,90 Z", METAL, light=(-2, -2))
+    c.line("M163,74 h6 M163,82 h6", 1.4)
     c.line("M52,76 h7 M52,84 h7", 1.4)
     # The shell: a soft hand-drawn box - no two corners alike, but fresh from the factory.
     c.shape("M66,44 Q84,31 112,34 Q146,31 159,44 Q168,60 165,84 Q167,110 154,118 Q130,126 104,123 "
@@ -195,9 +193,7 @@ LIMB = dict(sleeve=METAL, width=9, skin=GLOVE, hand_scale=0.82, toward=NECK)
 def hands(pose: str, grips: tuple[str, ...] = ()) -> dict[str, HandFrame]:
     """Where the hands of a pose are drawn (see `rig.HandFrame`); `grips` names the ones closed round a handle."""
     _, left, right = POSES[pose]
-    return {side: hand_frame(limb[0], limb[1], LIMB["width"], LIMB["hand_scale"], limb[3],
-                             "hold" if side in grips else limb[2], NECK)
-            for side, limb in (("left", left), ("right", right))}
+    return pose_hands({"left": left, "right": right}, LIMB["width"], LIMB["hand_scale"], NECK, grips)
 
 
 def _joint(c: Canvas, x: float, y: float) -> None:

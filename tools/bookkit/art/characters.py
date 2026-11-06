@@ -10,10 +10,12 @@ nothing else in the code base needs to know its name. The module must define:
     HEAD_TOP      y of the crown, used to float a badge over the head
     PEEK_Y        y below which the figure is hidden when it looks over an edge
     SCENE_SCALE   canvas scale relative to the professor's so the cast stands in proportion
-    HAND          color of the fingers when the character holds up a poster
+    HAND          color of the fingers: those that close round a held thing, and those over a poster's edge
     TALK_POSE     the full-figure pose used when the character speaks
     QUOTE_POSES   four poses a quote card cycles through
     RECAP_POSE    the pose in which the character presents a summary
+    POSES         mapping of pose name to whatever the module's rig needs
+    draw(pose, mood, **options) -> Canvas
 
 Optional:
 
@@ -21,8 +23,9 @@ Optional:
     PORTRAIT_OPTIONS  extra `draw` options for cropped views (the cat hides its tail)
     SEAT              "chair" or "desk": where the character sits in the study scene
     BALLOON_GRIP      {pose: (x, y)} where a balloon string ends, for characters that carry one
-    POSES         mapping of pose name to whatever the module's rig needs
-    draw(pose, mood, **options) -> Canvas
+    MOUTH             (x, y) where a speech bubble's tail points (a footer's `Strip.say`)
+    HOLD_Y            y down to which the character is drawn behind a poster it holds (the checklist block)
+    hand_point(pose, side) -> (x, y)   where a character without wrists holds things (the sparrow's wing tips)
     hands(pose, grips=()) -> {"left": HandFrame, "right": HandFrame}, with `draw(..., grips=(sides))` closing
                   those hands into fists: a character that has them can hold things (`draw(..., hold=...)`)
 

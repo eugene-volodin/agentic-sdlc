@@ -5,9 +5,11 @@ the body narrower, the face turned the way he goes, both hind paws pointing ahea
 """
 from __future__ import annotations
 
+import re
+
 from .. import design as P
 from .ink import Canvas, angle_of, ellipse_d, n, polar, uid
-from .rig import HandFrame, arm, fingers, hand, hand_frame
+from .rig import HandFrame, arm, fingers, hand, pose_hands
 
 SIZE = (280, 340)
 VIEW_BOX = "-34 0 348 340"
@@ -200,9 +202,7 @@ PAW = dict(sleeve=FUR, width=ARM_WIDTH, skin=FUR, hand_scale=0.88, toward=NECK)
 def hands(pose: str, grips: tuple[str, ...] = ()) -> dict[str, HandFrame]:
     """Where the paws of a pose are drawn (see `rig.HandFrame`); `grips` names the ones closed round a handle."""
     _, left, right = POSES[pose]
-    return {side: hand_frame(limb[0], limb[1], ARM_WIDTH, PAW["hand_scale"], limb[3],
-                             "hold" if side in grips else limb[2], NECK)
-            for side, limb in (("left", left), ("right", right))}
+    return pose_hands({"left": left, "right": right}, ARM_WIDTH, PAW["hand_scale"], NECK, grips)
 
 
 def _watch(c: Canvas, elbow: tuple[float, float], wrist: tuple[float, float]) -> None:
@@ -291,7 +291,7 @@ def draw(pose: str = "stand", mood: str = "smile", tail: bool = True, grips: tup
     by side read as a mistake."""
     stance, left, right = POSES[pose]
     if stance == "stride":
-        return _stride(pose, mood, tail, grips, left, right)
+        return _stride(pose, mood, tail, grips, palms, left, right)
     front = FRONT.get(pose, ())
     c = Canvas()
     if tail:
@@ -344,7 +344,6 @@ def _tx(x: float) -> float:
 def _turn_d(d: str) -> str:
     """A path of absolute commands turned to three-quarter view: every x through `_tx` (relative steps scaled by
     the mean of the two halves)."""
-    import re
     out, cmd, nums = [], "", []
 
     def flush() -> None:
@@ -391,7 +390,8 @@ def _vest_turned(c: Canvas, body: str, turned_body: str) -> None:
     c.path(turned_body, "none")
 
 
-def _stride(pose: str, mood: str, tail: bool, grips: tuple[str, ...], left: tuple, right: tuple) -> Canvas:
+def _stride(pose: str, mood: str, tail: bool, grips: tuple[str, ...], palms: tuple[str, ...], left: tuple,
+            right: tuple) -> Canvas:
     """Walking to the right in three-quarter view: the far arm (his right) behind the body swinging forward, the
     tail up behind him (on the left), the legs mid-stride, the body and the vest turned about the chest's
     centreline, the bow tie on it under the chin, the face turned the way he goes, the near arm (his left) in
@@ -402,7 +402,8 @@ def _stride(pose: str, mood: str, tail: bool, grips: tuple[str, ...], left: tupl
     kl = "hold" if "left" in grips else left[2]
     kr = "hold" if "right" in grips else right[2]
     arm(c, far, right[0], right[1], kind=kr, hand_turn=right[3], **PAW)             # the far arm, behind
-    _watch(c, right[0], right[1])
+    if "right" not in palms:
+        _watch(c, right[0], right[1])
     if tail:
         g = Canvas()
         _tail(g, TAILS[pose])

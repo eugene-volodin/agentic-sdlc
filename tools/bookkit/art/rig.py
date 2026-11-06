@@ -35,6 +35,14 @@ from .ink import Canvas, angle_of, ellipse_d, n, polar
 GRIP = (13.0, 0.0)          # the middle of the closed fist in a hand's own units: a handle passes here
 
 
+def pose_hands(limbs: dict[str, tuple], width: float, scale: float, toward: tuple[float, float],
+               grips: tuple[str, ...] = ()) -> dict[str, HandFrame]:
+    """The hands of a pose, {side: (elbow, wrist, kind, turn)} -> {side: HandFrame}; the hands named in `grips` are
+    closed round a handle. Every character's `hands()` is this with its own arm width, hand scale and neck."""
+    return {side: hand_frame(limb[0], limb[1], width, scale, limb[3], "hold" if side in grips else limb[2], toward)
+            for side, limb in limbs.items()}
+
+
 @dataclass(frozen=True)
 class HandFrame:
     """Where a hand is drawn: wrist at (x, y), pointing along `rotation` degrees, at `scale`, maybe mirrored

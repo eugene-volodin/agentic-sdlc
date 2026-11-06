@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from .. import design as P
 from .ink import Canvas, ellipse_d, n, rounded_rect_d
-from .rig import HandFrame, arm, hand_frame
+from .rig import HandFrame, arm, pose_hands
 
 SIZE = (270, 450)
 VIEW_BOX = "-30 0 320 450"
@@ -25,9 +25,9 @@ LENS = P.LENS
 OUTFITS = {
     # name: (top, rib/lapel, trousers, tie)
     "sweater": (P.SWEATER, P.SWEATER_RIB, P.TROUSERS, P.FIR),
-    "suit": (P.SUIT, P.SUIT_DARK, P.SUIT_TROUSERS, P.FIR),
 }
 ARM_WIDTH = 20
+HAND_SCALE = 0.9
 
 # Front rig: shoulders and resting arms. An arm is (elbow, wrist, hand kind, hand turn).
 FRONT_BACK_SHOULDER = (84, 208)
@@ -46,7 +46,7 @@ POSES = {
     "welcome": ("front", "stand", ((52, 252), (20, 232), "open", 20), ((192, 252), (224, 232), "open", -20)),
     "think": ("front", "stand", REST_BACK, ((198, 260), (180, 206), "fist", -6)),
     "thumb": ("front", "stand", REST_BACK, ((198, 254), (202, 210), "thumb", 90)),
-    "pointer": ("front", "stand", REST_BACK, ((198, 254), (228, 230), "fist", 26)),   # a pointer in his fist
+    "pointer": ("front", "stand", REST_BACK, ((198, 254), (228, 230), "fist", 26)),   # a fist held out, for hold=
     "explain": ("front", "stand", ((52, 254), (28, 240), "open", 10), ((204, 244), (196, 184), "point", 0)),
     "read": ("front", "stand", ((72, 268), (106, 272), "grip", 0), ((172, 268), (140, 274), "grip", 0)),
     "walk": ("side", "walk", ((152, 250), (170, 284), "relaxed", 0), ((104, 254), (94, 292), "relaxed", 0)),
@@ -109,8 +109,7 @@ def _torso(c: Canvas, rig: str, outfit: str) -> None:
                         stipple=(132, 214, 22, 76, 26, "right"))
         c.add(f'<g clip-path="url(#{torso})"><path d="M88,290 H160 V308 H88 Z" fill="{rib}"/></g>')
         c.line("M95,290 H152", 2)
-        if outfit == "sweater":
-            c.line("M104,293 v9 M116,293 v9 M128,293 v9 M140,293 v9", 1.3)
+        c.line("M104,293 v9 M116,293 v9 M128,293 v9 M140,293 v9", 1.3)        # the sweater's ribbed hem
         # Only the front edge of the collar and a sliver of tie show from the side.
         c.path("M130,186 L143,190 L145,205 L134,197 Z", P.WHITE, 2.2)
         c.path("M143,193 L149,198 L149,224 L144,218 Z", tie, 2)
@@ -121,23 +120,15 @@ def _torso(c: Canvas, rig: str, outfit: str) -> None:
                     stipple=(146, 212, 26, 78, 30, "right"))
     c.add(f'<g clip-path="url(#{torso})"><path d="M66,290 H178 V308 H66 Z" fill="{rib}"/></g>')
     c.line("M73,290 H171", 2)
-    if outfit == "sweater":
-        c.line("M84,293 v9 M96,293 v9 M108,293 v9 M120,293 v9 M132,293 v9 M144,293 v9 M156,293 v9", 1.3)
+    c.line("M84,293 v9 M96,293 v9 M108,293 v9 M120,293 v9 M132,293 v9 M144,293 v9 M156,293 v9", 1.3)
     # Shirt, tie and collar; the V sits right of centre because the chest is turned a little.
     c.path("M104,186 L124,230 L144,186 Z", P.WHITE, 2.3)
     c.shape("M119,192 L129,192 L132,216 L124,227 L116,216 Z", tie, light=(-2, -2), sw=2.1)
     c.path("M119,186 L129,186 L130,194 L118,194 Z", tie, 2.1)
     c.path("M104,186 L114,178 L123,192 L111,203 Z", P.WHITE, 2.3)
     c.path("M144,186 L134,178 L125,192 L137,203 Z", P.WHITE, 2.3)
-    if outfit == "suit":
-        c.path("M104,186 L124,236 L109,262 L91,220 Z", rib, 2.3)
-        c.path("M144,186 L124,236 L139,262 L157,220 Z", rib, 2.3)
-        c.dot(124, 264, 2.6)
-        c.dot(124, 282, 2.6)
-        c.path("M146,230 L160,228 L158,236 Z", P.WHITE, 1.8)
-    else:
-        c.line("M104,186 L124,230 L144,186", 5, rib)
-        c.line("M101,188 L124,236 L147,188", 1.9)
+    c.line("M104,186 L124,230 L144,186", 5, rib)                            # the sweater's V-neck
+    c.line("M101,188 L124,236 L147,188", 1.9)
 
 
 def _head(c: Canvas, mood: str) -> None:
@@ -196,9 +187,7 @@ def hands(pose: str, grips: tuple[str, ...] = ()) -> dict[str, HandFrame]:
     """Where the hands of a pose are drawn (see `rig.HandFrame`): "left" is the back or far arm, "right" the near
     one; `grips` names the ones closed round a handle."""
     rig, _, back, near = POSES[pose]
-    return {side: hand_frame(limb[0], limb[1], ARM_WIDTH, 0.9, limb[3], "hold" if side in grips else limb[2],
-                             NECK[rig])
-            for side, limb in (("left", back), ("right", near))}
+    return pose_hands({"left": back, "right": near}, ARM_WIDTH, HAND_SCALE, NECK[rig], grips)
 
 
 def draw(pose: str = "stand", mood: str = "smile", outfit: str = "sweater", grips: tuple[str, ...] = ()) -> Canvas:
@@ -206,8 +195,8 @@ def draw(pose: str = "stand", mood: str = "smile", outfit: str = "sweater", grip
     ("left" the back arm, "right" the near one) round a handle for `rig.hold`."""
     rig, stance, back, near = POSES[pose]
     top, rib, trousers, _ = OUTFITS[outfit]
-    sleeve = dict(sleeve=top, width=ARM_WIDTH, skin=SKIN, cuff=P.WHITE if outfit == "suit" else rib,
-                  hand_scale=0.9, toward=NECK[rig])
+    sleeve = dict(sleeve=top, width=ARM_WIDTH, skin=SKIN, cuff=rib,
+                  hand_scale=HAND_SCALE, toward=NECK[rig])
     bk = "hold" if "left" in grips else back[2]
     nk = "hold" if "right" in grips else near[2]
     c = Canvas()
