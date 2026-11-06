@@ -15,7 +15,6 @@ import zlib
 from dataclasses import dataclass
 
 from .. import design as P
-from ..design import lighten, mix
 from . import props
 from .characters import module
 from .openers import W, Box, Stage, conflicts
@@ -28,28 +27,14 @@ TALL_MAX = 165       # the professor's height in a footer never grows beyond thi
 # ============================================================================ the look of a chapter
 @dataclass(frozen=True)
 class Look:
-    """Time of day, season and the chapter's color of a chapter's footers.
-
-    The chapter's color is in every footer of the chapter (each chapter has its color, and its pages keep to
-    it): the sky and the walls are the paper tinted with it, the ground takes a little of it."""
-    time: str              # morning | day | evening
-    season: str            # summer | autumn | winter | spring
+    """The chapter's color, carried by every footer of the chapter (each chapter has its color, and its pages keep
+    to it)."""
     accent: str = P.YELLOW
 
 
-LOOKS = (Look("day", "summer"), Look("morning", "spring"), Look("evening", "summer"), Look("day", "autumn"),
-         Look("morning", "summer"), Look("day", "winter"), Look("evening", "autumn"), Look("day", "spring"),
-         Look("morning", "autumn"), Look("evening", "winter"), Look("morning", "winter"), Look("evening", "spring"))
-
-
 def look_for(chapter_index: int, accent: str = P.YELLOW) -> Look:
-    base = LOOKS[chapter_index % len(LOOKS)]
-    return Look(base.time, base.season, accent or P.YELLOW)
-
-
-def wall_color(look: Look) -> str:
-    """A room's wall: the paper tinted with the chapter's color."""
-    return mix(lighten(look.accent, 0.7), P.PAPER, 0.25)
+    """The look of a chapter's footers: today only its accent, the same for every chapter index."""
+    return Look(accent or P.YELLOW)
 
 
 # ============================================================================ the strip

@@ -78,10 +78,8 @@ class BookConfig:
         return self.strings.get("characters", {}).get(name, {"name": name, "role": ""})
 
     def vocabulary(self) -> dict:
-        """What the footers need from the locale: `footers:` at the top level, with the lettering of the worlds and of
-        the easter eggs beside it."""
-        return {**(self.strings.get("footers") or {}), "worlds": self.strings.get("worlds") or {},
-                "easter": self.strings.get("easter") or {}}
+        """What the footers need from the locale: the lettering of the worlds and of the easter eggs."""
+        return {"worlds": self.strings.get("worlds") or {}, "easter": self.strings.get("easter") or {}}
 
     def chapter_sources(self) -> list[ChapterSource]:
         """The chapters in order: each is one Markdown file, or a folder whose files are its parts."""

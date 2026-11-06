@@ -130,16 +130,12 @@ def footer_rect(mm: float) -> dict | None:
 
 
 def moment_name(moment: dict) -> str:
-    if moment.get("kind") == "episode":
-        return f"episode {moment['episode']}"
     station = moment.get("station")
     return f"{moment['world']} / {station} / {moment['beat']}" if station else f"{moment['world']} / finale"
 
 
 def _key(moment: dict) -> tuple:
-    if moment.get("kind") == "episode":
-        return ("episode", moment["episode"])
-    return ("world", moment["world"], moment.get("station"), moment.get("beat"))
+    return (moment["world"], moment.get("station"), moment.get("beat"))
 
 
 def _composition(strip) -> tuple:

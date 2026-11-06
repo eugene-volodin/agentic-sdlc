@@ -1346,7 +1346,7 @@
 
   // Footer scenes are drawn by Python: publish the requests, receive the SVG.
   const withFoot = pages.filter((p) => p.foot);
-  // Each footer is drawn for its page: Python reads the page's headings and text to pick an episode about them.
+  // Each footer is drawn for its page: a front page's footer is picked by its headings and text (world_courtyard.py).
   const textOf = (p) => plain((p.el.querySelector('.p-body') || p.el).innerText).replace(/\s+/g, ' ').slice(0, 6000);
   const headsOf = (p) => [...p.el.querySelectorAll('.p-body h1, .p-body h2, .p-body h3')].map((h) => plain(h.innerText)).join(' | ');
   window.__bookScenes = withFoot.map((p) => ({ page: p.number, clear: p.foot.clear, mm: p.foot.height, size: p.foot.size,

@@ -8,7 +8,7 @@ import yaml
 from bookkit import design
 from bookkit.art.worlds import WORLDS, egg_letter, egg_page, frame, schedule  # first: it loads the worlds
 from bookkit.art.flipbook import FLIER, FRAMES, flipbook, tag_box  # noqa: E402
-from bookkit.art.footers import LOOKS, Strip, footer_conflicts  # noqa: E402
+from bookkit.art.footers import Strip, footer_conflicts, look_for  # noqa: E402
 from bookkit.art.openers import W, opener  # noqa: E402
 from bookkit.art.world_kit import CLOCK_TIME, container_faults, link_faults  # noqa: E402
 from bookkit.config import LOCALES
@@ -120,6 +120,6 @@ def test_the_flipbook_sparrow_never_lands_on_anything(h):
 
 
 def test_the_flipbook_restarts_with_every_chapter_and_skips_a_full_corner():
-    s = Strip(136, 0, "right", LOOKS[0], {})
+    s = Strip(136, 0, "right", look_for(0), {})
     s.put(1, "", (W - 120, 0, W, 136), "wall")          # something fills the whole corner
     assert flipbook(s, 0) is None

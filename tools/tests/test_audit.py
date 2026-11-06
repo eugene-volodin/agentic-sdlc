@@ -24,7 +24,7 @@ from bookkit.render import _launch, footer_findings  # noqa: E402
 
 CASES = yaml.safe_load((Path(__file__).parent / "fixtures" / "audit_cases.yml").read_text(encoding="utf-8"))
 LOCALE = yaml.safe_load((LOCALES / "ru.yml").read_text(encoding="utf-8"))
-FRONT = "---\ntitle: Test\nscene: fair\n---\n\n# Test\n\n"
+FRONT = "---\ntitle: Test\nscene: railway\n---\n\n# Test\n\n"
 SENTENCE = "The agent reads the repository, runs the build and checks its own work before it says that it is done. "
 PARAGRAPH = SENTENCE * 5 + "\n\n"
 
@@ -254,7 +254,7 @@ def test_a_footer_whose_drawing_breaks_its_own_rules_is_an_error():
     strip = SimpleNamespace(h=200, tall=120, reserved=[], boxes=[
         Box(10, 10, 100, 150, "cat", "a", "actor"), Box(50, 20, 160, 190, "crate", "b", "thing")])
     found = audit.footer_checks([{"page": 5, "chapter": "1", "mm": 55}],
-                                [{"kind": "episode", "episode": "test", "strip": strip}])
+                                [{"kind": "world", "world": "fair", "station": "x", "beat": "y", "strip": strip}])
     assert [f["check"] for f in found] == ["footer-frame"] and "cat overlaps crate" in found[0]["detail"]
     world = {"kind": "world", "world": "fair", "station": "x", "beat": "y",
              "strip": SimpleNamespace(h=200, tall=120, reserved=[], boxes=[Box(10, 150, 60, 199, "cat", "a", "actor")])}
