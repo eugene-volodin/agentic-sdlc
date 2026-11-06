@@ -22,6 +22,7 @@ import tempfile
 import time
 import unicodedata
 from collections import Counter
+from html import escape
 from pathlib import Path
 
 import yaml
@@ -148,8 +149,8 @@ def _composition(strip) -> tuple:
 
 
 def footer_checks(requests: list[dict], trace: list) -> list[dict]:
-    """17: two neighbouring pages never show one moment; 18: every footer drawn passes its own drawing checks for the
-    exact height, side and seed it was drawn at - a text change moves the heights, and a frame never drawn at that
+    """Two neighbouring pages never show one moment, and every footer drawn passes its own drawing checks for the
+    exact height, side and seed it was drawn at: a text change moves the heights, and a frame never drawn at that
     height by the tests may break."""
     found: list[dict] = []
     drawn = [(request, moment) for request, moment in zip(requests, trace, strict=False) if moment]
@@ -199,6 +200,8 @@ def frame_faults(moment: dict) -> list[str]:
 def contact_sheets(page, found: list[dict], folder: Path) -> list[dict]:
     """Small pictures of the pages with something new on them: `AUDIT_SHEET_PAGES` to a PNG at `AUDIT_SHEET_SCALE`,
     each flagged region boxed in red. Only the page being shot is painted (as `render` takes its proofs)."""
+    from .render import relieve_memory
+
     flagged: dict[int, list[dict]] = {}
     for item in found:
         if item["page"] and item["severity"] != "info" and not item.get("baselined"):
@@ -233,8 +236,8 @@ def contact_sheets(page, found: list[dict], folder: Path) -> list[dict]:
                          "el.classList.add('unshot'); }")
         shots.append((number, base64.b64encode(png).decode("ascii"), items))
         if nth % 20 == 0:
-            cdp.send("Memory.simulatePressureNotification", {"level": "critical"})
-            cdp.send("HeapProfiler.collectGarbage")
+            relieve_memory(cdp)
+    cdp.detach()
     page.evaluate("() => document.querySelectorAll('#book > .page').forEach(p => p.classList.remove('unshot'))")
     width = round(design.PAGE_WIDTH * PX_PER_MM * design.AUDIT_SHEET_SCALE)
     per = design.AUDIT_SHEET_PAGES
@@ -246,7 +249,7 @@ def contact_sheets(page, found: list[dict], folder: Path) -> list[dict]:
             group = shots[start:start + per]
             cells = "".join(
                 f"<figure><img src='data:image/png;base64,{data}'><figcaption><b>{number}</b> "
-                f"{_escape(', '.join(sorted({item['check'] for item in items})))}</figcaption></figure>"
+                f"{escape(', '.join(sorted({item['check'] for item in items})), quote=False)}</figcaption></figure>"
                 for number, data, items in group)
             sheet_page.set_content(
                 f"<html><body style='margin:0;padding:12px;background:{design.DESK};font:600 12px sans-serif;"
@@ -261,16 +264,12 @@ def contact_sheets(page, found: list[dict], folder: Path) -> list[dict]:
     return sheets
 
 
-def _escape(text: str) -> str:
-    return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-
-
 # ============================================================================ checks without the browser
 VERSION = re.compile(r"(\d+)\.(\d+)-(0[1-9]|1[0-2])\.(\d{4})")
 
 
 def version_findings(content: Path, base: str) -> list[dict]:
-    """23: anything under book/ changed against `base` (a git ref) needs a new `version:` in book.yml - higher than
+    """Anything under book/ changed against `base` (a git ref) needs a new `version:` in book.yml - higher than
     the base's, in the form MAJOR.MINOR-MM.YYYY."""
     def git(*args: str) -> subprocess.CompletedProcess:
         return subprocess.run(["git", "-C", str(content), *args], capture_output=True, text=True, check=False)
@@ -287,10 +286,9 @@ def version_findings(content: Path, base: str) -> list[dict]:
                 if line.strip()]
     if not changed:
         return []
-    raw = yaml.safe_load((content / "book.yml").read_text(encoding="utf-8")) or {}
-    new = str(raw.get("version", "")).strip()
+    new = _version_of((content / "book.yml").read_text(encoding="utf-8"))
     shown = git("show", f"{base}:{inside + '/' if inside != '.' else ''}book.yml")
-    old = str((yaml.safe_load(shown.stdout) or {}).get("version", "")).strip() if not shown.returncode else ""
+    old = _version_of(shown.stdout) if not shown.returncode else ""
     where = f"{len(changed)} file(s) changed"
     if not VERSION.fullmatch(new):
         return [finding("version", "error", f"book.yml: the version must look like 1.4-10.2026 (MAJOR.MINOR-MM.YYYY), "
@@ -304,6 +302,15 @@ def version_findings(content: Path, base: str) -> list[dict]:
     return []
 
 
+def _version_of(text: str) -> str:
+    """`version:` of a book.yml's text; "" when it has none or is not a mapping of valid YAML."""
+    try:
+        raw = yaml.safe_load(text)
+    except yaml.YAMLError:
+        return ""
+    return str(raw.get("version", "")).strip() if isinstance(raw, dict) else ""
+
+
 def _version_order(version: str) -> tuple[int, int]:
     major, minor, _, _ = VERSION.fullmatch(version).groups()
     return int(major), int(minor)
@@ -312,7 +319,7 @@ def _version_order(version: str) -> tuple[int, int]:
 # ============================================================================ the baseline
 def normalise(text: str) -> str:
     """A snippet as the baseline matches it: the same words, whatever the spaces, the case and the line breaks."""
-    text = unicodedata.normalize("NFKC", str(text or "")).replace("­", "")
+    text = unicodedata.normalize("NFKC", str(text or "")).replace("\u00ad", "")
     return " ".join(text.lower().split())[:60]
 
 
@@ -336,7 +343,7 @@ def load_baseline(path: Path, strict: bool = True) -> list[dict]:
         if not isinstance(entry, dict) or not all(isinstance(entry.get(k), str) for k in ("check", "chapter", "where")):
             raise BuildError(f"{path}: entry {nth} needs the strings check, chapter and where")
         reason = str(entry.get("reason") or "").strip()
-        if strict and not reason or reason.upper().startswith("TODO"):
+        if strict and (not reason or reason.upper().startswith("TODO")):
             raise BuildError(f"{path}: entry {nth} ({entry['check']}, {entry['where']!r}) has no reason; say why it is "
                              f"accepted, or fix it and drop the entry")
     return entries
@@ -447,27 +454,23 @@ def failed(found: list[dict]) -> bool:
 
 # ============================================================================ the command
 def run(content: Path, *, only: str | None = None, baseline: Path | None = None, base: str | None = None,
-        sheets: Path | None = None, pdf: Path | None = None,
-        vocabulary_of=None) -> dict:
+        sheets: Path | None = None, pdf: Path | None = None) -> dict:
     """Build and audit the book in `content`.
 
     Returns `{"pages", "seconds", "findings", "sheets", "stale", "timing", "browser", "layout"}`."""
-    from .cli import vocabulary
     from .compiler import build_html
     from .render import render_isolated
 
     started = time.time()
     entries = load_baseline(baseline) if baseline else []
-    found: list[dict] = []
-    if base:
-        found += version_findings(content, base)
-    result = build_html(content, only=only)
+    result = build_html(content, only=only)          # book.yml and the chapters are read and checked first
+    found = version_findings(content, base) if base else []
     with tempfile.TemporaryDirectory(prefix="bookkit-audit-") as work:
         source = Path(work) / "book.html"
         source.write_text(result.html, encoding="utf-8")
         if pdf:
             pdf.parent.mkdir(parents=True, exist_ok=True)
-        report = render_isolated(source, pdf, None, None, vocabulary=(vocabulary_of or vocabulary)(result.config),
+        report = render_isolated(source, pdf, None, None, vocabulary=result.config.vocabulary(),
                                  audit=options(entries, sheets))
     audit = report["audit"]
     found += audit["findings"]

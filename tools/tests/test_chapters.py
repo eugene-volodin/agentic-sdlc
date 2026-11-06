@@ -88,3 +88,10 @@ def test_the_full_layout_is_a_known_side_for_a_chapter_and_for_a_switch(tmp_path
     book = write(tmp_path, {"01.md": "---\ntitle: T\nside: full\n---\nDense text.\n\n<!-- side: outer -->\n\nBack.\n"})
     html = build_html(book).html
     assert 'data-side="full"' in html or "side-full" in html or '"full"' in html
+
+
+def test_book_yml_may_list_only_folders_and_markdown_files(tmp_path):
+    book = write(tmp_path, {"book.yml": "title: Test\nchapters: [01-a.md, notes.txt]\n", "01-a.md": "Text.\n",
+                            "notes.txt": "not a chapter"})
+    with pytest.raises(BuildError, match="notes.txt, which is neither a folder nor a Markdown file"):
+        load_config(book).chapter_sources()

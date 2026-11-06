@@ -19,6 +19,7 @@ from fontTools.ttLib import TTFont
 from fontTools.varLib import instancer
 
 from . import design
+from .markup import BuildError
 
 FONT = Path(__file__).parent / "theme" / "fonts" / "Rubik.ttf"
 WEIGHT = 900
@@ -51,8 +52,11 @@ def _face() -> _Face:
 
 
 def _glyph(ch: str) -> str:
-    face = _face()
-    return face.cmap.get(ord(ch)) or face.cmap.get(ord("?"))
+    """The glyph of a character; one the heading face lacks is an error, never a silent stand-in."""
+    name = _face().cmap.get(ord(ch))
+    if name is None:
+        raise BuildError(f"the title's face (Rubik) has no letter {ch!r} (U+{ord(ch):04X}); write the title without it")
+    return name
 
 
 def _space(size: float, track: float) -> float:

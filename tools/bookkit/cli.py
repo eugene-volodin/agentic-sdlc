@@ -43,6 +43,8 @@ MARKER = ".bookkit"      # dropped into every folder the tool creates, so it onl
 
 def fresh_folder(folder: Path) -> None:
     """Empty a folder of generated files - but only if this tool made it."""
+    if folder.exists() and not folder.is_dir():
+        raise BuildError(f"{folder} is a file, not a folder; choose another --out")
     if folder.exists():
         if not (folder / MARKER).exists() and any(folder.iterdir()):
             raise BuildError(f"{folder} exists and was not created by this tool; move it or choose another --out")
@@ -66,12 +68,6 @@ def parse_pages(spec: str | None) -> list[int] | None:
     except ValueError as error:
         raise BuildError(f"cannot read page list {spec!r}; use something like 1,3-5") from error
     return pages
-
-
-def vocabulary(config) -> dict:
-    """What the footers need from the locale: the episodes' topic words and lettering, and the worlds' lettering."""
-    return {**(config.strings.get("footers") or {}), "worlds": config.strings.get("worlds") or {},
-            "easter": config.strings.get("easter") or {}}
 
 
 def export_prompts(build, target: Path) -> int:
@@ -141,7 +137,7 @@ def build(args) -> int:
             source = Path(work) / "book.html"
             source.write_text(result.html, encoding="utf-8")
             report = render_isolated(source, None if args.no_pdf else out, shots_dir, pages, scale=args.scale,
-                                     vocabulary=vocabulary(result.config))
+                                     vocabulary=result.config.vocabulary())
     if pages and report["pages"] < max(pages):
         report["warnings"].append(f"--shots asks for page {max(pages)}, but the book has {report['pages']}")
     for warning in report["warnings"]:
@@ -172,7 +168,7 @@ def storyboard(args) -> int:
             source = Path(work) / "book.html"
             source.write_text(result.html, encoding="utf-8")
             report = render_isolated(source, None, None, None, scale=args.scale, frames_dir=frames,
-                                     vocabulary=vocabulary(result.config))
+                                     vocabulary=result.config.vocabulary())
         for warning in report["warnings"]:
             print(f"  warning: {warning}")
         shots = report.get("frames") or []
@@ -268,16 +264,17 @@ def audit(args) -> int:
         if sheets:
             sheets.mkdir(parents=True, exist_ok=True)
         result = auditing.run(content, only=args.only, baseline=None if args.write_baseline else baseline,
-                              base=args.base, sheets=sheets, pdf=pdf,
-                              vocabulary_of=vocabulary)
+                              base=args.base, sheets=sheets, pdf=pdf)
     if args.write_baseline:
         count = auditing.write_baseline(baseline, result["findings"], auditing.load_baseline(baseline, strict=False))
         print(f"ok: {count} warning(s) -> {baseline}; give each new entry its reason")
     print(auditing.summary(result))
     if args.json:
+        Path(args.json).parent.mkdir(parents=True, exist_ok=True)
         Path(args.json).write_text(json.dumps(result, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
         print(f"  -> {args.json}")
     if args.md:
+        Path(args.md).parent.mkdir(parents=True, exist_ok=True)
         Path(args.md).write_text(auditing.markdown(result), encoding="utf-8")
         print(f"  -> {args.md}")
     for sheet in result["sheets"]:

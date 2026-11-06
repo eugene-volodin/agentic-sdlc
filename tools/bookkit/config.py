@@ -77,6 +77,12 @@ class BookConfig:
     def character(self, name: str) -> dict:
         return self.strings.get("characters", {}).get(name, {"name": name, "role": ""})
 
+    def vocabulary(self) -> dict:
+        """What the footers need from the locale: `footers:` at the top level, with the lettering of the worlds and of
+        the easter eggs beside it."""
+        return {**(self.strings.get("footers") or {}), "worlds": self.strings.get("worlds") or {},
+                "easter": self.strings.get("easter") or {}}
+
     def chapter_sources(self) -> list[ChapterSource]:
         """The chapters in order: each is one Markdown file, or a folder whose files are its parts."""
         if not self.content_dir.is_dir():
@@ -106,6 +112,8 @@ class BookConfig:
                     raise BuildError(f"book.yml lists the folder {entry.name}, but it has no Markdown files")
             elif entry.suffix == ".md" and (self.chapters or not skipped(entry)):
                 sources.append(ChapterSource(entry, [entry]))
+            elif self.chapters:
+                raise BuildError(f"book.yml lists {entry.name}, which is neither a folder nor a Markdown file")
         return sources
 
     def chapter_files(self) -> list[Path]:
@@ -164,7 +172,9 @@ def load_config(content_dir: Path) -> BookConfig:
         raise BuildError(f"no locale file for language {raw.get('language')!r} in {LOCALES}")
     strings = _merge(yaml.safe_load(locale_file.read_text(encoding="utf-8")), raw.get("strings") or {})
     aliases = {}
-    for name, info in strings.get("characters", {}).items():
+    for name, info in (strings.get("characters") or {}).items():
+        if not isinstance(info, dict) or not isinstance(info.get("aliases", []), list):
+            raise BuildError(f"{path.name}: strings: characters: {name} must be a mapping with a list of aliases")
         for alias in info.get("aliases", []):
             aliases[str(alias)] = name
     register_aliases(aliases)

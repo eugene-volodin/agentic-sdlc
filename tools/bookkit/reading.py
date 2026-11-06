@@ -11,6 +11,7 @@ import re
 from pathlib import Path
 
 from . import design
+from .config import skipped
 from .markup import read_source, split_front_matter
 
 _COMMENT = re.compile(r"<!--.*?-->", re.S)
@@ -41,8 +42,9 @@ def running_text(markdown: str) -> str:
 
 
 def characters(path: Path) -> int:
-    """The characters of running text in a chapter: a file, or a folder of files."""
-    files = sorted(path.glob("*.md")) if path.is_dir() else [path]
+    """The characters of running text in a chapter: a file, or a folder of files (those the build reads as its parts:
+    not a README or a hidden file)."""
+    files = sorted(file for file in path.glob("*.md") if not skipped(file)) if path.is_dir() else [path]
     return sum(len(running_text(read_source(file))) for file in files)
 
 

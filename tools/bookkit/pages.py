@@ -38,10 +38,9 @@ ACCENTS = (("cat", "read", "smile"), "monitor", ("agent", "wave", "smile"), "flo
 # Style sheets in cascade order: foundations first, then one sheet per component family.
 STYLE_SHEETS = ("base.css", "page.css", "typography.css", "speech.css", "callouts.css", "lists.css", "code.css",
                 "chat.css", "people.css", "layout.css", "pages.css")
-# Who stands on the dashed line of the running header, by page number modulo 4: (who, bust?, drop). The drop, in
-# mm, lowers the drawing box so the feet and not the box meet the line; measured on the page PNGs.
-PERCHES = {0: ("cat", False, 0.2), 1: ("sparrow", False, -0.3), 2: ("caterpillar", False, -0.2),
-           3: ("agent", False, -0.4)}
+# Who stands on the dashed line of the running header, by page number modulo 4: (who, drop). The drop, in mm, lowers
+# the drawing box so the feet and not the box meet the line; measured on the page PNGs.
+PERCHES = {0: ("cat", 0.2), 1: ("sparrow", -0.3), 2: ("caterpillar", -0.2), 3: ("agent", -0.4)}
 # Where the opener's cast stands, left to right, in scene units.
 OPENER_POSITIONS = (330, 545, 668, 770)
 assert len(OPENER_POSITIONS) == OPENER_EXTRAS + 1
@@ -84,8 +83,8 @@ def cover_page(config: BookConfig) -> str:
 def opener_page(chapter: Chapter, compiler: Compiler) -> str:
     """The full-page opening of a chapter: a story picture, the title on paper plates, the professor's bubble, a tag.
 
-    A chapter whose `scene:` names a story in `art.stories` gets that picture over the whole page;
-    any other setting falls back to the generic scene under a colored page.
+    A chapter with a `world:` gets its world's opener, and one whose `scene:` names a story of `art.openers` gets that
+    picture, over the whole page; any other setting falls back to the generic scene under a colored page.
     """
     meta, config = chapter.meta, compiler.config
     kind = WORLDS[meta["world"]].opener if meta.get("world") else meta.get("scene", "meadow")
@@ -93,7 +92,10 @@ def opener_page(chapter: Chapter, compiler: Compiler) -> str:
         return _generic_opener(chapter, compiler)
     plain = re.sub(r"[*_`]", "", str(meta.get("lead", "")))
     title = re.sub(r"[*`]", "", chapter.title).strip()   # drawn letters carry no Markdown emphasis or code
-    lettering = draw_title(title)
+    try:
+        lettering = draw_title(title)
+    except BuildError as error:
+        raise BuildError(f"{chapter.path.name}: {error}") from error
     art = opener(kind, design.ACCENTS[chapter.color], seed=chapter.index, lead_chars=len(plain),
                  words=config.opener_words(kind), title=(lettering.width, lettering.height))
     lead = ""
@@ -252,8 +254,8 @@ def chapter_section(chapter: Chapter, compiler: Compiler) -> str:
 
 def stock() -> str:
     """Ornaments for the paginator to copy: who perches on the header, what lightens a page of solid text."""
-    perches = "".join(f'<div data-perch="{slot}" data-drop="{drop}">{figure(who, "stand", "smile", bust=bust)}</div>'
-                      for slot, (who, bust, drop) in PERCHES.items())
+    perches = "".join(f'<div data-perch="{slot}" data-drop="{drop}">{figure(who, "stand", "smile")}</div>'
+                      for slot, (who, drop) in PERCHES.items())
     accents = "".join(f'<div data-accent>{doodle(item) if isinstance(item, str) else figure(*item)}</div>'
                       for item in ACCENTS)
     return perches + accents

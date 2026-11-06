@@ -19,18 +19,15 @@ from playwright.sync_api import sync_playwright
 from . import design
 from .art.footers import footers
 from .art.ink import id_scope
+from .fonts import FONTS
 from .markup import BuildError
 from .pdftext import strip_soft_hyphens
 
 CSS_PX_PER_MM = 96 / 25.4
 PAGE_VIEWPORT = {"width": round(design.PAGE_WIDTH * CSS_PX_PER_MM),
                  "height": round(design.PAGE_HEIGHT * CSS_PX_PER_MM)}
-
-
-RUN_SWITCH = "bookkit-run"   # `--bookkit-run=<run>` marks the browsers of one isolated render, so a stopped build
-                              # can find and end them
-
-
+# `--bookkit-run=<run>` marks the browsers of one isolated render, so a stopped build can find and end them.
+RUN_SWITCH = "bookkit-run"
 INSTALL_BROWSER = "uv run playwright install chromium"
 
 
@@ -98,6 +95,13 @@ def _first_line(error: Exception) -> str:
     return str(error).strip().split("\n")[0][:300]
 
 
+def relieve_memory(cdp) -> None:
+    """Let the browser drop the rasters and the garbage of what was painted so far (`cdp`: a CDP session of the
+    page): the book's pages, shot or printed one after another, otherwise run a small machine out of memory."""
+    cdp.send("Memory.simulatePressureNotification", {"level": "critical"})
+    cdp.send("HeapProfiler.collectGarbage")
+
+
 def render(html_path: Path, pdf_path: Path | None = None, shots_dir: Path | None = None,
            pages: list[int] | None = None, scale: float = 1.0, vocabulary: dict | None = None,
            frames_dir: Path | None = None, audit: dict | None = None) -> dict:
@@ -121,14 +125,14 @@ def render(html_path: Path, pdf_path: Path | None = None, shots_dir: Path | None
                 error = page.evaluate("window.__bookError || null")
                 if error:
                     raise BuildError(f"pagination failed in the browser: {error}")
-                # The paginator reports each page's footer height and its text; an episode is drawn for each page
-                # (`vocabulary` is the locale's `footers:`, the topic words and lettering of the episodes).
+                # The paginator reports each page's footer height and its text; a footer is drawn for each page
+                # (`vocabulary`: the locale's words for the footers, `BookConfig.vocabulary`).
                 step = "drawing the footer scenes"
                 requests = page.evaluate("window.__bookScenes")
                 id_scope("f")                    # the page's own drawings were numbered by the compiler
-                trace: list | None = [] if audit is not None else None
-                scenes = footers(requests, vocabulary or {}, trace) if audit is not None else \
-                    footers(requests, vocabulary or {})
+                trace: list = []                 # what each footer shows, for the audit
+                scenes = (footers(requests, vocabulary or {}, trace) if audit is not None
+                          else footers(requests, vocabulary or {}))
                 clash = page.evaluate("list => window.__setScenes(list)", scenes)
                 if clash:
                     raise BuildError(f"the drawings could not be given unique ids: {clash}")
@@ -140,7 +144,7 @@ def render(html_path: Path, pdf_path: Path | None = None, shots_dir: Path | None
                 if audit is not None:
                     from . import audit as auditing
                     step = "auditing the pages"
-                    report["audit"] = auditing.in_browser(page, requests, trace or [], report, audit)
+                    report["audit"] = auditing.in_browser(page, requests, trace, report, audit)
                 if frames_dir:
                     step = "taking the storyboard frames"
                     frames_dir.mkdir(parents=True, exist_ok=True)
@@ -169,16 +173,15 @@ def render(html_path: Path, pdf_path: Path | None = None, shots_dir: Path | None
                         element.screenshot(path=str(target))
                         element.evaluate("el => el.classList.add('unshot')")
                         report["shots"].append(str(target))
-                        if number % 20 == 0:             # let the browser drop the rasters of the pages shot so far
-                            cdp.send("Memory.simulatePressureNotification", {"level": "critical"})
-                            cdp.send("HeapProfiler.collectGarbage")
+                        if number % 20 == 0:
+                            relieve_memory(cdp)
+                    cdp.detach()
                     page.evaluate("() => document.querySelectorAll('.page').forEach(p => p.classList.remove('unshot'))")
                 if pdf_path:
                     # Printing takes the most memory: let the browser drop what the layout, the proofs and the audit
                     # left behind first, or a machine with little memory (a container on a laptop) crashes the page.
                     pressure = page.context.new_cdp_session(page)
-                    pressure.send("Memory.simulatePressureNotification", {"level": "critical"})
-                    pressure.send("HeapProfiler.collectGarbage")
+                    relieve_memory(pressure)
                     pressure.detach()
                     step = "printing the PDF"
                     page.pdf(path=str(partial), prefer_css_page_size=True, print_background=True,
@@ -202,7 +205,6 @@ def render(html_path: Path, pdf_path: Path | None = None, shots_dir: Path | None
         elif partial:
             partial.unlink(missing_ok=True)
     report["warnings"] += problems
-    report["problems"] = problems
     return report
 
 
@@ -297,7 +299,8 @@ def render_isolated(html_path: Path, pdf_path: Path | None = None, shots_dir: Pa
                 os.killpg(child.pid, signal.SIGKILL)
             child.wait()
             # The browser runs in a process group of its own: end it by the mark it was started with.
-            subprocess.run(["pkill", "-KILL", "-f", f"{RUN_SWITCH}={run}"], check=False)
+            with contextlib.suppress(FileNotFoundError):        # a system without pkill
+                subprocess.run(["pkill", "-KILL", "-f", f"{RUN_SWITCH}={run}"], check=False)
             if pdf_path:
                 pdf_path.with_name(f".{pdf_path.name}.partial").unlink(missing_ok=True)
 
@@ -334,7 +337,6 @@ def _child(job_path: str) -> int:
     return 0
 
 
-FONTS = Path(__file__).resolve().parent / "theme" / "fonts"
 BASE_FONT = re.compile(rb"/BaseFont\s*/(?:[A-Z]{6}\+)?([^\s/<>\[\]()]+)")
 
 

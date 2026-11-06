@@ -311,6 +311,10 @@ def test_a_baseline_entry_needs_its_reason(tmp_path):
     with pytest.raises(BuildError, match="entry 1 .* has no reason"):
         audit.load_baseline(path)
     assert audit.load_baseline(path, strict=False)[0]["where"] == "x"
+    path.write_text(json.dumps({"accepted": [{"check": "hole", "chapter": "4", "where": "x", "reason": "TODO"}]}))
+    with pytest.raises(BuildError, match="has no reason"):
+        audit.load_baseline(path)
+    assert audit.load_baseline(path, strict=False)[0]["reason"] == "TODO"   # rewriting the baseline keeps it
     path.write_text("[]")
     with pytest.raises(BuildError, match="list \"accepted\""):
         audit.load_baseline(path)

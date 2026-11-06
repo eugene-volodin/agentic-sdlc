@@ -25,3 +25,10 @@ def test_a_chapter_folder_is_counted_across_its_files(tmp_path: Path):
     (tmp_path / "00-chapter.md").write_text("---\ntitle: X\n---\nабв\n", encoding="utf-8")
     (tmp_path / "01-more.md").write_text("где\n", encoding="utf-8")
     assert reading.characters(tmp_path) == 6
+
+
+def test_a_chapter_folder_counts_only_its_parts(tmp_path):
+    (tmp_path / "00-chapter.md").write_text("Words.", encoding="utf-8")
+    (tmp_path / "README.md").write_text("About the folder, not a part of the chapter.", encoding="utf-8")
+    (tmp_path / "_draft.md").write_text("A draft.", encoding="utf-8")
+    assert reading.characters(tmp_path) == len("Words.")
