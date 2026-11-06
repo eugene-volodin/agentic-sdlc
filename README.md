@@ -1,43 +1,46 @@
 <p align="center">
-  <img src="docs/images/cover.png" alt="Cover of the book" width="360">
-</p>
-
-<h1 align="center">How to build an Agentic SDLC in your repository</h1>
-
-<p align="center">
-  <b>«Методичка профессора Фортрана. Как построить Agentic SDLC в своём репозитории»</b><br>an illustrated book in Russian
-  on preparing a repository and a team's process for AI coding agents
+  <img src="docs/images/cover.png" alt="Обложка книги" width="360">
 </p>
 
 <p align="center">
-  <a href="https://github.com/pulyavin/agentic-sdlc/releases/latest/download/agentic-sdlc.pdf"><b>Download the PDF</b></a>
+  <a href="https://github.com/pulyavin/agentic-sdlc/releases/latest/download/agentic-sdlc.pdf"><img src="docs/images/download.svg" alt="Скачать книгу (PDF)" width="360"></a>
+</p>
+
+<h1 align="center">Как построить Agentic SDLC в своём репозитории</h1>
+
+<p align="center">
+  <b>«Методичка профессора Фортрана»</b> — иллюстрированная книга о том, как подготовить<br>
+  репозиторий и процесс разработки к работе с AI-агентом
+</p>
+
+<p align="center">
+  <a href="https://github.com/pulyavin/agentic-sdlc/releases/latest/download/agentic-sdlc.pdf"><b>Скачать PDF</b></a>
   ·
-  <a href="https://github.com/pulyavin/agentic-sdlc/releases">All versions</a>
+  <a href="https://github.com/pulyavin/agentic-sdlc/releases">Все версии</a>
   ·
-  <a href="CONTRIBUTING.md">Contribute</a>
+  <a href="CONTRIBUTING.md">Как помочь</a>
 </p>
 
 <p align="center">
   <a href="https://github.com/pulyavin/agentic-sdlc/actions/workflows/check.yml"><img src="https://github.com/pulyavin/agentic-sdlc/actions/workflows/check.yml/badge.svg" alt="check"></a>
-  <a href="https://github.com/pulyavin/agentic-sdlc/releases/latest"><img src="https://img.shields.io/github/v/release/pulyavin/agentic-sdlc?label=version" alt="latest version"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/text-CC%20BY--NC%204.0-blue" alt="CC BY-NC 4.0"></a>
+  <a href="https://github.com/pulyavin/agentic-sdlc/releases/latest"><img src="https://img.shields.io/github/v/release/pulyavin/agentic-sdlc?label=версия" alt="версия"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/текст-CC%20BY--NC%204.0-blue" alt="CC BY-NC 4.0"></a>
 </p>
 
 ---
 
-An agent writes slop in a repository that isn't ready for it: it doesn't know your conventions, can't run your
-project and has no way to notice its own mistakes. This book walks through preparing the repository and the process
-step by step — from `AGENTS.md` to a pipeline where the agent takes a task from request to production — with a
-practical prompt for every step. Professor Fortran, the Cat, the Sparrow, the Caterpillar and the Agent keep you
-company along the way.
+В неподготовленном репозитории агент пишет слоп: он не знает ваших договорённостей, не умеет запустить проект и не
+замечает собственных ошибок. Эта книга шаг за шагом проводит через подготовку репозитория и процесса — от `AGENTS.md`
+до конвейера, в котором агент ведёт задачу от запроса до прода, — и на каждом шаге даёт промпт, который можно сразу
+запустить у себя. А по пути тебя сопровождают профессор Фортран, Кот, Воробей, Гусеница и Агент.
 
 <p align="center">
-  <img src="docs/images/spread.png" alt="A spread from the book" width="720">
+  <img src="docs/images/spread.png" alt="Разворот книги" width="720">
 </p>
 
-## Contents
+## Что внутри
 
-| | Chapter |
+| | Глава |
 |---|---|
 | | Введение |
 | 1 | Почему агент пишет слоп |
@@ -53,57 +56,57 @@ company along the way.
 | 11 | Как теперь выглядит разработка |
 | | Заключение |
 
-## This repository is an example too
+## Этот репозиторий — тоже пример
 
-The repository is set up the way the book recommends, so you can see every idea in a working project:
+Репозиторий устроен так, как советует книга, поэтому каждую её идею можно посмотреть на живом проекте:
 
-| In the book | Here |
+| В книге | Здесь |
 |---|---|
-| Instructions for the agent | [`AGENTS.md`](AGENTS.md) |
-| Skills for repeated work | [`.claude/skills/`](.claude/skills) — build the book, check a chapter, raise the version |
-| Decisions that the code doesn't show | [`docs/adr/`](docs/adr) |
-| The agent learns about its mistakes on its own | tests, the linter and `book audit`, which measures every page |
-| CI is the gate before `main` | [`check.yml`](.github/workflows/check.yml) on every pull request |
-| From merge to production | [`release.yml`](.github/workflows/release.yml) publishes the PDF as a release on every merge that raises the version |
+| Инструкции для агента | [`AGENTS.md`](AGENTS.md) |
+| Скиллы для повторяющейся работы | [`.claude/skills/`](.claude/skills) — собрать книгу, проверить главу, поднять версию |
+| Решения, которых не видно в коде | [`docs/adr/`](docs/adr) |
+| Агент сам узнаёт о своих ошибках | тесты, линтер и `book audit`, который проверяет каждую страницу |
+| CI — барьер перед `main` | [`check.yml`](.github/workflows/check.yml) на каждый пул-реквест |
+| От merge до прода | [`release.yml`](.github/workflows/release.yml) выпускает PDF на каждый merge, который поднимает версию |
 
-## How the book is built
+## Как собирается книга
 
-The chapters are Markdown with a few blocks of their own: the characters' notes, prompts in drawn monitors, tables,
-steps. A Python tool compiles them to HTML, Google Chrome lays out every page and prints a vector PDF, and every
-drawing — characters, scenes, the worlds of the chapters — is generated as code.
+Главы написаны в Markdown с несколькими своими блоками: сноски героев, промпты в нарисованных мониторах, таблицы,
+шаги. Инструмент на Python превращает их в HTML, Google Chrome раскладывает каждую страницу и печатает векторный
+PDF, а все рисунки — герои, сцены, миры глав — генерируются кодом.
 
 ```bash
 cd tools
 uv sync
-uv run book build --strict        # ../book -> ../dist/agentic-sdlc.pdf
-uv run book audit --baseline audit-baseline.json   # build once and check every page, as CI does
-uv run book build --demo          # a showcase of every block
-uv run pytest                     # tests
+uv run book build --strict                          # ../book -> ../dist/agentic-sdlc.pdf
+uv run book audit --baseline audit-baseline.json    # собрать книгу и проверить каждую страницу, как в CI
+uv run book build --demo                            # витрина всех блоков
+uv run pytest                                       # тесты
 ```
 
-You need [uv](https://docs.astral.sh/uv/) and Google Chrome. Read more in [`docs/build.md`](docs/build.md) and
-[`docs/design-system.md`](docs/design-system.md).
+Нужны [uv](https://docs.astral.sh/uv/) и Google Chrome. Подробнее — в [`docs/build.md`](docs/build.md) и
+[`docs/design-system.md`](docs/design-system.md) (на английском).
 
-## Contributing
+## Как помочь
 
-Found a typo, an inaccuracy or an outdated fact? Open a pull request or an issue: [CONTRIBUTING.md](CONTRIBUTING.md)
-explains how. CI builds the book and checks every page, and every merge that raises the version becomes a new release. A star tells the
-author the book is worth developing further.
+Нашёл опечатку, неточность или устаревший факт? Сделай пул-реквест или заведи issue — как это устроено, написано в
+[CONTRIBUTING.md](CONTRIBUTING.md). CI соберёт книгу и проверит каждую страницу, а каждый merge с новой версией
+становится новым релизом. А звёздочка подскажет автору, что книгу стоит развивать дальше.
 
-## Author
+## Автор
 
-Artem Puliavin (Тёма Пулявин), former CTO of the car-sharing service Citydrive —
-[blog «Быть Лидом»](https://t.me/tobelead) · [Telegram](https://t.me/puliavin).
+Тёма Пулявин, бывший технический директор каршеринга Ситидрайв —
+[блог «Быть Лидом»](https://t.me/tobelead) · [Telegram](https://t.me/puliavin).
 
-The characters are an homage to «Энциклопедия профессора Фортрана» by A. V. Zaretsky, M. O. Zaretskaya,
-A. V. Trukhanov and the artist E. L. Desyatnik; the drawings in this repository are original.
+Герои книги — дань уважения «Энциклопедии профессора Фортрана» А. В. Зарецкого, М. О. Зарецкой, А. В. Труханова и
+художницы Э. Л. Десятник; все рисунки в этом репозитории оригинальные.
 
-## License
+## Лицензия
 
-- The text and pictures of the book, except the author's photo: [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/) — share and
-  adapt with credit to the author and the book, no commercial use.
-- Prompts, commands and code examples in the book: [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/).
-- The build tool: [PolyForm Noncommercial 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0).
-- Fonts: SIL Open Font License 1.1.
+- Текст и картинки книги, кроме фото автора: [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/deed.ru) —
+  делись и переделывай, указывая автора и книгу, но не продавай.
+- Промпты, команды и примеры кода из книги: [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/deed.ru).
+- Инструмент сборки: [PolyForm Noncommercial 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0).
+- Шрифты: SIL Open Font License 1.1.
 
-See [LICENSE](LICENSE) for the details.
+Подробно — в [LICENSE](LICENSE).
