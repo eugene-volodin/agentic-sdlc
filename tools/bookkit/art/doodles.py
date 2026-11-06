@@ -6,7 +6,7 @@ the original encyclopedia, storage media, tools, and a few things every develope
 registered with `@doodle_drawing`; `doodle(name)` returns it as a complete `<svg>`.
 
 To add one: write the function, decorate it, and it is immediately available to the paginator's
-fillers (`pages.FILLERS`) and to the contact cards. Keep to the house style - ink outline, one
+accents (`pages.ACCENTS`) and to the contact cards. Keep to the house style - ink outline, one
 light source from the top left (`Canvas.shape` does the shading), colors from `bookkit.design`.
 """
 from __future__ import annotations

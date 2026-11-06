@@ -19,9 +19,11 @@ WOOD = P.WOOD
 BEIGE = P.BEIGE
 
 
-def _at(c: Canvas, x: float, y: float, scale: float = 1.0, mirror: bool = False) -> str:
+def _at(c: Canvas, x: float, y: float, scale: float = 1.0, mirror: bool = False, turn: float = 0) -> str:
+    """A drawing made round its own origin, set at (x, y): turned by `turn` degrees, scaled, mirrored if asked."""
     sx = -scale if mirror else scale
-    return f'<g transform="translate({n(x)},{n(y)}) scale({n(sx)},{n(scale)})">{c.render()}</g>'
+    rot = f" rotate({n(turn)})" if turn else ""
+    return f'<g transform="translate({n(x)},{n(y)}){rot} scale({n(sx)},{n(scale)})">{c.render()}</g>'
 
 
 # ------------------------------------------------------------------ meadow

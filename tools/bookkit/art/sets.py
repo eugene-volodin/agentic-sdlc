@@ -13,13 +13,7 @@ from .. import design as P
 from ..design import darken, lighten
 from .doodles import _DRAWINGS
 from .ink import INK, Canvas, ellipse_d, lettering, lettering_width, n, rounded_rect_d
-from .props import tree
-
-
-def _at(c: Canvas, x: float, y: float, scale: float = 1.0, mirror: bool = False, turn: float = 0) -> str:
-    sx = -scale if mirror else scale
-    rot = f" rotate({n(turn)})" if turn else ""
-    return f'<g transform="translate({n(x)},{n(y)}){rot} scale({n(sx)},{n(scale)})">{c.render()}</g>'
+from .props import _at, tree
 
 
 def _label(c: Canvas, x: float, y: float, text: str, size: float, fill: str = INK, anchor: str = "middle",
@@ -275,7 +269,7 @@ def legacy_shelf(x: float, y: float, scale: float = 1.0, seed: int = 0, gap: int
             i += 1
         if not new:   # dust on the edge of the board
             c.dots(None, -66, top + 84, 132, 4, 40, "even", seed=seed + row, r=0.8, color=P.WHITE, opacity=0.8)
-    # A label board on the top: the new, and on the side: the old.
+    # A label board on the top.
     c.path(rounded_rect_d(-34, -412, 68, 18, 4), P.CREAM, 1.8)
     c.line("M-24,-403 h48", 2.4, P.GREEN, 0.9)
     return _at(c, x, y, scale)
@@ -292,7 +286,7 @@ def fanfold(points: list[tuple[float, float]], width: float, flags: list[tuple[f
     rnd = random.Random(seed)
     lefts, rights = [], []
     for i, (px, py) in enumerate(points):
-        qx, qy = points[min(i + 1, len(points) - 1)] if i < len(points) - 1 else points[i]
+        qx, qy = points[min(i + 1, len(points) - 1)]
         ox, oy = points[i - 1] if i else points[0]
         dx, dy = (qx - ox), (qy - oy)
         length = math.hypot(dx, dy) or 1

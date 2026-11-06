@@ -1364,8 +1364,8 @@ def _bench(x: float, foot: float, k: float, accent: str) -> str:
     three wooden slats for the seat and two for the back. The origin is the middle of its feet; 140 wide, 84 tall."""
     c = Canvas()
     iron = darken(accent, 0.75)
-    for back, slat in ((-84, -76), (-66, -58)):                                      # the back's slats
-        c.shape(rounded_rect_d(-62, slat - 8 if back == -84 else back, 124, 9, 2), P.WOOD_LIGHT, sw=1.8, light=None)
+    for back in (-84, -66):                                                            # the back's slats
+        c.shape(rounded_rect_d(-62, back, 124, 9, 2), P.WOOD_LIGHT, sw=1.8, light=None)
     for sx in (-1, 1):
         c.path(f"M{sx * 58},0 Q{sx * 52},-12 {sx * 56},-36 L{sx * 60},-86 M{sx * 56},-36 Q{sx * 64},-44 {sx * 70},-48 "
                f"L{sx * 50},-50", "none", 5.4, INK)

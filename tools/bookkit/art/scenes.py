@@ -237,7 +237,7 @@ def _outdoor_ground(s: _Scene) -> None:
                   f'stroke="{P.INK}" stroke-width="1.200"/>')
     if s.kind == "pond":
         left_room, right_room = (min(t[0] for t in s.taken) - s.lo, s.hi - max(t[0] for t in s.taken)) \
-            if s.taken else (1, 0)
+            if s.taken else (s.hi - s.lo, 0)
         x = s.lo + left_room * 0.45 if left_room > right_room else s.hi - right_room * 0.45
         y = s.base + g * 0.2
         rx = min(72 * min(1.7, h / 136), max(left_room, right_room) * 0.36)
@@ -453,8 +453,8 @@ def scene(h: int = 136, seed: int = 0, kind: str | None = None, cast=None, sign:
         start = lo + margin + s.rnd.uniform(0, max(1.0, span - gap * (slots - 1)))
         if s.desk_right is not None:   # in the study everyone gathers by the computer
             gap = min(gap, s.tall * 0.46)
-            clear = s.tall * 0.3   # stand clear of the chair
-            start = hi - clear - gap * (slots - 1) if s.desk_right else lo + clear
+            aside = s.tall * 0.3   # stand clear of the chair
+            start = hi - aside - gap * (slots - 1) if s.desk_right else lo + aside
         positions = [start + i * gap for i in range(slots)]
         if slots > count:
             prop_x = positions.pop(1)
