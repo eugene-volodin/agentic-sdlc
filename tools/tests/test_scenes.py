@@ -42,3 +42,10 @@ def test_story_prop_and_cast_do_not_share_ground():
             assert not spans_overlap(props_only), seed
     finally:
         scenes._outdoor_props = original
+
+
+def test_a_pond_with_nobody_beside_it_is_a_real_pond():
+    """With no one standing in the scene the pond takes the room of the whole width, not of a single unit."""
+    import re
+    radii = [float(r) for r in re.findall(r" A([\d.]+),", scenes.scene(h=220, seed=1, kind="pond", cast=[]))]
+    assert radii and max(radii) > 60
