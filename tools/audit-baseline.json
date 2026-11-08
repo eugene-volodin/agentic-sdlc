@@ -19,6 +19,22 @@
     {
       "check": "footer-repeat",
       "chapter": "2",
+      "where": "fair / drive / go",
+      "page": 39,
+      "detail": "pages 37 and 39 show the same picture (fair / drive / go)",
+      "reason": "The same frame two pages apart, in a world whose station holds one beat for a stretch of pages: the neighbouring pages differ (camera and mirror alternate page by page, tests/test_world_frames.py), and the rule (no two neighbouring pages show one picture) is about neighbouring pages."
+    },
+    {
+      "check": "footer-repeat",
+      "chapter": "2",
+      "where": "fair / home / carry",
+      "page": 45,
+      "detail": "pages 43 and 45 show the same picture (fair / home / carry)",
+      "reason": "The same frame two pages apart, in a world whose station holds one beat for a stretch of pages: the neighbouring pages differ (camera and mirror alternate page by page, tests/test_world_frames.py), and the rule (no two neighbouring pages show one picture) is about neighbouring pages."
+    },
+    {
+      "check": "footer-repeat",
+      "chapter": "2",
       "where": "fair / choice / roll",
       "page": 48,
       "detail": "pages 46 and 48 show the same picture (fair / choice / roll)",

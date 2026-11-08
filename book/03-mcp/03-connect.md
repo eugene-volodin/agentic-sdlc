@@ -8,7 +8,7 @@ Added HTTP MCP server sentry with URL: https://mcp.sentry.dev/mcp to project con
 File modified: /path/to/repo/.mcp.json
 ```
 
-::: note agent
+::: say agent
 Я проверил: после этой команды в репозитории появился файл .mcp.json, а при следующем запуске Claude Code спросит, подключать ли сервер
 :::
 
@@ -37,17 +37,17 @@ URL сервера в `.mcp.json` будет у всех один и тот же
 
 И дальше агент действует в сервисе полностью от твоего имени, как будто это ты сам нажимаешь кнопки, так что если сервис ведёт журнал действий, рядом с каждым действием агента там будут стоять твоё имя и твоя аватарка.
 
-::: note cat
+::: say cat
 Вместо самого ключа в .mcp.json пишут ссылку на переменную окружения, вроде "Authorization": "Bearer ${API_KEY}", и Claude Code подставит её значение сам — [code.claude.com](https://code.claude.com/docs/en/mcp)
 :::
 
 А если сервис даёт только API-ключ, его кладут в переменную окружения, а не в файл `.mcp.json`, потому что этот файл лежит в репозитории и всё, что в нём написано, увидят все.
 
-::: note cat
+::: say cat
 Как подключать MCP в Codex и Antigravity CLI — [learn.chatgpt.com](https://learn.chatgpt.com/codex/mcp), [antigravity.google](https://antigravity.google/docs/mcp)
 :::
 
-Неприятно только, что у Codex и Antigravity CLI настройки MCP лежат в своих файлах:
+Неприятно только, что Codex и Antigravity CLI берут настройки MCP не из `.mcp.json`, а из других файлов:
 
 - Codex хранит серверы для всех твоих проектов в `~/.codex/config.toml` в домашней папке, туда их и записывает команда `codex mcp add`, а сервер для одного проекта вписывают руками в `.codex/config.toml` в репозитории, и Codex прочитает этот файл, только если ты отметил проект как доверенный;
 - у Antigravity CLI для всех проектов это `~/.gemini/config/mcp_config.json`, а для одного проекта — `.agents/mcp_config.json` в репозитории.
