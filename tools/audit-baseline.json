@@ -385,14 +385,6 @@
       "reason": "A justified line that holds few words: a narrow column beside a note, or inline code, a no-break pair or a word the dictionary cannot hyphenate at its end. Hyphenation, the narrower word space and letter spacing at its invisible limit (paginate.js) leave it as wide as shown; only rewording the sentence closes it."
     },
     {
-      "check": "footer-repeat",
-      "chapter": "5",
-      "where": "attic / write / write",
-      "page": 97,
-      "detail": "pages 95 and 97 show the same picture (attic / write / write)",
-      "reason": "The same frame two pages apart, in a world whose station holds one beat for a stretch of pages: the neighbouring pages differ (camera and mirror alternate page by page, tests/test_world_frames.py), and the rule (no two neighbouring pages show one picture) is about neighbouring pages."
-    },
-    {
       "check": "page-weight",
       "chapter": "Заключение",
       "where": "",
