@@ -106,9 +106,11 @@ that installs it.
 paragraphs and list items from the pyphen dictionaries (`ru_RU`, `en_US`), and the style sheets say `hyphens: manual`.
 A browser's own hyphenation uses the dictionaries of the system, which differ between machines, and so would the
 pages. Code, links, headings, bubbles, margin notes and pictures get no soft hyphens, nor do short words (under
-`HYPHEN_MIN_WORD` letters), names, acronyms, paths and the last word of a block. Whatever is reported, searched or
-compared (the audit, the paginator's warnings, the text the footers are picked by) goes without them, and so does the
-PDF's text layer: copying or searching a word finds it whole.
+`HYPHEN_MIN_WORD` letters), names, acronyms, paths and the last word of a block. A paragraph split between two pages
+is cut between words, never inside one: a word that does not fit on the page goes on whole (`splitText` in
+`paginate.js`). Whatever is reported, searched or compared (the audit, the paginator's warnings, the text the footers
+are picked by) goes without the soft hyphens, and so does the PDF's text layer: copying or searching a word finds it
+whole.
 
 ---
 

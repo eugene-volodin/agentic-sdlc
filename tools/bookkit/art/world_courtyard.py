@@ -1044,11 +1044,13 @@ def near_fence(s: Strip, seed: int, view: float = 0.0) -> None:
     veil(s)
 
 
-def street(s: Strip, gx: float, open_: bool, seed: int = 0) -> float:
+def street(s: Strip, gx: float, open_: bool, seed: int = 0, avoid: tuple[float, float] | None = None) -> float:
     """The street side behind a frame, the gate at `gx`: the sky, the cottage's front behind its garden with its door
     on the line of the gate, an apple tree beside it, the brick path from the gate up to the steps between borders of
     flowers, the white fence along the back of the pavement with the gate hung between its posts - shut, or open into
-    the yard - and the pavement the cast stands on. Returns the fence's foot."""
+    the yard - and the pavement the cast stands on. A far house that a big thing in front (`avoid`, its x span)
+    would hide in part is left out: half a house peeping round a box reads as a broken drawing. Returns the
+    fence's foot."""
     c = s.back
     u = U(s)
     feet = lane(s).feet
@@ -1059,7 +1061,9 @@ def street(s: Strip, gx: float, open_: bool, seed: int = 0) -> float:
     far = Canvas()
     for q, kind in enumerate((1, 3, 0, 2)):
         x = gx + (-1) ** q * (230 + 160 * (q // 2)) * kc
-        if -80 * kc < x < W + 80 * kc:
+        half = (100 if kind >= 4 else 80) * kc * 0.62
+        hidden = avoid is not None and x - half < avoid[1] and avoid[0] < x + half
+        if -80 * kc < x < W + 80 * kc and not hidden:
             far_house(far, x, garden - 18 * kc, kc * 0.62, kind)
     c.add(f'<g opacity=".9">{far.render()}</g>')
     house_x = gx + 86 * kc                                     # the door (at -86) on the line of the gate
@@ -1618,9 +1622,9 @@ def library_moment(s: Strip, beat: str) -> None:
     w = way(s)
     feet = lane(s).feet
     gx = fx_(s, 0.66) if low(s) else (s.lo + s.hi) / 2 + w * 64 * u   # the library, the two and the gate centred
-    fence = street(s, gx, open_=True, seed=s.seed + 1)
     gw = 52 * u
     lx = gx - w * (gw / 2 + 40 * u)
+    fence = street(s, gx, open_=True, seed=s.seed + 1, avoid=(lx - 60 * u, lx + 60 * u))
     lk = min(u, (feet - 3 * u - 4) / 104)
     up = lift(s)
     box = little_library(s, lx, feet - 3 * u - up, lk, open_=True)
@@ -1816,7 +1820,7 @@ def tea_moment(s: Strip, beat: str) -> None:
         upright(s, prof, teapot, tilt=tilt)
         tx = tip[0] + w * 30 * u                                   # the table: a cup right under the spout
         cups = [-30 * w + 2 * w, 10 * w]
-        up = lift(s)
+        up = 0.0                       # beside him, at his depth: the tea falls from the spout into the cup below it
         tb = table_tea(c, tx, feet - 2 * u - up, u, [-28 if w > 0 else 28, 12 if w > 0 else -12], full=True)
         cup_x = tx + (-28 if w > 0 else 28) * u
         top = tb["top"] - 6.4 * u

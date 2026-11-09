@@ -431,7 +431,10 @@
 
   /* The last line of a paragraph, set ragged, is nearly as long as the line above it: justified, it would not open
    * wide gaps. */
-  function fullLastLine(p) {
+  // The last line on the page of a paragraph cut between words is justified: set ragged it must already reach this
+  // share of the line before it, or its word gaps would open too wide (the audit's word-gap).
+  const CUT_FULL = 0.94;
+  function fullLastLine(p, share = 0.85) {
     const cut = p.classList.contains('cut');
     p.classList.remove('cut');
     const range = document.createRange();
@@ -443,7 +446,7 @@
       const line = rects.filter((r) => lines.of(r.top) === n);
       return Math.max(...line.map((r) => r.right)) - Math.min(...line.map((r) => r.left));
     };
-    return lines.count < 2 || width(lines.count - 1) >= width(lines.count - 2) * 0.85;
+    return lines.count < 2 || width(lines.count - 1) >= width(lines.count - 2) * share;
   }
 
   /* Where a paragraph may be cut: after a space, so a word is never cut in two. Each cut is a character offset in the
@@ -499,30 +502,18 @@
     // page is finished (`widenHangingNotes`), between the two parts of the paragraph, and the text would set anew.
     const hangs = () => !singleColumn(page.el) && body.offsetHeight - (row.offsetTop + row.offsetHeight) >= HANG_MAX;
 
-    /* Cut the paragraph so that k lines stay, where the browser broke line k: inside a word it hyphenated there -
-     * the first part then ends with that hyphen, as it was set - or before the first word of the next line, or else
-     * before the hyphenated word. The first part's last line must stay full: it is justified, and a short one would
-     * open wide gaps. Returns the cut-off tail, or null (nothing changed). */
+    /* Cut the paragraph so that k lines stay, where the browser broke line k: before the first word of the next
+     * line, or else before the word it hyphenated there. A word is never torn between two pages: the last word of a
+     * page is whole, and a word that does not fit goes on to the next page. The first part's last line must stay
+     * full: it is justified, and a short one would open wide gaps. Returns the cut-off tail, or null (nothing
+     * changed). */
     function cut(k, measured) {
-      const { cuts, of } = measured;
+      const { cuts } = measured;
       const next = cuts.find((c) => c.line === k);
       const last = cuts.filter((c) => c.line === k - 1).pop();
       if (!next || !last) return null;
       const range = document.createRange();
-      const tries = [];
-      for (let i = last.at + 1; i < next.at; i++) {     // a character of the last word already on the next line
-        const point = pointAt(p, i);
-        if (!point || /\s/.test(point[0].textContent[point[1]] || ' ')) break;
-        range.setStart(...point);
-        range.setEnd(point[0], point[1] + 1);
-        // The letter's own box is its last: the letter after a soft hyphen that broke the line also gets the box of
-        // that hyphen, at the end of the line above.
-        const rect = [...range.getClientRects()].filter((r) => r.width > 0).pop();
-        if (rect && of(rect.top) >= k) { tries.push({ at: i, hyphen: true }); break; }
-      }
-      // Without the hyphen: before the next line's first word, or before the hyphenated word.
-      tries.push({ at: next.at, hyphen: false }, { at: last.at, hyphen: false });
-      for (const { at, hyphen } of tries) {
+      for (const at of [next.at, last.at]) {
         const point = pointAt(p, at);
         if (!point) continue;
         // Never inside a bit of code: `claude auto-mode config` torn between two pages reads as two commands.
@@ -531,15 +522,8 @@
         range.setStart(...point);
         range.setEnd(p, p.childNodes.length);
         const tail = range.extractContents();
-        // A word broken at its own hyphen (state-manager) keeps that one; only a syllable break gets one added, in
-        // place of the soft hyphen it broke at.
-        if (hyphen && !/[-‐‑]$/.test(p.textContent)) {
-          const end = pointAt(p, p.textContent.length);
-          if (end && end[1] > 0 && end[0].data[end[1] - 1] === '\u00ad') end[0].deleteData(end[1] - 1, 1);
-          p.append('-');
-        }
         p.classList.add('cut');                          // its last line is justified: the sentence runs on
-        if (lineCount(p) === k && fullLastLine(p) && fits() && sectionFits() && !hangs() && tailLines(tail) >= MIN_LINES) {
+        if (lineCount(p) === k && fullLastLine(p, CUT_FULL) && fits() && sectionFits() && !hangs() && tailLines(tail) >= MIN_LINES) {
           return tail;
         }
         restore();
@@ -1214,11 +1198,14 @@
       range.surroundContents(span);
       made.push({ span, spacing });
     }
-    // Rarely, the spacing lets the next line's word be hyphenated up: then less of it, or none.
+    // Rarely, the spacing lets the next line's word be hyphenated up, or pushes a line that cannot break (a bit of
+    // code torn at its end) out past the column: then less of it, or none.
+    const right = block.getBoundingClientRect().right - parseFloat(getComputedStyle(block).paddingRight || 0) + 0.5;
+    const inside = () => made.every(({ span }) => [...span.getClientRects()].every((r) => r.right <= right));
     for (const share of [1, 0.5, 0.25]) {
       for (const { span, spacing } of made) span.style.letterSpacing = (spacing * share).toFixed(4) + 'em';
       const after = lineSignature(block);
-      if (after.length === before.length && after.every((top, k) => Math.abs(top - before[k]) < half)) return;
+      if (after.length === before.length && after.every((top, k) => Math.abs(top - before[k]) < half) && inside()) return;
     }
     for (const { span } of made) span.replaceWith(...span.childNodes);
     block.normalize();

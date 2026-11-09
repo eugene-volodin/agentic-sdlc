@@ -7,7 +7,7 @@ cast: ["agent:wave:smile", "cat:point:smile"]
 world: railway
 sign: Глава 11
 number: 11
-lead: Задачу от запроса до прода ведёт агент, а **ты ставишь задачу, утверждаешь план, проверяешь результат и отвечаешь за merge**
+lead: Задачу от запроса до прода ведёт агент, а **ты ставишь цель, утверждаешь план, проверяешь результат и отвечаешь за merge**
 ---
 
 # Как теперь выглядит разработка
@@ -22,7 +22,7 @@ lead: Задачу от запроса до прода ведёт агент, а
 Называют этот процесс все по-разному: в Red Hat — agentic SDLC, в AWS — AI-DLC (AI-Driven Development Life Cycle), в Microsoft — agentic DevOps, а в Anthropic — AI-native SDLC, хотя в своём руководстве Anthropic пишет, что его называют и agentic SDLC — [redhat.com](https://www.redhat.com/en/blog/building-future-core-concepts-red-hats-agentic-software-development-life-cycle), [aws.amazon.com](https://aws.amazon.com/blogs/devops/ai-driven-development-life-cycle/), [azure.microsoft.com](https://azure.microsoft.com/en-us/blog/agentic-devops-evolving-software-development-with-github-copilot-and-microsoft-azure/), [claude.com](https://claude.com/blog/the-ai-native-sdlc-playbook)
 :::
 
-Единого определения у него нет, каждая компания вкладывает в этот термин что-то своё, но если собрать то общее, в чём они сходятся, то я бы определил его так: **Agentic SDLC — это когда задачу от запроса до прода ведёт агент, а человек ставит задачу, утверждает план, проверяет результат и отвечает за merge.**
+Единого определения у него нет, каждая компания вкладывает в этот термин что-то своё, но если собрать то общее, в чём они сходятся, то я бы определил его так: **Agentic SDLC — это когда задачу от запроса до прода ведёт агент, а человек ставит цель, утверждает план, проверяет результат и отвечает за merge.**
 
 В этой главе я расскажу:
 

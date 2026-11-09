@@ -34,7 +34,7 @@ from .footers import Strip
 from .ink import INK, Canvas, ellipse_d, lettering, lettering_width, n, rounded_rect_d
 from .openers import CLEAR_MM, H, OPENERS, W, Stage
 from .scenes import PROFESSOR_HEIGHT
-from .world_kit import (GAP_MIN, SIZE, Holder, Pen, Room, cast, clock_hands, hide, ledger, letter, room, sound,
+from .world_kit import (GAP_MIN, SIZE, Holder, Pen, Room, cast, clock_hands, hide, ledger, letter, room,
                         stash_along, tag_size, wrap)
 from .world_base import Station, world
 
@@ -1099,6 +1099,26 @@ def hood(s, x: float, counter: float, floor: float) -> None:
     s.put(1.2, c.render(), box, "hood")
 
 
+def kitchen_timer(x: float, foot: float, k: float) -> str:
+    """A twin-bell wind-up kitchen timer standing at (x, foot), 34 tall at k = 1, ringing: tipped on one foot, its
+    red case with a white dial and two hands, the two bells on top and the hammer struck between them."""
+    c = Canvas()
+    c.add(f'<ellipse cx="0" cy="0" rx="12" ry="1.8" fill="{INK}" fill-opacity=".15"/>')
+    g = Canvas()
+    g.line("M-6,-2 L-8,2 M6,-2 L8,2", 2.6)                                               # its feet
+    for bx in (-7, 7):                                                                   # the bells
+        g.shape(f"M{bx - 6},-24 Q{bx - 6},-32 {bx},-32 Q{bx + 6},-32 {bx + 6},-24 Z", P.METAL_LIGHT, sw=1.2,
+                light=(-0.6, -0.6))
+    g.line("M0,-22 V-31", 1.4)                                                           # the hammer's arm ...
+    g.add(f'<circle cx="2.6" cy="-31" r="2.2" fill="{P.METAL_DARK}" stroke="{INK}" stroke-width="1"/>')
+    g.shape("M-11,-12 a11,11 0 1 1 22,0 a11,11 0 1 1 -22,0 Z", P.RED, sw=1.4, light=(-1, -1))    # the case
+    g.add(f'<circle cx="0" cy="-12" r="8" fill="{P.CARD}" stroke="{INK}" stroke-width="1"/>')     # the dial
+    g.line("M0,-12 L0,-17.5 M0,-12 L4,-10", 1.2)                                         # its hands
+    g.add(f'<circle cx="0" cy="-12" r="1" fill="{INK}"/>')
+    c.add(f'<g transform="rotate(-12)">{g.render()}</g>')
+    return f'<g transform="translate({n(x)},{n(foot)}) scale({n(k)})">{c.render()}</g>'
+
+
 def oven_station(s: Strip, beat: str) -> None:
     """The pie is in the oven. "bake": the agent shows it baking through the oven's window, the caterpillar asks
     if it will really bake, the sparrow flutters about. "smoke": the timer rings and smoke comes up - the agent
@@ -1121,10 +1141,12 @@ def oven_station(s: Strip, beat: str) -> None:
             sx, sy = ox - 6 * sk, r.counter - 8 * sk
             s.put(1.45, smoke_cloud(sx, sy, sk), (sx - 32 * sk, sy - 112 * sk, sx + 36 * sk, r.counter), "smoke",
                   group="stove")
-            size = max(sets.LETTERING_MIN + 6, min(30.0, 26 * s.unit))
-            side = -1 if getattr(s, "mirror", False) else 1
-            sound(s, ox + side * (50 * sk + lettering_width(s.word("ring"), size) / 2), r.counter - 70 * sk,
-                  s.word("ring"), size, "stove", margin=12)
+        # the kitchen timer that rang: a twin-bell wind-up timer on the stove's top, rocking on its feet, its
+        # hammer between the bells - what made the sound, drawn instead of a sound word
+        tk = max(0.5, min(1.2, s.unit * 1.1))
+        tx = box[0] + 16 * tk if not getattr(s, "mirror", False) else box[2] - 16 * tk
+        s.put(1.5, kitchen_timer(tx, box[1], tk), (tx - 13 * tk, box[1] - 34 * tk, tx + 13 * tk, box[1]), "timer",
+              group="stove")
         stand(s, "agent", beside(s, box, 1, "agent"), "shrug", "worry", face=ox)
         stand(s, who(s, "professor", "cat"), beside(s, box, -1, "professor"), "think", "worry", face=ox)
         flying(s, ((X(s, 0.95), r.counter - 40 * s.unit), (X(s, 0.05), r.counter - 40 * s.unit)), "worry",
