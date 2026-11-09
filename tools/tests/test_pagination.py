@@ -190,7 +190,8 @@ STUCK_PROMPT_PAGES = 6        # the layout of STUCK_PROMPT before footers could 
 # machine. A footer never adds a page; raise this only when the text or its hyphenation changes, never for a change of
 # the footers.
 BOOK = Path(__file__).resolve().parents[2] / "book"
-BOOK_PAGES = 261            # 260 since a word is never torn between two pages; 261 with chapter 5's proofreading
+BOOK_PAGES = 262            # 260 since a word is never torn between two pages; 261 with chapter 5's proofreading;
+                            # 262 with the Russian models in the market table
 
 
 def test_a_prompt_that_moved_on_whole_leaves_a_footer_grown_to_the_last_line(tmp_path, monkeypatch):

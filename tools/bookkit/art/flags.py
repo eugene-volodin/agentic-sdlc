@@ -61,7 +61,12 @@ def _fr(c: Canvas) -> None:
         c.path(_band(LEFT + i * third, LEFT + (i + 1) * third, 0, 1, steps=6), color, sw=0)
 
 
-FLAGS = {"us": _us, "cn": _cn, "fr": _fr}
+def _ru(c: Canvas) -> None:
+    for i, color in enumerate((P.WHITE, P.BLUE, P.RED)):
+        c.path(_band(LEFT, RIGHT, i / 3, (i + 1) / 3, steps=10), color, sw=0)
+
+
+FLAGS = {"us": _us, "cn": _cn, "fr": _fr, "ru": _ru}
 
 
 def flag(code: str) -> str:

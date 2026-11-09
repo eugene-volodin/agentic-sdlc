@@ -221,12 +221,13 @@ def mid(s: Strip) -> bool:
     return 200 <= s.h < 300
 
 
-def zoom(s: Strip) -> None:
+def zoom(s: Strip, alternate: bool = False) -> None:
     """The fair's camera, close: the station and its cast fill the frame's height, but nothing is ever cut by the
     frame (nothing may be cut at the bottom, anywhere) - a band of paving shows
     under every pair of feet, at least an eighth of the frame, and every head stays under the top. A strip shows
     fewer things, each whole and smaller, rather than a close-up cut at the knees."""
-    s.shot = s.seed % 2                                   # every other page: a second camera
+    s.shot = ((s.seed + s.seed // 2) if alternate else s.seed) % 2   # every other page: a second camera, and
+                                                        # another one where a beat comes back
     s.ground = max(26.0, s.h * (0.22 if s.h < 200 else 0.19))
     s.base = s.h - s.ground
     feet = s.h - max(16.0, s.h * 0.14)                     # the feet line: the paving shows under it
@@ -242,7 +243,7 @@ def backdrop(s: Strip, index: int) -> None:
     tents, its big wheel, its garlands - is put in by `scenery` once the station has placed its cast and things, so
     that nothing of it stands behind a head or peeks out from behind anyone."""
     ledger(s)
-    zoom(s)
+    zoom(s, alternate=True)                                # a beat that comes back is drawn from the other camera
     c = s.back
     sets.sky(c, mix(P.SKY, P.BLUE, 0.12), P.SKY_LOW, s.base + 10, W)
     if s.h >= 190:
