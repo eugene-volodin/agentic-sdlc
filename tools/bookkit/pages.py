@@ -226,7 +226,7 @@ def book_map(chapters: list[Chapter], config: BookConfig) -> str:
         slot = number or ("end" if seen_number else "intro")
         color = design.ACCENTS.get(found.color, design.TEAL) if found else design.TEAL
         world = (str(found.meta.get("world") or "") or None) if found else None
-        if world and world not in bookmap.VIGNETTES and slot != bookmap.RAILWAY:   # the last one is the railway
+        if world and world not in bookmap.VIGNETTES:
             raise BuildError(f"{found.path}: the world {world!r} has no place on the map of the book yet; "
                              f"add its vignette to art/bookmap.py")
         stops.append(bookmap.Stop(slot, number, bookmap.plain(found.title if found else title),
