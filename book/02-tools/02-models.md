@@ -24,7 +24,7 @@
 **Контекст** тут — это то, сколько текста модель «держит в голове» за один вызов, и меряют его в токенах — кусочках текста, о которых я подробнее расскажу чуть ниже.
 
 ::: note cat
-Окна российских моделей: GigaChat 2 Max — [developers.sber.ru](https://developers.sber.ru/docs/ru/gigachat/models/gigachat-2-max), Alice AI LLM и YandexGPT Pro 5.1 — [aistudio.yandex.ru](https://aistudio.yandex.ru/docs/ru/ai-studio/concepts/generation/models)
+Контекстное окно у GigaChat 2 Max от Сбера — 128K токенов — [developers.sber.ru](https://developers.sber.ru/docs/ru/gigachat/models/gigachat-2-max). У Alice AI LLM от Яндекса — тоже 128K, а у YandexGPT Pro 5.1 — 32K — [aistudio.yandex.ru](https://aistudio.yandex.ru/docs/ru/ai-studio/concepts/generation/models)
 :::
 
 А модели Anthropic, кстати, встроены даже в Xcode, среду разработки от Apple, а начиная с Xcode 27 там же можно выбрать и модели Google и OpenAI.
