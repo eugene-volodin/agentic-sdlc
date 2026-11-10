@@ -7,7 +7,7 @@
 | Anthropic | :flag-us: США | - Fable 5.1<br>- Opus 5.5<br>- Sonnet 5.5<br>- Haiku 5.5 | 1M |
 | OpenAI | :flag-us: США | - GPT-6 Astra<br>- GPT-6.1 Sol<br>- GPT-6 Luna | 1M |
 | Google | :flag-us: США | - Gemini 3.8 Flash<br>- Gemini 3.1 Pro | 1M |
-| SpaceXSI (бывшая xAI) | :flag-us: США | - Grok 4.7 | 500K |
+| SpaceXAI (бывшая xAI) | :flag-us: США | - Grok 4.7 | 500K |
 | DeepSeek | :flag-cn: Китай | - DeepSeek V4-Pro<br>- DeepSeek V4.1-Flash | 1M |
 | Moonshot AI | :flag-cn: Китай | - Kimi K3 | 1M |
 | Zhipu (Z.ai) | :flag-cn: Китай | - GLM-5.3 | 1M |
@@ -15,7 +15,7 @@
 | MiniMax | :flag-cn: Китай | - MiniMax-M3 | 1M |
 | Mistral | :flag-fr: Франция | - Codestral<br>- Mistral Medium 3.5 | - 128K<br>- 256K |
 | Сбер | :flag-ru: Россия | - GigaChat 2 Max | 128K |
-| Яндекс | :flag-ru: Россия | - AliceAI<br>- YandexGPT 5 | - 262K<br>- 32K |
+| Яндекс | :flag-ru: Россия | - Alice AI LLM<br>- YandexGPT Pro 5.1 | - 128K<br>- 32K |
 
 ::: note cat
 Есть ещё Claude Mythos 5.1 — те же возможности, что у Fable, но доступна она только организациям, прошедшим проверку Anthropic. Подробнее — [platform.claude.com](https://platform.claude.com/docs/en/about-claude/models/overview)
@@ -23,16 +23,8 @@
 
 **Контекст** тут — это то, сколько текста модель «держит в голове» за один вызов, и меряют его в токенах — кусочках текста, о которых я подробнее расскажу чуть ниже.
 
-В таблице — не все, но большинство тех, кто разработал свою модель «с нуля». Однако ты наверняка видел и модели других компаний. В большинстве своём они основаны на открытых моделях, таких как Qwen и Llama. Кто-то открыто пишет, какую модель взял за основу. Например, T-pro 2.0 у Т-Банка — дообученный Qwen3-32B, а Sonar у Perplexity собран на Llama 3.3.
-
 ::: note cat
-T-pro 2.0 — [huggingface.co](https://huggingface.co/t-tech/T-pro-it-2.0), Sonar — [perplexity.ai](https://www.perplexity.ai/hub/blog/meet-new-sonar). Окна: GigaChat 2 Max — 128K — [developers.sber.ru](https://developers.sber.ru/docs/ru/gigachat/models/gigachat-2-max), YandexGPT 5 — 32K — [yandex.cloud](https://yandex.cloud/ru/docs/ai-studio/concepts/generation/models), AliceAI — 262K — [huggingface.co](https://huggingface.co/yandex/AliceAI-Foundation-80B-A3B-Base), [habr.com](https://habr.com/ru/companies/yandex/articles/1083300/)
-:::
-
-А обучение с нуля — это в первую очередь очень много железа и серьёзная инженерная школа. Meta обучала Llama 3.1 405B на 16 384 видеокартах H100. На DeepSeek-V3 ушло 2,788 млн GPU-часов на H800 — по данным самой компании. Тут нужна сильная команда эксплуатации, которая сможет поддерживать такой огромный кластер в стабильном состоянии. И, конечно же, нужна сильная команда ML-инженеров, которая разрабатывает архитектуру модели и обучает её. Вот почему «своя модель» почти всегда значит не обучение с нуля, а адаптацию чужой: создать свою модель по силам единицам, и даже у них на это уходят годы.
-
-::: note cat
-Факты про GPU-кластеры: Meta — [ai.meta.com](https://ai.meta.com/blog/meta-llama-3-1/), DeepSeek — [arxiv.org](https://arxiv.org/abs/2412.19437)
+Окна российских моделей: GigaChat 2 Max — [developers.sber.ru](https://developers.sber.ru/docs/ru/gigachat/models/gigachat-2-max), Alice AI LLM и YandexGPT Pro 5.1 — [aistudio.yandex.ru](https://aistudio.yandex.ru/docs/ru/ai-studio/concepts/generation/models)
 :::
 
 А модели Anthropic, кстати, встроены даже в Xcode, среду разработки от Apple, а начиная с Xcode 27 там же можно выбрать и модели Google и OpenAI.
@@ -41,7 +33,7 @@ T-pro 2.0 — [huggingface.co](https://huggingface.co/t-tech/T-pro-it-2.0), Sona
 Anthropic сама предупреждает, что Opus 4.5 и Opus 4.6 склонны оверинжинирить — создавать лишние файлы и абстракции, — и советует добавлять в промпт готовую строку: «Не добавляй функции, не рефактори код и не делай „улучшений“ сверх того, о чём просили» — [platform.claude.com](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices)
 :::
 
-Есть модели общего назначения, которые отвечают на вопросы и которыми вполне можно заменить поход в Google, и с этим, по моему опыту, хорошо справляются GPT-модели — я и сам активно пользуюсь ChatGPT, моему аккаунту больше двух лет, и каждый день я открываю там десятки сессий. А есть модели, заточенные под код, — та же Grok 4.7 от SpaceXSI или китайская Kimi K3. При этом в 2026 году разница между моделями больших корпораций на самом деле не такая уж и существенная. Да, кто-то из них норовит оверинжинирить, а кто-то, наоборот, недоделывает, но всё это можно подтюнить, и качество кода при прочих равных у них выходит сопоставимое.
+Есть модели общего назначения, которые отвечают на вопросы и которыми вполне можно заменить поход в Google, и с этим, по моему опыту, хорошо справляются GPT-модели — я и сам активно пользуюсь ChatGPT, моему аккаунту больше двух лет, и каждый день я открываю там десятки сессий. А есть модели, заточенные под код, — та же Grok 4.7 от SpaceXAI или китайская Kimi K3. При этом в 2026 году разница между моделями больших корпораций на самом деле не такая уж и существенная. Да, кто-то из них норовит оверинжинирить, а кто-то, наоборот, недоделывает, но всё это можно подтюнить, и качество кода при прочих равных у них выходит сопоставимое.
 
 ### Модели мыслят токенами
 
