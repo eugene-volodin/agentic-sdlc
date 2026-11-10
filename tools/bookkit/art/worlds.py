@@ -115,15 +115,41 @@ def world_footers(world_: World, requests: list[dict], vocabulary: dict, chapter
     places = schedule(world_, len(requests))
     hidden, letter = egg_page(world_, places), egg_letter(vocabulary, chapter_index)
     out = []
+    drawn: list[dict] = []
     for nth, (request, place) in enumerate(zip(requests, places, strict=True)):
         h = round(float(request["mm"]) * P.SCENE_UNITS_PER_PAGE_MM)
-        svg, strip = frame(world_, h, place, request.get("clear"), chapter_index,
-                           str(request.get("accent") or P.YELLOW), words, seed=nth,
-                           egg=letter if nth == hidden else None, flip=nth)
+        before = drawn[-2] if len(drawn) >= 2 else None
+        for retry in range(RETRIES):                   # the same picture two pages back: another camera or cast
+            svg, strip = frame(world_, h, place, request.get("clear"), chapter_index,
+                               str(request.get("accent") or P.YELLOW), words, seed=nth + retry * 2 + (retry > 0),
+                               egg=letter if nth == hidden else None, flip=nth)
+            shown = moment(world_, place, strip)
+            if not (before and same_picture(before, shown)):
+                break
         out.append(svg)
+        drawn.append(shown)
         if trace is not None:
-            trace.append(moment(world_, place, strip))
+            trace.append(shown)
     return out
+
+
+RETRIES = 4     # seeds tried for a frame before giving up and leaving the repeat to `book audit`
+
+
+def moment_key(moment_: dict) -> tuple:
+    """The world, the station and the beat a frame shows."""
+    return (moment_["world"], moment_.get("station"), moment_.get("beat"))
+
+
+def composition(strip: Strip) -> tuple:
+    """Who stands where and how big: two frames of one beat that differ here are another camera or cast."""
+    return (tuple(sorted(b.name for b in strip.boxes if b.kind == "actor")), round(strip.tall),
+            bool(getattr(strip, "mirror", False)))
+
+
+def same_picture(a: dict, b: dict) -> bool:
+    """Two frames a reader would take for one picture: one beat, one cast, one camera."""
+    return moment_key(a) == moment_key(b) and composition(a["strip"]) == composition(b["strip"])
 
 
 def moment(world_: World, place: tuple[int, str] | None, strip: Strip) -> dict:

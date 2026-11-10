@@ -134,20 +134,12 @@ def moment_name(moment: dict) -> str:
     return f"{moment['world']} / {station} / {moment['beat']}" if station else f"{moment['world']} / finale"
 
 
-def _key(moment: dict) -> tuple:
-    return (moment["world"], moment.get("station"), moment.get("beat"))
-
-
-def _composition(strip) -> tuple:
-    """Who stands where and how big: two frames of one beat that differ here are another camera or cast."""
-    return (tuple(sorted(b.name for b in strip.boxes if b.kind == "actor")), round(strip.tall),
-            bool(getattr(strip, "mirror", False)))
-
-
 def footer_checks(requests: list[dict], trace: list) -> list[dict]:
     """Two neighbouring pages never show one moment, and every footer drawn passes its own drawing checks for the
     exact height, side and seed it was drawn at: a text change moves the heights, and a frame never drawn at that
     height by the tests may break."""
+    from .art.worlds import composition, moment_key
+
     found: list[dict] = []
     drawn = [(request, moment) for request, moment in zip(requests, trace, strict=False) if moment]
     for nth, (request, moment) in enumerate(drawn):
@@ -155,9 +147,9 @@ def footer_checks(requests: list[dict], trace: list) -> list[dict]:
         rect = footer_rect(float(request["mm"]))
         for later in drawn[nth + 1:nth + 3]:
             gap = int(later[0]["page"]) - page
-            if gap > 2 or _key(later[1]) != _key(moment):
+            if gap > 2 or moment_key(later[1]) != moment_key(moment):
                 continue
-            same = _composition(later[1]["strip"]) == _composition(moment["strip"])
+            same = composition(later[1]["strip"]) == composition(moment["strip"])
             if gap == 1:
                 found.append(finding("footer-repeat", "error",
                                      f"pages {page} and {page + 1} show the same moment ({moment_name(moment)})"
@@ -443,9 +435,10 @@ def summary(result: dict) -> str:
     return "\n".join([head, *out])
 
 
-def failed(found: list[dict]) -> bool:
-    """Any error, or any warning the baseline does not accept."""
-    return any(f["severity"] == "error" or f["severity"] == "warning" and not f.get("baselined") for f in found)
+def failed(found: list[dict], warnings: bool = True) -> bool:
+    """Any error, or (unless `warnings` is False) any warning the baseline does not accept."""
+    return any(f["severity"] == "error" or warnings and f["severity"] == "warning" and not f.get("baselined")
+               for f in found)
 
 
 # ============================================================================ the command

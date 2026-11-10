@@ -1,17 +1,19 @@
 """The map of the book: a land seen from above at an angle, each chapter a place of its own world by the road.
 
-A map of the book by the contents: every chapter its own land, the last chapter joining all the worlds by a railway,
-with the chapters' titles on it and how long each takes to read, so the reader sees the way through the chapters and
-what lies ahead. The contents fill their pages, so the map takes a page of its own right after them.
+A map of the book by the contents: every chapter its own land, with the chapters' titles on it and how long each
+takes to read, so the reader sees the way through the chapters and what lies ahead. The contents fill their pages,
+so the map takes a page of its own right after them.
 
 The way runs as a road in four long rows, from the professor's courtyard at the bottom (the introduction), in the
 morning, to the computer city under the stars at the top (the conclusion; the city the characters walk off into
 on the book's last page, `farewell.py`): the journey of a day. The five characters
 walk it. By the road every chapter has a vignette of its world in the chapter's own colour and, in front of the road,
 a wooden plaque with its number, its title and its reading time. A chapter not written yet is drawn faint in a mist,
-its plaque greyed with "soon", like the greyed rows of the contents. The railway of the last chapter runs along
-the bottom edge. The land is countryside: fields of different crops with hedges, meadows with flowers, a river under a
-bridge into a pond, a windmill, haystacks, rocks, trees and a forest edge.
+its plaque greyed with "soon", like the greyed rows of the contents. The last chapter's railway station stands on
+the top row, between chapter 10 and the city, so the way reads in order (until 2026-11-09 the railway ran along the
+bottom edge, and readers took its plaque for a stop between the introduction and chapter 1). The land is
+countryside: fields of different crops with hedges, meadows with flowers, a river under a bridge into a pond,
+a windmill, haystacks, rocks, trees and a forest edge.
 
 Units: the page, 840 x 1188 (4 units to the millimetre). A vignette is drawn in local units standing on (0, 0) and
 placed at its stop, scaled to its row (the far rows are smaller). Everything placed has a box on a `Stage`;
@@ -72,19 +74,16 @@ ROWS = ((944, 1.0), (676, 0.92), (418, 0.85), (172, 0.78))
 ROAD_HALF = 15               # half the road's width at scale 1
 SIDE_R, SIDE_L = 822, 20     # the x of the hairpins on the right and on the left
 VIG_H = 124                  # the tallest a vignette stands at scale 1 ...
-VIG_W = (186, 226, 226, 226)  # ... and the widest, per row (the first row also has the walkers)
+VIG_W = (186, 226, 226, 190)  # ... and the widest, per row (the first row also has the walkers)
 # Where every slot stands: (row, x of the vignette's and the plaque's middle).
 SLOTS = {"intro": (0, 104), "1": (0, 500), "2": (0, 700),
          "3": (1, 668), "4": (1, 420), "5": (1, 168),
          "6": (2, 168), "7": (2, 420), "8": (2, 668),
-         "9": (3, 668), "10": (3, 420), "end": (3, 168)}
-RAILWAY = "11"               # the chapter that joins the worlds: a track along the bottom edge
-RAIL_Y = 1168
-RAIL_PLAQUE_X = 292          # its plaque: under the walkers, where the first row has no plaque
+         "9": (3, 712), "10": (3, 490), "11": (3, 286), "end": (3, 90)}
 CAST_X = (204, 384)          # the stretch of the first row the characters walk, between the courtyard and chapter 1
 PUDDLES = ((0, 610), (1, 300), (2, 600), (3, 300))   # (row, x) of a puddle on the road
-RIVER_X = 546                # the river comes down from the hills between chapters 10 and 9 ...
-POND = (544, 244, 32, 14)    # ... under the bridge of the top row, into a pond: centre x, y, radii
+RIVER_X = 600                # the river comes down from the hills between chapters 10 and 9 ...
+POND = (600, 244, 24, 12)    # ... under the bridge of the top row, into a pond: centre x, y, radii
 PLAQUE_W = 150               # a plaque's width; it never shrinks with distance, so its words always read
 TITLE_SIZE = 12.4            # its title's size, set smaller as a whole when the title would not fit in three lines
 TITLE_LH = 14.2
@@ -622,13 +621,48 @@ def city(c: Canvas, accent: str) -> None:
     c.shape(ellipse_d(81, -76, 11, 3.4), P.METAL_LIGHT, sw=1.6, light=None)
 
 
+@vignette("railway", -106, -120, 106)
+def railway(c: Canvas, accent: str) -> None:
+    """Chapter 11: the railway station - a brick station house with a clock in its gable over a stone platform, and a
+    steam engine with its cab in the chapter's colour on the track in front, puffing."""
+    _shadow(c, 212)
+    c.shape(rect_d(-24, -110, 8, 16), P.CHARCOAL, sw=1.7, light=None)        # the chimney, behind the roof
+    c.shape(rect_d(-90, -74, 96, 56), P.TERRACOTTA, sw=SW)                    # the station house of brick ...
+    courses = " ".join(f"M-90,{y} H6" for y in range(-66, -18, 8))
+    bonds = " ".join(f"M{x + (4 if (y // 8) % 2 else 0)},{y} V{y + 8}" for y in range(-74, -18, 8)
+                     for x in range(-82, 6, 16))
+    c.line(f"{courses} {bonds}", sw=0.8, stroke=darken(P.TERRACOTTA, 0.72))
+    c.shape("M-98,-72 L-42,-112 L14,-72 Z", accent, sw=SW)                    # ... its gable roof
+    c.shape(circle_d(-42, -88, 9), P.WHITE, sw=1.8, light=None)               # the clock in the gable
+    c.line("M-42,-88 V-94 M-42,-88 L-37,-86", sw=1.4)
+    _window(c, -82, -62, 16, 18, lit=True)
+    _window(c, -14, -62, 16, 18, lit=True)
+    c.shape("M-51,-18 V-44 Q-42,-54 -33,-44 V-18 Z", P.WOOD, sw=1.8)          # the arched door
+    c.shape(rect_d(-100, -18, 104, 10), P.STONE, sw=SW, light=None)          # the platform
+    c.line("M-100,-14 H4", sw=1, stroke=darken(P.STONE, 0.7))
+    c.shape(rect_d(-106, -8, 212, 8), P.PEBBLE, sw=1.6, light=None)          # the track: ballast, sleepers, rail
+    c.line(" ".join(f"M{x},-7 V-1" for x in range(-100, 104, 10)), sw=3.6, stroke=P.WOOD_DARK)
+    c.line("M-106,-6 H106", sw=3.4)
+    c.line("M-106,-6 H106", sw=1.4, stroke=P.METAL)
+    c.shape(rect_d(30, -56, 10, 18), P.CHARCOAL, sw=1.7, light=None)        # the engine: funnel, boiler, cab ...
+    c.shape(rounded_rect_d(22, -40, 50, 20, 8), P.CHARCOAL, sw=SW)
+    c.shape(rect_d(68, -58, 32, 38), accent, sw=SW)
+    _window(c, 74, -53, 20, 13, lit=True, cross=False)
+    c.shape(rect_d(18, -24, 86, 6), P.DARK_BROWN, sw=1.7, light=None)        # ... its frame and cowcatcher
+    c.shape("M10,-8 L18,-22 L18,-8 Z", P.METAL_DARK, sw=1.4, light=None)
+    for x, r in ((34, 7), (54, 7), (88, 6)):                                  # ... and its wheels on the rail
+        c.shape(circle_d(x, -13, r), P.METAL_DARK, sw=1.7, light=None)
+        c.dot(x, -13, 1.6, P.CHARCOAL)
+    _smoke(c, 36, -66, 0.9)
+
+
 @vignette("signpost-only", -30, -40, 30)
 def _nothing(c: Canvas, accent: str) -> None:
     """A planned chapter with no drawing of its own: only its plaque stands by the road."""
 
 
 # What stands at a planned chapter's place, by slot, until it is written; a written one is drawn from its world.
-PLANNED = {"intro": "courtyard", "10": "camp", "end": "city"}
+PLANNED = {"intro": "courtyard", "10": "camp", "11": "railway", "end": "city"}
 
 
 # ============================================================================ the plaques
@@ -890,38 +924,6 @@ def _bridge(c: Canvas, road) -> None:
                sw=0.9, stroke=P.METAL_DARK)
 
 
-def _railway(c: Canvas, y: float) -> None:
-    """The railway of the last chapter: a track with sleepers along the bottom edge."""
-    sleepers = " ".join(f"M{n(x)},{n(y - 8)} V{n(y + 8)}" for x in _frange(4, W, 12))
-    c.add(f'<path d="{rect_d(0, y - 10, W, 20)}" fill="{P.PEBBLE}"/>')
-    c.add(f'<path d="{sleepers}" stroke="{P.WOOD_DARK}" stroke-width="5" fill="none"/>')
-    c.add(f'<path d="M0,{n(y - 4.5)} H{W} M0,{n(y + 4.5)} H{W}" stroke="{P.INK}" stroke-width="3.6" fill="none"/>'
-          f'<path d="M0,{n(y - 4.5)} H{W} M0,{n(y + 4.5)} H{W}" stroke="{P.METAL}" stroke-width="1.6" fill="none"/>')
-
-
-def _train(x: float, y: float, cab: str = P.RED) -> str:
-    """A little steam train on the track: the locomotive (its cab in `cab`) and two wagons, puffing."""
-    c = Canvas()
-    for wx, color in ((x + 64, P.BLUE), (x + 120, P.GREEN)):              # the wagons
-        c.shape(rounded_rect_d(wx, y - 34, 50, 26, 4), color, sw=SW)
-        for k in (0, 1, 2):
-            _window(c, wx + 5 + k * 15, y - 30, 10, 10, lit=True, cross=False)
-        c.line(f"M{wx - 6},{y - 14} H{wx}", sw=2.4)
-        for ww in (wx + 10, wx + 40):
-            c.shape(circle_d(ww, y - 5, 5), P.METAL_DARK, sw=1.6, light=None)
-    c.shape(rounded_rect_d(x - 26, y - 30, 42, 20, 8), P.CHARCOAL, sw=SW)      # the boiler
-    c.shape(rect_d(x + 12, y - 44, 26, 34), cab, sw=SW)                        # the cab
-    _window(c, x + 17, y - 40, 15, 12, lit=True, cross=False)
-    c.shape(rect_d(x - 20, y - 46, 9, 16), P.CHARCOAL, sw=1.7, light=None)      # the funnel
-    c.shape(f"M{n(x - 34)},{n(y)} L{n(x - 26)},{n(y - 10)} L{n(x - 26)},{n(y)} Z", P.METAL_DARK, sw=1.4,
-            light=None)                                                       # the cowcatcher
-    c.shape(rect_d(x - 28, y - 12, 68, 5), P.DARK_BROWN, sw=1.7, light=None)
-    for wx in (x - 16, x, x + 26):
-        c.shape(circle_d(wx, y - 5, 6), P.METAL_DARK, sw=1.7, light=None)
-    _smoke(c, x - 16, y - 56, 1.1)
-    return c.render()
-
-
 # ============================================================================ decorations of the land
 def _windmill(x: float, y: float, s: float) -> str:
     c = Canvas()
@@ -1013,11 +1015,7 @@ def draw(stops: list[Stop], soon: str = "soon") -> BookMap:
     # Dusk falls over the far land: the way runs from morning at the bottom to night at the top.
     back.fade(0, HORIZON, W, 440, [(0, P.SPACE_LOW, 0.42), (0.6, P.SPACE_LOW, 0.1), (1, P.SPACE_LOW, 0.0)])
     result = BookMap("", road=road, river=river)
-    railway: Stop | None = None
     for stop in stops:
-        if stop.slot == RAILWAY:
-            railway = stop
-            continue
         if stop.slot not in SLOTS:
             raise MapError(f"the map of the book has no place for chapter {stop.slot}: give it a slot in "
                            f"art/bookmap.py SLOTS")
@@ -1030,9 +1028,6 @@ def draw(stops: list[Stop], soon: str = "soon") -> BookMap:
             kind = PLANNED.get(stop.slot, "signpost-only")
         result.drawn[stop.slot] = kind
         result.plaques[stop.slot] = _place(stage, stop, kind, soon)
-    if railway is not None:
-        result.drawn[railway.slot] = "railway" if railway.written else "planned railway"
-        result.plaques[railway.slot] = _place_railway(stage, railway, soon)
     _walkers(stage)
     _decorate(stage, road, river)
     result.svg = stage.svg("bookmap-art", marks=False)
@@ -1076,22 +1071,6 @@ def _mist(c: Canvas, left: float, top: float, right: float, bottom: float) -> No
     c.add(f'<path d="{" ".join(d)}" fill="{P.WHITE}" fill-opacity=".62"/>')
 
 
-def _place_railway(stage: Stage, stop: Stop, soon: str) -> list[str]:
-    """The last chapter's railway along the bottom edge: faint while planned, in full and its engine in the
-    chapter's colour once written."""
-    track = Canvas()
-    _railway(track, RAIL_Y)
-    faint = not stop.written
-    stage.back.add(f'<g opacity=".6">{track.render()}</g>' if faint else track.render())
-    train = (452, RAIL_Y - 70, 676, RAIL_Y)
-    engine = _train(486, RAIL_Y - 2, P.RED if faint else stop.color)
-    stage.put(RAIL_Y, f'<g opacity=".55">{engine}</g>' if faint else engine, train, name="train", group="railway")
-    plaque, pbox, lines = _plaque(stop, RAIL_PLAQUE_X, 0, soon)
-    lift = RAIL_Y - 12 - pbox[3]                     # the plaque stands on the ground above the track
-    stage.put(RAIL_Y, f'<g transform="translate(0,{n(lift)})">{plaque}</g>',
-              (pbox[0], pbox[1] + lift, pbox[2], pbox[3] + lift), name=f"plaque{stop.slot}", group="railway")
-    return lines
-
 
 def _walkers(stage: Stage) -> None:
     """The five on the road between the courtyard and the kitchen, walking to chapter 1, the sparrow over them."""
@@ -1110,7 +1089,7 @@ def _decorate(stage: Stage, road, river) -> None:
     stage.reserved.extend(keep)
     rnd = random.Random(41)
     spots = [(x + rnd.uniform(-12, 12), y + rnd.uniform(-8, 8))
-             for y in range(HORIZON + 40, RAIL_Y - 14, 18) for x in range(24, W - 16, 26)]
+             for y in range(HORIZON + 40, H - EDGE - 6, 18) for x in range(24, W - 16, 26)]
     placed: list[tuple[float, float]] = []
     for kind, (make, half, tall, most) in enumerate(DECOR):
         rnd.shuffle(spots)

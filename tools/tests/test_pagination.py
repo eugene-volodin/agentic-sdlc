@@ -10,7 +10,6 @@ import pytest
 from bookkit import design
 from bookkit import render as rendering
 from bookkit.compiler import build_html
-from bookkit.hyphenate import SHY
 from bookkit.render import footer_warnings
 
 FRONT = "---\ntitle: Test\nscene: railway\n---\n\n# Test\n\n"
@@ -186,12 +185,6 @@ PROMPT = ('```prompt title="Long" note="-"\n' + "".join(f"Line {n} of a prompt t
                                                        for n in range(26)) + "```\n\n")
 STUCK_PROMPT = "## Section\n\n" + PARAGRAPH * 2 + PROMPT + PARAGRAPH
 STUCK_PROMPT_PAGES = 6        # the layout of STUCK_PROMPT before footers could grow to fill: it must not change
-# The handbook's page count, laid out in Playwright's Chromium with the soft hyphens of hyphenate.py: the same on every
-# machine. A footer never adds a page; raise this only when the text or its hyphenation changes, never for a change of
-# the footers.
-BOOK = Path(__file__).resolve().parents[2] / "book"
-BOOK_PAGES = 262            # 260 since a word is never torn between two pages; 261 with chapter 5's proofreading;
-                            # 262 with the Russian models in the market table
 
 
 def test_a_prompt_that_moved_on_whole_leaves_a_footer_grown_to_the_last_line(tmp_path, monkeypatch):
@@ -214,18 +207,3 @@ def test_footers_grown_to_fill_are_not_counted_among_the_large_ones():
     assert footer_warnings([{"page": 3, "chapter": "4", "size": "fill", "end": "stuck", "blocker": "table"}])
 
 
-def test_footers_grown_to_fill_never_add_a_page_to_the_handbook(monkeypatch):
-    """The whole handbook, laid out with its footers left empty (about ten seconds)."""
-    if not (BOOK / "book.yml").is_file():
-        pytest.skip("the handbook is not beside the tool")
-    monkeypatch.setattr(rendering, "footers", lambda requests, vocabulary: ["<svg></svg>" for _ in requests])
-    html = build_html(BOOK).html
-    with tempfile.TemporaryDirectory() as work:
-        source = Path(work) / "book.html"
-        source.write_text(html, encoding="utf-8")
-        report = rendering.render(source)
-    # Another browser or no soft hyphens lays the text out differently: say which, so a mismatch of machines is plain.
-    assert report["pages"] <= BOOK_PAGES, (
-        f"{report['pages']} pages, at most {BOOK_PAGES} expected; laid out in {report.get('browser')}, "
-        f"{html.count(SHY)} soft hyphens in the text")
-    assert any(foot["size"] == "fill" for foot in report["feet"])

@@ -6,7 +6,7 @@ import yaml
 
 from bookkit import design
 from bookkit.art import bookmap
-from bookkit.art.bookmap import RAILWAY, SLOTS, VIGNETTES, MapError, Stop, draw, problems
+from bookkit.art.bookmap import SLOTS, VIGNETTES, MapError, Stop, draw, problems
 from bookkit.compiler import build_html
 from bookkit.markup import BuildError
 
@@ -26,7 +26,7 @@ def _worlds() -> dict[str, tuple[str, str]]:
 
 
 TITLES = {"intro": "Введение", "end": "Заключение: чек-лист и напутствие",
-          "11": "Как теперь выглядит разработка: Agentic SDLC", "4": "AGENTS.md: что записать для агента и куда"}
+          "11": "Как теперь выглядит разработка", "4": "AGENTS.md: что записать для агента и куда"}
 
 
 def _stops(written: dict[str, tuple[str, str]]) -> list[Stop]:
@@ -41,9 +41,6 @@ def test_every_world_of_the_handbook_has_its_vignette():
     worlds = _worlds()
     assert len(worlds) >= 9
     for number, (world, _) in worlds.items():
-        if number == RAILWAY:                   # the last chapter is the railway along the bottom edge, not a stop
-            assert world == "railway"
-            continue
         assert world in VIGNETTES, world
         assert number in SLOTS, number
 
