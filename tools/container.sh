@@ -14,4 +14,4 @@ fi
 tty=()
 [ -t 0 ] && [ -t 1 ] && tty=(--tty --interactive)
 exec docker run --rm ${tty[@]+"${tty[@]}"} --init --ipc=host --user "$(id -u):$(id -g)" \
-  --env BASE --volume "$repo:/repo" --workdir /repo/tools "$image" "${@:-./ci.sh}"
+  --env BASE --env ADVISORY --volume "$repo:/repo" --workdir /repo/tools "$image" "${@:-./ci.sh}"

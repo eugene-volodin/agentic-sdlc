@@ -34,6 +34,8 @@ jobs:
         env:
           BOOKKIT_IMAGE: bookkit-build
           BASE: origin/main
+          # a pull request from a fork: layout warnings are reported, not failed on (tools/ci.sh)
+          ADVISORY: ${{ github.event.pull_request.head.repo.fork && '1' || '' }}
         run: tools/container.sh
       - name: Job summary
         if: always()

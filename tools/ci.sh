@@ -5,6 +5,8 @@
 #
 # CI runs this inside the image of tools/Dockerfile; tools/container.sh runs it there on any machine. Run from tools/.
 # BASE (a git ref, e.g. origin/main) makes the audit check that book/ changed only together with its version.
+# ADVISORY=1 (a contributor's pull request from a fork) reports the layout warnings without failing on them: the
+# maintainer lays the pages out after the merge, a contributor only writes the text.
 set -euo pipefail
 cd "$(dirname "$0")"
 out=../dist/ci
@@ -20,5 +22,5 @@ for file in "${worlds[@]}"; do
   uv run --frozen pytest -q -p no:cacheprovider "$file"
 done
 uv run --frozen ruff check bookkit tests
-uv run --frozen book audit ${BASE:+--base "$BASE"} --baseline audit-baseline.json \
+uv run --frozen book audit ${BASE:+--base "$BASE"} ${ADVISORY:+--advisory} --baseline audit-baseline.json \
   --md "$out/report.md" --json "$out/audit.json" --sheets "$out/sheets" --pdf "$out/agentic-sdlc.pdf"

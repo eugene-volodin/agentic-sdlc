@@ -120,3 +120,17 @@ def test_any_world_module_can_be_imported_first(module):
     done = subprocess.run([sys.executable, "-c", f"import bookkit.art.{module}"], capture_output=True, text=True,
                           cwd=ART.parents[1])
     assert done.returncode == 0, done.stderr.strip().splitlines()[-1:]
+
+
+@pytest.mark.parametrize("name", sorted(set(WORLDS) - {"front"}))   # the front pages pick their own places
+def test_a_picture_never_comes_back_two_pages_later_the_camera_moves_instead(name):
+    """A text change shifts which beat lands on which page; the generator, not a contributor, keeps two pages apart
+    from showing one picture: it draws the frame again from another camera."""
+    from bookkit.art.worlds import same_picture, world_footers
+
+    for mm in (34, 55):
+        requests = [{"mm": mm, "page": n, "chapter": "2"} for n in range(24)]
+        shown: list[dict] = []
+        world_footers(WORLDS[name], requests, {"worlds": LOCALE.get("worlds") or {}}, 2, shown)
+        repeats = [n for n in range(2, len(shown)) if same_picture(shown[n - 2], shown[n])]
+        assert not repeats, f"{name} at {mm} mm: pages {repeats} repeat the picture two pages back"

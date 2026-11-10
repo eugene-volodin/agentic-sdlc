@@ -343,3 +343,9 @@ def test_every_check_is_described():
     used = set(re.findall(r"(?<![.\w])(?:add|warn)\(\s*'([a-z-]+)'", sources)) | \
         set(re.findall(r'finding\(\s*"([a-z-]+)"', sources))
     assert used and used <= set(audit.CHECKS), used - set(audit.CHECKS)
+
+
+def test_a_contributors_pull_request_fails_only_on_errors_the_layout_is_the_maintainers():
+    warning = {"severity": "warning", "check": "hole"}
+    assert audit.failed([warning]) and not audit.failed([warning], warnings=False)
+    assert audit.failed([{"severity": "error", "check": "version"}], warnings=False)

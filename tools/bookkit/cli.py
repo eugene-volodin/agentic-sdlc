@@ -279,6 +279,8 @@ def audit(args) -> int:
         print(f"  -> {args.md}")
     for sheet in result["sheets"]:
         print(f"  {sheet['path']}")
+    if args.advisory and not auditing.failed(result["findings"], warnings=False):
+        return 0                          # the layout warnings are the maintainer's to fix after the merge
     return 1 if auditing.failed(result["findings"]) and not args.write_baseline else 0
 
 
@@ -323,6 +325,8 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_argument("--write-baseline", action="store_true", help="write every warning found into --baseline")
     sub.add_argument("--base", help="git ref to compare book/ with: a change needs a new version (e.g. origin/main)")
     sub.add_argument("--pdf", help="also print the PDF here")
+    sub.add_argument("--advisory", action="store_true",
+                     help="report layout warnings but fail only on errors (a contributor's pull request)")
     sub.set_defaults(handler=audit)
     args = parser.parse_args(argv)
     try:
